@@ -1,0 +1,65 @@
+################################################################################
+#+TITLE: *Implementacja maszyny wirtualnej dla funkcyjnych języków programowania wspierających przetwarzanie współbieżne.*
+#+AUTHOR: Kajetan Rzepecki \\* kajtek@idorobots.org
+#+DATE: \today
+#
+#+BEGIN_OPTIONS
+#+STARTUP: content
+#+LaTeX_CLASS: article
+#+LaTeX_CLASS_OPTIONS: []
+#+LaTeX_HEADER: \usepackage[a4paper, margin=2.5cm]{geometry}
+#+LaTeX_HEADER: \usepackage[polish]{babel}
+#+LaTeX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \usepackage{minted}
+##+LATEX_HEADER: \usepackage[hyperref]{xcolor}
+##+LATEX_HEADER: \definecolor{link-red}{rgb}{0.4,0.15,0.15}
+##+LATEX_HEADER: \definecolor{link-blue}{rgb}{0.15,0.15,0.4}
+##+LATEX_HEADER: \hypersetup{colorlinks=true, linkcolor=link-red, urlcolor=link-blue}
+#+OPTIONS: tags:nil, todo:nil, toc:nil
+#+END_OPTIONS
+####################
+
+#+latex: \pagebreak
+#+latex: \thispagestyle{empty}
+
+#+latex: \pagebreak
+#+latex: \mbox{}
+
+#+latex: \pagebreak
+#+latex: \tableofcontents
+
+#+latex: \pagebreak
+* Motywacja pracy
+# TODO Opisać problemy Erlanga, opisać próby ich rozwiązania w Erlangu, opisać proponowany sposób ich rozwiązania, umotywować powstanie ThesisVM - maszyny rozwiązującej ten problem.
+
+
+#+latex: \pagebreak
+* Implementacja ThesisVM
+** Reprezentacja pośrednia programów
+** Reprezentacja obiektów ThesisVM
+** Reprezentacja stanu ThesisVM
+** Funkcja zmiany stanu ThesisVM
+
+
+#+latex: \pagebreak
+* Zarządzanie Pamięcią
+** Organizacja pamięci ThesisVM
+** Alokacja obiektów
+** Kolekcja nieosiągalnych obiektów
+** Kolekcja obiektów cyklicznych
+
+
+#+latex: \pagebreak
+* Model Przetwarzania Współbieżnego
+** Model Aktorowy
+** Notacja procesu w ThesisVM
+** Harmonogramowanie procesów
+** Przesyłanie wiadomości
+
+
+#+latex: \pagebreak
+* Dodatki
+** Dodatek A - Kompilator kodu bajtowego
+** Dodatek B - Wizualizacja stanu maszyny wirtualnej
+** Dodatek C - Przykładowe przebiegi programów
+** Dodatek D - Analiza wydajności ThesisVM
