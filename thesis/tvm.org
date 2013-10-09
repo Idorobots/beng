@@ -30,8 +30,13 @@
 
 #+latex: \pagebreak
 * Motywacja pracy
-# TODO Opisać problemy Erlanga, opisać próby ich rozwiązania w Erlangu, opisać proponowany sposób ich rozwiązania, umotywować powstanie ThesisVM - maszyny rozwiązującej ten problem.
+Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy oraz asynchroniczne przekazywanie wiadomości.
+# TODO adnotacja Actor Model
 
+- Opisać problemy Erlanga,
+- opisać próby ich rozwiązania w Erlangu,
+- opisać proponowany sposób ich rozwiązania,
+- umotywować powstanie ThesisVM.
 
 #+latex: \pagebreak
 * Implementacja ThesisVM
