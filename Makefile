@@ -5,9 +5,9 @@ GDB = -funittest -fdebug -ggdb3
 #GDB = -O3
 LIB = 
 
-VPATH = src:src/compiler/codegen:src/compiler/parser:src/eval/gc:src/eval/smp:src/eval/vm
+VPATH = src:src/compiler/codegen:src/compiler/parser:src/compiler/pretty:src/eval/gc:src/eval/smp:src/eval/vm
 
-COMPILER_OBJS = token.o scanner.o parser.o ast.o compile.o
+COMPILER_OBJS = token.o scanner.o parser.o ast.o compile.o print.o
 VM_OBJS = alloc.o gc.o memory.o mqueue.o rqueue.o smp.o builtins.o bytecode.o eval.o state.o
 OTHER_OBJS = main.o
 
