@@ -1,9 +1,10 @@
 module compiler.pretty.print;
 
 import std.string;
+import std.stdio;
+
 import eval.gc.memory;
 import eval.vm.state;
-
 
 string toString(SimpleValue that) {
     return format("[0x%x|0x%x]([0x%x|0x%x|0x%x])",
@@ -34,3 +35,6 @@ string toString(ref VmState that) {
                   that.continuation.toString());
 }
 
+void print(VmState state) {
+    writeln(state.toString());
+}

@@ -1,3 +1,6 @@
+tvm
 *.o
 *.tex
 *.pyg
+*.bbl
+*.blg

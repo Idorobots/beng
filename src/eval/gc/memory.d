@@ -65,7 +65,7 @@ struct Cons {
 }
 
 SimpleValue mkPointer(void* ptr) {
-    if(ptr !is null()) {
+    if(ptr !is null) {
         (cast(ObjectHeader*) ptr).mark();
     }
 

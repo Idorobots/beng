@@ -1,36 +1,70 @@
 ################################################################################
-#+TITLE: *Implementacja maszyny wirtualnej dla funkcyjnych języków programowania wspierających przetwarzanie współbieżne.*
-#+AUTHOR: Kajetan Rzepecki \\* kajtek@idorobots.org
-#+DATE: \today
+#+TITLE: TVM BEng
+#+AUTHOR: Kajetan Rzepecki
+#+DATE: {\printdayoff\today}
 #
 #+BEGIN_OPTIONS
+#+BIND: org-export-latex-title-command ""
 #+STARTUP: content
-#+LaTeX_CLASS: article
+#+LaTeX_CLASS: aghdpl
 #+LaTeX_CLASS_OPTIONS: []
-#+LaTeX_HEADER: \usepackage[a4paper, margin=2.5cm]{geometry}
-#+LaTeX_HEADER: \usepackage[polish]{babel}
+#+LaTeX_HEADER: \usepackage[english,polish]{babel}
+#+LaTeX_HEADER: \usepackage[english,iso]{isodate}
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+LATEX_HEADER: \usepackage{minted}
-##+LATEX_HEADER: \usepackage[hyperref]{xcolor}
-##+LATEX_HEADER: \definecolor{link-red}{rgb}{0.4,0.15,0.15}
-##+LATEX_HEADER: \definecolor{link-blue}{rgb}{0.15,0.15,0.4}
-##+LATEX_HEADER: \hypersetup{colorlinks=true, linkcolor=link-red, urlcolor=link-blue}
-#+OPTIONS: tags:nil, todo:nil, toc:nil
+#+OPTIONS: tags:nil, todo:nil, toc:nil, date:nil
 #+END_OPTIONS
 ####################
 
-#+latex: \pagebreak
-#+latex: \thispagestyle{empty}
+# AGH setup:
+#+BEGIN_OPTIONS
+#+LATEX_HEADER: \titlePL{Implementacja maszyny wirtualnej dla funkcyjnych języków programowania wspierających przetwarzanie współbieżne.}
+#+LATEX_HEADER: \titleEN{Implementation of a virtual machine for functional programming languages with support for concurrent computing.}
 
-#+latex: \pagebreak
-#+latex: \mbox{}
+#+LATEX_HEADER: \shorttitlePL{Implementacja maszyny wirtualnej dla funkcyjnych języków programowania \dots}
+#+LATEX_HEADER: \shorttitleEN{Implementation of a virtual machine for functional programming languages \dots}
+#+LATEX_HEADER: \thesistypePL{Praca inżynierska}
+#+LATEX_HEADER: \thesistypeEN{Bachelor of Engineering Thesis}
 
-#+latex: \pagebreak
-#+latex: \tableofcontents
+#+LATEX_HEADER: \supervisorPL{dr inż. Piotr Matyasik}
+#+LATEX_HEADER: \supervisorEN{Piotr Matyasik, Ph.D}
 
-#+latex: \pagebreak
+#+LATEX_HEADER: \departmentPL{Katedra Informatyki Stosowanej}
+#+LATEX_HEADER: \departmentEN{Department of Applied Computer Science}
+
+#+LATEX_HEADER: \facultyPL{Wydział Elektrotechniki, Automatyki, Informatyki i Inżynierii Biomedycznej}
+#+LATEX_HEADER: \facultyEN{Faculty of Electrical Engineering, Automatics, Computer Science and Biomedical Engineering}
+
+##+LATEX_HEADER: \acknowledgements{}
+#+END_OPTIONS
+
+# Title pages & table of contents:
+#+begin_latex
+\selectlanguage{english} % So isodate doesn't complain.
+\titlepages
+
+\selectlanguage{polish} % So we actually use the correct language.
+\tableofcontents
+#+end_latex
+
+* COMMENT Helpers & Stuff
+#+begin_src emacs-lisp
+  (add-to-list 'org-export-latex-classes
+               '("aghdpl"
+                 "\\documentclass{aghdpl}"
+                 ("\\chapter{%s}" . "\\chapter*{%s}")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ))
+  (setq org-export-latex-classes (cdr org-export-latex-classes))
+#+end_src
+
 * Motywacja pracy
-Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy oraz asynchroniczne przekazywanie wiadomości.
+Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy ([[cite:Test00]]) oraz asynchroniczne przekazywanie wiadomości.
+
 # TODO adnotacja Actor Model
 
 - Opisać problemy Erlanga,
@@ -38,33 +72,40 @@ Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja mas
 - opisać proponowany sposób ich rozwiązania,
 - umotywować powstanie ThesisVM.
 
-#+latex: \pagebreak
 * Implementacja ThesisVM
 ** Reprezentacja pośrednia programów
 ** Reprezentacja obiektów ThesisVM
 ** Reprezentacja stanu ThesisVM
 ** Funkcja zmiany stanu ThesisVM
 
-
-#+latex: \pagebreak
 * Zarządzanie Pamięcią
 ** Organizacja pamięci ThesisVM
 ** Alokacja obiektów
 ** Kolekcja nieosiągalnych obiektów
 ** Kolekcja obiektów cyklicznych
 
-
-#+latex: \pagebreak
 * Model Przetwarzania Współbieżnego
 ** Model Aktorowy
 ** Notacja procesu w ThesisVM
 ** Harmonogramowanie procesów
 ** Przesyłanie wiadomości
 
+#+latex: \appendix
+* Kompilator kodu bajtowego
+Opisać pipeline kompilatora.
 
-#+latex: \pagebreak
-* Dodatki
-** Dodatek A - Kompilator kodu bajtowego
-** Dodatek B - Wizualizacja stanu maszyny wirtualnej
-** Dodatek C - Przykładowe przebiegi programów
-** Dodatek D - Analiza wydajności ThesisVM
+* Wizualizacja stanu maszyny wirtualnej
+Opisać narzędzie do rysowania grafów stanu.
+
+* Przykładowe przebiegi programów
+Dać kilka przykładów prostych programów razem z grafami stanów.
+
+* Analiza wydajności ThesisVM
+Przeanalizować wydajność GC i SMP.
+
+#+latex: \clearpage
+# The bibliography:
+#+begin_latex
+\bibliographystyle{alpha}
+\bibliography{bibs}
+#+end_latex
