@@ -1,0 +1,150 @@
+################################################################################
+#+TITLE: Implementacja maszyny wirtualnej dla funkcyjnych języków programowania wspierających przetwarzanie współbieżne.
+#+AUTHOR: Kajetan Rzepecki
+#+DATE: \today
+#+LATEX_HEADER: \institute[AGH-UST]{Wydział EAIiIB\\ Katedra Informatyki Stosowanej}
+#
+#+BEGIN_OPTIONS
+# Org stuff:
+#+OPTIONS: toc:nil
+#+BIND: org-export-latex-title-command ""
+#
+# LaTeX stuff:
+#+LATEX_HEADER: \usepackage[polish]{babel}
+#+LATEX_HEADER: \usepackage{ifthen}
+#+LATEX_HEADER: \usepackage{multicol}
+#+LATEX_HEADER: \usepackage{minted}
+#+LATEX_CLASS: beamer
+##+LATEX_CLASS_OPTIONS: [bigger]
+#+BEAMER_FRAME_LEVEL: 2
+#
+# Color theme:
+#+LATEX_HEADER: \usetheme{AGH}
+#+LATEX_HEADER: \setbeamertemplate{itemize item}{$\maltese$}
+#+END_OPTIONS
+####################
+
+# AGH Setup:
+#+BEGIN_OPTIONS
+#+LATEX_HEADER: \newcommand\shorttitle{Implementacja maszyny wirtualnej dla \dots}
+#+LATEX_HEADER: \renewcommand\insertshorttitle{\shorttitle}
+#+LATEX_HEADER: \let\oldframetitle\frametitle
+#+LATEX_HEADER: \renewcommand{\frametitle}[1]{\oldframetitle{\ifthenelse{\equal{#1}{skiptitle}}{\secname}{\secname \space - #1}}}
+#+END_OPTIONS
+
+# TITLE Frame
+#+begin_latex
+{
+\usebackgroundtemplate{\includegraphics[width=\paperwidth]{titlepagepl}} % wersja polska
+ \begin{frame}
+   \centering
+   \titlepage
+\end{frame}
+}
+#+end_latex
+
+* Wprowadzenie
+** skiptitle
+*Maszyna wirtualna* - środowisko uruchomieniowe języków programowania uniezależniające je od platformy uruchomieniowej.
+
+#+latex: \pause
+#+latex: \vfill
+#+latex: \noindent
+W skład pracy wchodzą:
+
+#+latex: \pause
+- Implementacja interpretera kodu bajtowego.
+
+#+latex: \pause
+- Implementacja kolektora obiektów nieosiągalnych.
+
+#+latex: \pause
+- Implementacja Modelu Aktorowego (ang. Actor Model).
+
+* Motywacja pracy
+** Problemy Erlanga
+
+#+begin_src erlang
+start() ->
+    Data = file:read("file.json"),    %% <<"Dane ...">>
+    transmogrify(Data).
+#+end_src
+
+#+latex: \pause
+
+#+begin_src erlang
+transmogrify(Data) ->
+    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
+    JSON = json:decode(Data),         %% {[Dane ...]}
+    framework:map_reduce(Pids, JSON). %% $#&^@
+
+do_stuff(JSON) ->
+    %% Operacje na danych.
+    result.
+#+end_src
+
+** Problemy Erlanga
+
+#+begin_src erlang
+transmogrify(Data) ->
+    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
+    framework:map_reduce(Pids, Data).
+
+do_stuff(Data) ->             %% <<"Dane ...">>
+    JSON = json:decode(Data), %% {[Dane ...]} * bazylion
+    %% Operacje na danych.
+    result.
+#+end_src
+
+#+latex: \pause
+- Mniejsza logika przepływu danych.
+
+#+latex: \pause
+- Zwielokrotnienie parsowania pliku JSON.
+
+#+latex: \pause
+- Działa szybciej. (!?)
+
+* ThesisVM
+** Architektura
+** Interpreter kodu bajtowego
+** Przykład kodu bajtowego
+** Kolekcja śmieci
+** Opóźnione zliczanie referencji
+# - Szybkie dealokacje.
+# - Wolniejsze alokacje zamortyzowane listą wolnych obiektów.
+#- "Ostatni gasi światło"
+** Symmetric Multiprocessing
+** Model Aktorowy
+
+
+* Podsumowanie - TODO
+** skiptitle
+#+latex: \vfill
+#+latex: \noindent
+Projekt implementuje:
+
+#+latex: \pause
+- Interpreter kodu bajtowego oparty o *Three Instruction Machine*.
+
+#+latex: \pause
+- Kolektor obiektów nieosiągalnych oparty o *opóźniane zliczanie referencji*.
+
+#+latex: \pause
+- Model Aktorowy oparty o *kolejki nieblokujące*.
+
+#+latex: \vfill
+* 
+#+latex: \usebackgroundtemplate{\includegraphics[width=\paperwidth]{titlepagepl}}
+** 
+# FINAL FRAME
+#+begin_latex
+\vfill
+\vfill
+\centering{
+    \Huge{Dziękuję za uwagę.}
+    \vfill
+    \large\insertauthor
+}
+\vfill
+#+end_latex
