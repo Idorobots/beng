@@ -145,26 +145,29 @@ University of Science and Technology in Krakow}}}
 }
 
 \def\thesisheaders{
-\fancyfoot[L]{\small \@shortauthor\quad\textit{\@shorttitlePL}}
+\fancyfoot[L]{\fancyplain{}{\small \@shortauthor\quad\textit{\@shorttitlePL}}}}
 }
 
 \DeclareOption{en}{
 \def\thesisheaders{
-\fancyfoot[L]{\small \@shortauthor\quad\textit{\@shorttitleEN}}
+\fancyfoot[L]{\fancyplain{}{{\small \@shortauthor\quad\textit{\@shorttitleEN}}}}
 }
 }
 
 \ProcessOptions
 
-\pagestyle{fancy}
+\pagestyle{fancyplain}
 \renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
 \renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\footrulewidth}{0.5pt}
+%% \fancyhf{}
+%% \fancyhead[L]{\slshape{\small \rightmark}}
+%% \fancyhead[R]{\thepage}
+
 \fancyhf{}
-\fancyhead{}
-\fancyhead[L]{\slshape{\small \rightmark}}
-\fancyhead[R]{\bfseries \thepage}
+\fancyhead[L]{\fancyplain{}{\slshape{\small \rightmark}}}
+\fancyhead[R]{\fancyplain{\thepage}{\thepage}}
 
 \thesisheaders
 

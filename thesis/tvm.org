@@ -1,23 +1,25 @@
 ################################################################################
 #+TITLE: TVM BEng
 #+AUTHOR: Kajetan Rzepecki
-#+DATE: {\printdayoff\today}
+#+DATE: 2013
 #
 #+BEGIN_OPTIONS
 #+BIND: org-export-latex-title-command ""
 #+STARTUP: content
 #+LaTeX_CLASS: aghdpl
-#+LaTeX_CLASS_OPTIONS: []
+#+LaTeX_CLASS_OPTIONS: [12pt]
 #+LaTeX_HEADER: \usepackage[english,polish]{babel}
-#+LaTeX_HEADER: \usepackage[english,iso]{isodate}
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+LATEX_HEADER: \usepackage{minted}
+##+LATEX_HEADER: \usepackage{lineno}
 #+OPTIONS: tags:nil, todo:nil, toc:nil, date:nil
 #+END_OPTIONS
 ####################
 
 # AGH setup:
 #+BEGIN_OPTIONS
+#+LATEX_HEADER: \shortauthor{K. Rzepecki}
+
 #+LATEX_HEADER: \titlePL{Implementacja maszyny wirtualnej dla funkcyjnych języków programowania wspierających przetwarzanie współbieżne.}
 #+LATEX_HEADER: \titleEN{Implementation of a virtual machine for functional programming languages with support for concurrent computing.}
 
@@ -45,6 +47,8 @@
 
 \selectlanguage{polish} % So we actually use the correct language.
 \tableofcontents
+\listoffigures
+\listoftables
 #+end_latex
 
 * COMMENT Helpers & Stuff
@@ -62,46 +66,58 @@
   (setq org-export-latex-classes (cdr org-export-latex-classes))
 #+end_src
 
-* Motywacja pracy
-Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy ([[cite:Test00]]) oraz asynchroniczne przekazywanie wiadomości.
+* Wstęp
+Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy ([[cite:Test00]]) oraz asynchroniczne przekazywanie wiadomości [fn::Test].
 
 # TODO adnotacja Actor Model
 
+** Problemy przetwarzania współbieżnego
 - Opisać problemy Erlanga,
+** Próby rozwiązania problemu
 - opisać próby ich rozwiązania w Erlangu,
+** Cel i zawartość pracy
 - opisać proponowany sposób ich rozwiązania,
 - umotywować powstanie ThesisVM.
 
-* Implementacja ThesisVM
+* Projekt i implementacja ThesisVM
+TODO: Opisać ogólną strukturę maszyny wirtualnej (z GC i SMP) i opisać o czym będzie niniejsza sekcja.
 ** Reprezentacja pośrednia programów
-** Reprezentacja obiektów ThesisVM
-** Reprezentacja stanu ThesisVM
-** Funkcja zmiany stanu ThesisVM
+** Reprezentacja prostych obiektów ThesisVM
+** Reprezentacja obiektów funkcyjnych ThesisVM
+** Reprezentacja kodu bajtowego ThesisVM
+** Ewaluacja argumentów i aplikacja funkcji
+** Operacje arytmetyczne
+** Implementacja wbudowanych operatorów
+** Kompilator kodu bajtowego ThesisVM
+Opisać pipeline kompilatora.
 
-* Zarządzanie Pamięcią
+* Model zarządzanie pamięcią
 ** Organizacja pamięci ThesisVM
 ** Alokacja obiektów
 ** Kolekcja nieosiągalnych obiektów
 ** Kolekcja obiektów cyklicznych
 
-* Model Przetwarzania Współbieżnego
+* Model przetwarzania współbieżnego
 ** Model Aktorowy
 ** Notacja procesu w ThesisVM
 ** Harmonogramowanie procesów
 ** Przesyłanie wiadomości
 
-#+latex: \appendix
-* Kompilator kodu bajtowego
-Opisać pipeline kompilatora.
+* Podsumowanie i analiza wydajności ThesisVM
+Przeanalizować wydajność GC i SMP.
+** Leniwe zliczanie referencji
+Przeanalizować szybkość, pauzy, zużycie pamięci.
+** Przesyłanie wiadomości
+Przeanalizować szybkość przesyłania wiadomości/konieczność czekania procesów/wątków.
+** Porównanie szybkości działania ThesisVM
+Porównać kilka implementacji prostych programów (z Haskell'em, leniwym Lispem itp).
 
+#+latex: \appendix
 * Wizualizacja stanu maszyny wirtualnej
 Opisać narzędzie do rysowania grafów stanu.
 
-* Przykładowe przebiegi programów
+* Przykładowe programy
 Dać kilka przykładów prostych programów razem z grafami stanów.
-
-* Analiza wydajności ThesisVM
-Przeanalizować wydajność GC i SMP.
 
 #+latex: \clearpage
 # The bibliography:
