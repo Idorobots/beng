@@ -172,11 +172,11 @@ Oparty o *Three Instruction Machine*:
 #+begin_src d
 TVMObj* alloc(uProc* context, size_t size) {
     TVMObj* newObject;
-    if(hasSuitableObject(context, size)) {
+    if(!hasSuitableObject(context, size)) {
+        newObject = alloc(context.allocator, size);
+    } else {
         newObject = popFreeList(context, size);
         collect(context, newObject);
-    } else {
-        newObject = alloc(context.allocator, size);
     }
     atomicIncrement(&newObject.refCount);
     return newObject;
