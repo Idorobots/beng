@@ -37,7 +37,6 @@
 {
 \usebackgroundtemplate{\includegraphics[width=\paperwidth]{titlepagepl}} % wersja polska
  \begin{frame}
-   \centering
    \titlepage
 \end{frame}
 }
@@ -47,12 +46,10 @@
 ** skiptitle
 *Maszyna wirtualna* - środowisko uruchomieniowe języków programowania uniezależniające je od platformy uruchomieniowej.
 
-#+latex: \pause
 #+latex: \vfill
-#+latex: \noindent
+#+latex: \pause
 W skład pracy wchodzą:
 
-#+latex: \pause
 - Implementacja interpretera kodu bajtowego.
 
 #+latex: \pause
@@ -107,28 +104,159 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 
 * ThesisVM
 ** Architektura
+#+begin_center
+#+ATTR_LATEX: scale=0.8
+[[file:./img/arch.pdf]]
+#+end_center
 ** Interpreter kodu bajtowego
+#+begin_center
+#+ATTR_LATEX: scale=0.8
+[[file:./img/uProc.pdf]]
+#+end_center
+
+#+latex: \pause
+Oparty o *Three Instruction Machine*:
+- Niewielka ilość rejestrów.
+
+#+latex: \pause
+- Niewielka ilość instrukcji.
+
+#+latex: \pause
+- Architektura *CISC*.
+
 ** Przykład kodu bajtowego
+#+begin_src scheme
+(define (add a b)
+  (+ a b))
+(add 2 2)
+#+end_src
+
+#+latex: \pause
+#+begin_src python
+  __start: PUSH 2      # Połóż "a" na stosie.
+           PUSH 2
+           ENTER add   # Wejdź do domknięcia "add".
+  add:     TAKE 2      # Pobierz dwa argumenty ze stosu.
+           PUSH __add0
+           ENTER 1
+  __add0:  PUSH __add1
+           ENTER 0     # PUSHC 2, RETURN
+  __add1:  OP_ADD
+           RETURN
+#+end_src
+
 ** Kolekcja śmieci
+#+begin_center
+#+ATTR_LATEX: scale=0.8
+[[file:./img/GC.pdf]]
+#+end_center
+
+#+latex: \pause
+- Wykorzystuje zliczanie referencji.
+
+#+latex: \pause
+- Kolekcja pamięci procesu nie zależy od innych procesów.
+
+#+latex: \pause
+- "Ostatni gasi światło."
+
+#+latex: \pause
+- Proste obiekty ($\leq$ 8 bajtów) są kopiowane.
+
 ** Opóźnione zliczanie referencji
-# - Szybkie dealokacje.
-# - Wolniejsze alokacje zamortyzowane listą wolnych obiektów.
-#- "Ostatni gasi światło"
-** Symmetric Multiprocessing
+#+begin_latex
+{
+\tiny
+\begin{multicols}{2}
+#+end_latex
+#+begin_src d
+TVMObj* alloc(uProc* context, size_t size) {
+    TVMObj* newObject;
+    if(hasSuitableObject(context, size)) {
+        newObject = popFreeList(context, size);
+        collect(context, newObject);
+    } else {
+        newObject = alloc(context.allocator, size);
+    }
+    atomicIncrement(&newObject.refCount);
+    return newObject;
+}
+#+end_src
+
+#+latex: \columnbreak
+#+latex: \pause
+#+begin_src d
+void collect(uProc* context, TVMObj* object) {
+    foreach(TVMObj* pointer; object) {
+         free(context, pointer);
+    }
+}
+#+end_src
+
+#+latex: \pause
+#+begin_src d
+void free(uProc* contex, TVMObj* object) {
+    if(atomicDecrement(object.refCount) == 0) {
+        pushFreeList(context, object);
+    }
+}
+#+end_src
+
+#+begin_latex
+\end{multicols}
+}
+#+end_latex
+#+latex: \pause
+- Szybka dealokacje.
+
+#+latex: \pause
+- Szybka alokacja zamortyzowana listą wolnych obiektów.
+
+#+latex: \pause
+- Pamięć nie jest natychmiastowo zwracana do Systemu Operacyjnego.
+
+#+latex: \pause
+- Wymaga atomowych operacji na liczniku referencji oraz barier pamięci.
+
 ** Model Aktorowy
+#+begin_center
+#+ATTR_LATEX: scale=0.8
+[[file:./img/Actor.pdf]]
+#+end_center
+
+#+latex: \pause
+- *Pid* == wskaźnik na kontekst procesu.
+
+#+latex: \pause
+- Wykorzystuje kolejki nieblokujące.
+
+** Symmetric Multiprocessing
+#+begin_center
+#+ATTR_LATEX: scale=0.8
+[[file:./img/SMP.pdf]]
+#+end_center
+
+#+latex: \pause
+- Wykorzystuje Model Aktorowy!
+
+#+latex: \pause
+- Procesy są wywłaszczane (ang. preemptive concurrency).
+
+#+latex: \pause
+- Obecnie brak automatycznego balansowania obciążenia procesorów.
 
 
 * Podsumowanie - TODO
 ** skiptitle
 #+latex: \vfill
-#+latex: \noindent
 Projekt implementuje:
-
-#+latex: \pause
 - Interpreter kodu bajtowego oparty o *Three Instruction Machine*.
 
 #+latex: \pause
-- Kolektor obiektów nieosiągalnych oparty o *opóźniane zliczanie referencji*.
+- Kompilator kodu bajtowego.
+
+#+latex: \pause
+- Kolektor obiektów nieosiągalnych oparty o *opóźnione zliczanie referencji*.
 
 #+latex: \pause
 - Model Aktorowy oparty o *kolejki nieblokujące*.
@@ -139,6 +267,7 @@ Projekt implementuje:
 ** 
 # FINAL FRAME
 #+begin_latex
+\vfill
 \vfill
 \vfill
 \centering{
