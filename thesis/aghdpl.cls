@@ -52,7 +52,7 @@
 
 
 \def\thesisheaders{
-\fancyfoot[LE,RO]{\small \@shortauthor\quad\textit{\@shorttitlePL}}
+\fancyfoot[LE,RO]{\fancyplain{}{\small \@shortauthor\quad\textit{\@shorttitlePL}}}
 }
 
 \def\thesistable{
@@ -154,7 +154,7 @@ Supervisor: & {\itshape \@supervisor}\\
 }
 
 
-\pagestyle{fancy}
+\pagestyle{fancyplain}
 \renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
 \renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
 \renewcommand{\headrulewidth}{0.5pt}
@@ -162,9 +162,9 @@ Supervisor: & {\itshape \@supervisor}\\
 \fancyhf{}
 \fancyhead{}
 %\fancyhead[L]{\slshape{\small \rightmark}}
-\fancyhead[RE,LO]{\slshape{\small \rightmark}}
+\fancyhead[RE,LO]{\fancyplain{}{\slshape{\small \rightmark}}}
 %\fancyhead[R]{\bfseries \thepage}
-\fancyhead[RO,LE]{\bfseries \thepage}
+\fancyhead[RO,LE]{\fancyplain{\bfseries \thepage}{\bfseries \thepage}}
 
 \thesisheaders
 
@@ -197,7 +197,7 @@ Supervisor: & {\itshape \@supervisor}\\
 % Ustawienia parametrów generowania spisu treści i spisu rysunków
 %---------------------------------------------------------------------------
 
-%\renewcommand{\cfttoctitlefont}{\bfseries\Large}
+\renewcommand{\cfttoctitlefont}{\bfseries\LARGE}
 \renewcommand{\cftloftitlefont}{\bfseries\Large}
 \renewcommand{\cftlottitlefont}{\bfseries\Large}
 \renewcommand{\cftbeforetoctitleskip}{20mm}
