@@ -60,9 +60,11 @@
 #+end_src
 
 * Wstęp
-Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy ([[cite:Test00]]) oraz asynchroniczne przekazywanie wiadomości [fn::Test].
+Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy oraz asynchroniczne przekazywanie wiadomości.
 
 # TODO adnotacja Actor Model
+
+Pubsy [[cite:Ramsdell1999]], [[cite:Sundell2003]], [[cite:VanHorn2010]], [[cite:Wilhelmsson2005]], [[cite:bacon2004]], [[cite:Armstrong1995]], [[cite:Huelsbergen1998]], [[cite:Cook2013]], [[cite:Abelson1996]], [[cite:Gudeman1993]], [[cite:Gordon2012]], [[cite:Steele1978]], [[cite:PeytonJones1992]], [[cite:Ladan-Mozes2004]], [[cite:Herlihy2002]], [[cite:Kogan2011]], [[cite:Groves2008]], [[cite:MichaelScott1996]], [[cite:Boehm2004]], [[cite:Shahriyar2012]], [[cite:Kaser1992]].
 
 #+begin_center
 #+ATTR_LATEX: scale=1.0
