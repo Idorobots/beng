@@ -196,7 +196,7 @@ void collect(uProc* context, TVMObj* object) {
 #+latex: \pause
 #+begin_src d
 void free(uProc* contex, TVMObj* object) {
-    if(atomicDecrement(object.refCount) == 0) {
+    if(atomicDecrement(&object.refCount) == 0) {
         pushFreeList(context, object);
     }
 }
