@@ -7,11 +7,11 @@
 #+BIND: org-export-latex-title-command ""
 #+STARTUP: content
 #+LaTeX_CLASS: aghdpl
-#+LaTeX_CLASS_OPTIONS: [12pt]
-#+LaTeX_HEADER: \usepackage[english,polish]{babel}
+#+LaTeX_CLASS_OPTIONS: [a4paper, 12pt]
+#+LaTeX_HEADER: \usepackage[polish]{babel}
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+LATEX_HEADER: \usepackage{minted}
-##+LATEX_HEADER: \usepackage{lineno}
+#+LATEX_HEADER: \usepackage[notlof, notlot]{tocbibind}
 #+OPTIONS: tags:nil, todo:nil, toc:nil, date:nil
 #+END_OPTIONS
 ####################
@@ -19,40 +19,33 @@
 # AGH setup:
 #+BEGIN_OPTIONS
 #+LATEX_HEADER: \shortauthor{K. Rzepecki}
+#+LATEX_HEADER: \degreeprogramme{Informatyka}
+
+#+LATEX_HEADER: \thesistype{Praca dyplomowa inżynierska}
 
 #+LATEX_HEADER: \titlePL{Implementacja maszyny wirtualnej dla funkcyjnych języków programowania wspierających przetwarzanie współbieżne.}
 #+LATEX_HEADER: \titleEN{Implementation of a virtual machine for functional programming languages with support for concurrent computing.}
 
 #+LATEX_HEADER: \shorttitlePL{Implementacja maszyny wirtualnej dla funkcyjnych języków programowania \dots}
 #+LATEX_HEADER: \shorttitleEN{Implementation of a virtual machine for functional programming languages \dots}
-#+LATEX_HEADER: \thesistypePL{Praca inżynierska}
-#+LATEX_HEADER: \thesistypeEN{Bachelor of Engineering Thesis}
 
-#+LATEX_HEADER: \supervisorPL{dr inż. Piotr Matyasik}
-#+LATEX_HEADER: \supervisorEN{Piotr Matyasik, Ph.D}
+#+LATEX_HEADER: \supervisor{dr inż. Piotr Matyasik}
 
-#+LATEX_HEADER: \departmentPL{Katedra Informatyki Stosowanej}
-#+LATEX_HEADER: \departmentEN{Department of Applied Computer Science}
+#+LATEX_HEADER: \department{Katedra Informatyki Stosowanej}
 
-#+LATEX_HEADER: \facultyPL{Wydział Elektrotechniki, Automatyki, Informatyki i Inżynierii Biomedycznej}
-#+LATEX_HEADER: \facultyEN{Faculty of Electrical Engineering, Automatics, Computer Science and Biomedical Engineering}
+#+LATEX_HEADER: \faculty{Wydział Elektrotechniki, Automatyki,\protect\\[-1mm] Informatyki i Inżynierii Biomedycznej}
 
-##+LATEX_HEADER: \acknowledgements{}
+#+LATEX_HEADER: \acknowledgements{Serdecznie dziękuję opiekunowi pracy za wsparcie merytoryczne oraz dobre rady edytorskie pomocne w tworzeniu pracy.}
 #+END_OPTIONS
 
 # Title pages & table of contents:
 #+begin_latex
-\selectlanguage{english} % So isodate doesn't complain.
 \titlepages
-
-\selectlanguage{polish} % So we actually use the correct language.
 \tableofcontents
-\listoffigures
-\listoftables
 #+end_latex
 
-* COMMENT Helpers & Stuff
-#+begin_src emacs-lisp
+# Helpers & Stuff
+#+begin_src emacs-lisp :exports none
   (add-to-list 'org-export-latex-classes
                '("aghdpl"
                  "\\documentclass{aghdpl}"
@@ -70,6 +63,42 @@
 Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy ([[cite:Test00]]) oraz asynchroniczne przekazywanie wiadomości [fn::Test].
 
 # TODO adnotacja Actor Model
+
+#+begin_center
+#+ATTR_LATEX: scale=1.0
+#+CAPTION: Logo AGH
+[[file:./img/agh.eps]]
+#+end_center
+
+#+begin_center
+#+ATTR_LATEX: scale=1.0
+#+CAPTION: Logo inne
+[[file:./img/agh.eps]]
+#+end_center
+
+#+begin_center
+#+ATTR_LATEX: align=|l|l|
+#+CAPTION: Tabelka jakaś.
+|---------+------|
+| Tabelka | Hurr |
+| /       | <>   |
+|---------+------|
+| Hurr    | durr |
+| Herp    | derp |
+|---------+------|
+#+end_center
+
+#+begin_center
+#+ATTR_LATEX: align=|l|l|
+#+CAPTION: Tabelka inna.
+|---------+------|
+| Tabelka | Hurr |
+| /       | <>   |
+|---------+------|
+| Hurr    | durr |
+| Herp    | derp |
+|---------+------|
+#+end_center
 
 ** Problemy przetwarzania współbieżnego
 - Opisać problemy Erlanga,
@@ -91,7 +120,7 @@ TODO: Opisać ogólną strukturę maszyny wirtualnej (z GC i SMP) i opisać o cz
 ** Kompilator kodu bajtowego ThesisVM
 Opisać pipeline kompilatora.
 
-* Model zarządzanie pamięcią
+* Model zarządzania pamięcią
 ** Organizacja pamięci ThesisVM
 ** Alokacja obiektów
 ** Kolekcja nieosiągalnych obiektów
@@ -112,6 +141,12 @@ Przeanalizować szybkość przesyłania wiadomości/konieczność czekania proce
 ** Porównanie szybkości działania ThesisVM
 Porównać kilka implementacji prostych programów (z Haskell'em, leniwym Lispem itp).
 
+# The bibliography
+#+begin_latex
+\bibliographystyle{alpha}
+\bibliography{bibs}
+#+end_latex
+
 #+latex: \appendix
 * Wizualizacja stanu maszyny wirtualnej
 Opisać narzędzie do rysowania grafów stanu.
@@ -119,9 +154,6 @@ Opisać narzędzie do rysowania grafów stanu.
 * Przykładowe programy
 Dać kilka przykładów prostych programów razem z grafami stanów.
 
-#+latex: \clearpage
-# The bibliography:
-#+begin_latex
-\bibliographystyle{alpha}
-\bibliography{bibs}
-#+end_latex
+* Spisy rysunków i tablic
+#+latex: \listoffigures
+#+latex: \listoftables
