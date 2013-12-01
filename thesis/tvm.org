@@ -60,55 +60,16 @@
 #+end_src
 
 * Wstęp
-Celem pracy i powiązanego z nią projektu jest implementacja oraz ewaluacja maszyny wirtualnej dla funkcyjnych języków programowania, które umożliwiają przetwarzanie współbieżne wykorzystując Model Aktorowy oraz asynchroniczne przekazywanie wiadomości.
+- Opisać temat i cel pracy.
 
-# TODO adnotacja Actor Model
-
-Pubsy [[cite:Hewitt1973]], [[cite:Clinger1981]], [[cite:Fairbairn1987]], [[cite:Ramsdell1999]], [[cite:Sundell2003]], [[cite:VanHorn2010]], [[cite:Wilhelmsson2005]], [[cite:bacon2004]], [[cite:Armstrong1995]], [[cite:Huelsbergen1998]], [[cite:Cook2013]], [[cite:Abelson1996]], [[cite:Gudeman1993]], [[cite:Gordon2012]], [[cite:Steele1978]], [[cite:PeytonJones1992]], [[cite:Ladan-Mozes2004]], [[cite:Herlihy2002]], [[cite:Kogan2011]], [[cite:Groves2008]], [[cite:MichaelScott1996]], [[cite:Boehm2004]], [[cite:Shahriyar2012]], [[cite:Kaser1992]].
-
-#+begin_center
-#+ATTR_LATEX: scale=1.0
-#+CAPTION: Logo AGH
-[[file:./img/agh.eps]]
-#+end_center
-
-#+begin_center
-#+ATTR_LATEX: scale=1.0
-#+CAPTION: Logo inne
-[[file:./img/agh.eps]]
-#+end_center
-
-#+begin_center
-#+ATTR_LATEX: align=|l|l|
-#+CAPTION: Tabelka jakaś.
-|---------+------|
-| Tabelka | Hurr |
-| /       | <>   |
-|---------+------|
-| Hurr    | durr |
-| Herp    | derp |
-|---------+------|
-#+end_center
-
-#+begin_center
-#+ATTR_LATEX: align=|l|l|
-#+CAPTION: Tabelka inna.
-|---------+------|
-| Tabelka | Hurr |
-| /       | <>   |
-|---------+------|
-| Hurr    | durr |
-| Herp    | derp |
-|---------+------|
-#+end_center
-
-** Problemy przetwarzania współbieżnego
+** Motywacja pracy
 - Opisać problemy Erlanga,
-** Próby rozwiązania problemu
-- opisać próby ich rozwiązania w Erlangu,
-** Cel i zawartość pracy
-- opisać proponowany sposób ich rozwiązania,
-- umotywować powstanie ThesisVM.
+- Umotywować powstanie ThesisVM,
+
+** Zawartość pracy
+- Opisać zakres pracy.
+- Opisać zawartość poszczególnych rozdziałów.
+
 
 * Projekt i implementacja ThesisVM
 TODO: Opisać ogólną strukturę maszyny wirtualnej (z GC i SMP) i opisać o czym będzie niniejsza sekcja.
