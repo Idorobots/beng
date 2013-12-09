@@ -16,6 +16,21 @@
 #+END_OPTIONS
 ####################
 
+# Helpers & Stuff
+#+begin_src emacs-lisp :exports none
+  (add-to-list 'org-export-latex-classes
+               '("aghdpl"
+                 "\\documentclass{aghdpl}"
+                 ("\\chapter{%s}" . "\\chapter*{%s}")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+                 ))
+  (setq org-export-latex-classes (cdr org-export-latex-classes))
+#+end_src
+
 # AGH setup:
 #+BEGIN_OPTIONS
 #+LATEX_HEADER: \shortauthor{K. Rzepecki}
@@ -44,23 +59,9 @@
 \tableofcontents
 #+end_latex
 
-# Helpers & Stuff
-#+begin_src emacs-lisp :exports none
-  (add-to-list 'org-export-latex-classes
-               '("aghdpl"
-                 "\\documentclass{aghdpl}"
-                 ("\\chapter{%s}" . "\\chapter*{%s}")
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-                 ))
-  (setq org-export-latex-classes (cdr org-export-latex-classes))
-#+end_src
-
 * Wstęp
 - Opisać temat i cel pracy.
+#+latex: \nocite{*}
 
 ** Motywacja pracy
 - Opisać problemy Erlanga,
@@ -73,6 +74,7 @@
 
 * Projekt i implementacja ThesisVM
 TODO: Opisać ogólną strukturę maszyny wirtualnej (z GC i SMP) i opisać o czym będzie niniejsza sekcja.
+
 ** Reprezentacja pośrednia programów
 ** Reprezentacja prostych obiektów ThesisVM
 ** Reprezentacja obiektów funkcyjnych ThesisVM
@@ -106,7 +108,7 @@ Porównać kilka implementacji prostych programów (z Haskell'em, leniwym Lispem
 
 # The bibliography
 #+begin_latex
-\bibliographystyle{alpha}
+\bibliographystyle{ieeetr}
 \bibliography{bibs}
 #+end_latex
 
