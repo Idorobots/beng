@@ -1,5 +1,5 @@
 ################################################################################
-#+TITLE: TVM BEng
+#+TITLE: ThesisVM BEng
 #+AUTHOR: Kajetan Rzepecki
 #+DATE: 2013
 #
@@ -60,51 +60,183 @@
 #+end_latex
 
 * Wstęp
-- Opisać temat i cel pracy.
-#+latex: \nocite{*}
+- Opisać temat pracy.
+- Opisać czym jest maszyna wirtualna.
+- Opisać czym jest przetwarzanie współbierzne w kontekście pracy.
+- Wspomnieć o Modelu Aktorowym. [[cite:Hewitt1973,Clinger1981]].
+- Krótko opisać cel pracy - implementacja interpretera kodu bajtowego, GC i SMP.
+- Wspomnieć o języku implementacji - język D.
 
 ** Motywacja pracy
-- Opisać problemy Erlanga,
-- Umotywować powstanie ThesisVM,
+- Sformułować problem do rozwiązania.
+- Opisać krótko kod Erlanga prezentujący problem.
+- Opisać konieczność kopiowania wiadomości w architekturze prywatnej sterty.
+- Opisać problemy publicznej sterty (związane z GC).
+- Opisać sposób w jaki ThesisVM ma je rozwiązać.
 
 ** Zawartość pracy
 - Opisać zakres pracy.
-- Opisać zawartość poszczególnych rozdziałów.
+- Opisać zawartość [[Architektura ThesisVW]].
+- Opisać zawartość [[Interpreter kodu bajtowego]].
+- Opisać zawartość [[Model zarządzania pamięcią]].
+- Opisać zawartość [[Model przetwarzania współbieżnego]].
+- Opisać zawartość [[Podsumowanie]].
+- Opisać zawartość [[Przykładowe programy]].
+- Opisać zawartość [[Wizualizacja stanu maszyny]].
+- Opisać zawartość [[Spisy wbudowanych funkcji i operatorów]].
 
+* Architektura ThesisVM
+- Diagram architektury ThesisVM.
+- Opisać architekturę w odniesieniu do wyżej wymienionych celów pracy.
 
-* Projekt i implementacja ThesisVM
-TODO: Opisać ogólną strukturę maszyny wirtualnej (z GC i SMP) i opisać o czym będzie niniejsza sekcja.
+** Reprezentacja pośrednia programów (TVMIR)
+- Opisać krótko TVMIR. [[cite:Abelson1996,PeytonJones1992]]
+- Opisać dostępne typy danych.
+- Opisać dostępne konstrukcje języka.
+- Porównać TVMIR do core lang. [[cite:PeytonJones1992]]
+- Porównać TVMIR do Core Erlang. [[cite:Carlsson2001,Carlsson2004]]
 
-** Reprezentacja pośrednia programów
-** Reprezentacja prostych obiektów ThesisVM
-** Reprezentacja obiektów funkcyjnych ThesisVM
-** Reprezentacja kodu bajtowego ThesisVM
-** Ewaluacja argumentów i aplikacja funkcji
-** Operacje arytmetyczne
+** Kompilacja kodu bajtowego
+- Diagram pipeline'u kompilatora.
+- Opisać krótko analizę leksykalną.
+- Opisać krótko analizę syntaktyczną.
+- Opisać krótko analizę semantyczną (+ proste transformacje TVMIR jeśli jakieś będą).
+- Opisać krótko fazę optymalizacji (+ proste optymalizacje jak constant folding, etc).
+- Opisać krótko generację kodu bajtowego.
+
+** Interpretacja kodu bajtowego
+- Opisać ogólnie architektury pamięci i przekazywanie wiadomości. [[cite:Wilhelmsson2005]]
+- Opisać sposób budowy interpreterów kodu bajtowego. [[cite:Steele1978]]
+- Opisać krótko różne architektury interpreterów (stosowa, rejestrowa, grafowa). [[cite:PeytonJones1992]]
+- Wspomnieć o wybranym modelu.
+
+** Zarządzanie pamięcią
+- Opisać krótko strategie alokacji.
+- Opisać krótko strategie GC (ref-count vs tracing).
+- Wspomnieć o problemach kolekcji tracing GC (w kontekście problemu Erlanga). [[cite:Gudeman1993]]
+- Umotywować wykorzystanie zliczania referencji (wspomnieć, że Erlang też korzysta). [[cite:Shahriyar2012]]
+
+** Przetwarzanie współbieżne
+- Opisać różne sposoby przetwarzania wielowątkowego - SMP i AMP.
+- Opisać wady i zalety poszczególnych modeli (SMP - skalowalność, AMP - VCGC). [[cite:Huelsbergen1998]]
+- Opisać krótko Model Aktorowy. [[cite:Hewitt1973,Clinger1981]].
+- Umotywować wybrany model przetwarzania i jego relację z Modelem Actorowym.
+
+* Interpreter kodu bajtowego
+- Diagram stanu interpretera.
+- Opisać wybrany model Three Instruction Machine. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
+- Opisać krótko działanie TIM, zwrócić uwagę na leniwość. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
+- Opisać modyfikacje modelu TIM.
+- Diagram poszczególnych rejestrów ThesisVM.
+- Opisać wykorzystane rejestry.
+- Opisać krótko alternatywne rozwiązania (SECD, TRSECD, SICP machine). [[cite:VanHorn2010,Ramsdell1999,Abelson1996,Steele1978]], [[cite:Kaser1992]]
+
+** Implementacja obietków prostych
+- Opisać implementację atomów ($\leq$ 8 bajtów).
+- Opisać metodę tagowania atomów (dolne trzy bity) [[cite:Gudeman1993]], [[cite:Cook2013]]
+- Opisąć optymalizacje/trejdofy wybranego sposobu tagowania. [[cite:Gudeman1993]], [[cite:Cook2013]]
+
+** Implementacja obiektów złożonych
+- Opisać implementację obiektów złożonych ($\geq$ 8 bajtów - pary, funkcje/domknięcia, procesy).
+- Opisać metodę tagowania (dolne dwa bajty + górne 48 bitów zarezerwowane dla GC). [[cite:Gudeman1993]], [[cite:Cook2013]]
+- Opisać komponenty par.
+- Opisać poszczególne komponenty obiektów funkcyjnych.
+- Opisać reprezentację obiektów procesów (gołe rejestry).
+- Opisać relację pomiędzy zbiorem rejestrów a reprezentacją procesu.
+
 ** Implementacja wbudowanych operatorów
-** Kompilator kodu bajtowego ThesisVM
-Opisać pipeline kompilatora.
+- Opisać wykorzystanie VStack.
+- Opisać dostępne operacje prymitywne (LispKit). [[cite:Abelson1996]]
+- Skonfrontować dostępne operacje prymitywne z Core Erlang. [[cite:Carlsson2004]]
+- Opisać optymalizacje operacji arytmetycznych. [[cite:Gudeman1993]]
+
+** Ewaluacja argumentów i aplikacja funkcji
+- Opisać działanie interpretera kodu bajtowego ThesisVM. [[cite:Fairbairn1987,PeytonJones1992]]
+- Opisać leniwą ewaluację argumentów.
+- Opisać aplikację funkcji.
+- Opisać aplikację operacji prymitywnych.
+
+** Reprezentacja kodu bajtowego ThesisVM
+- Opisać reprezentację kodu bajtowego (listy opkodów).
+- Opisać optymalizacje TVMBC (wykorzystanie górnych dwóch bajtów słowa, 0 = pushc, threading, itd).
+- Opisać dostępne opkody kodu bajtowego. [[cite:Fairbairn1987,PeytonJones1992]]
+
+** Generacja kodu bajtowego ThesisVM
+- Opisać szczegółowo generację kodu bajtowego. [[cite:PeytonJones1992]]
 
 * Model zarządzania pamięcią
-** Organizacja pamięci ThesisVM
-** Alokacja obiektów
+- Diagram modelu pamięci.
+- Opisać krótko architekturę wspólnej sterty. [[cite:Wilhelmsson2005]]
+- Opisać strategie zarządzania pamięcią (alokator i GC). [[cite:Bacon2004]]
+
+** Architektura wspólnej sterty
+- Opisać szczegółowo wybraną architekturę.
+- Wspomnieć o problemach wybranej architektury (duży root-set, długie kolekcje). [[cite:Wilhelmsson2005]]
+- Skonfrontować publiczną stertę z architekturą prywatnej sterty. [[cite:Wilhelmsson2005]]
+- Wspomnieć o problemach prywatnej sterty (powolne przekazywanie wiadomości przez kopiowanie). cite:Wilhelmsson2005
+- Wspomnieć o istnieniu rozwiązań hybrydowych. [[cite:Wilhelmsson2005]]
+- Wspomnięć o problemach rozwiązań hybrydowych (usunięte z Erlang/OTP R15B02).
+
+** Implementacja alokatora obiektów
+- Diagram alokatora (kaskadowe alokatory w stylu alokatorów języka D).
+- Opisać działanie kaskadowego alokatora.
+- Opisać implementację wykorzystanego alokatora.
+- Opisać optymalizacje alokatora (wykorzystanie free listy).
+- Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
+- Opisać krótko alternatywne rozwiązania (mallocator, etc).
+
 ** Kolekcja nieosiągalnych obiektów
+- Opisać leniwe zliczanie referencji. [[cite:Boehm2004]]
+- Opisać implementację algorytmu leniwego zliczania referencji. [[cite:Bacon2004]]
+- Opisać konieczność wykorzystania operacji atomowych i barier pamięci (liczniki referencji).
+- Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
+- Opisać narzut pamięci związany z licznikiem referencji i leniwością algorytmu. cite:Boehm2004,Bacon2004
+- Opisać krótko wady, możliwe usprawnienia i alternatywne rozwiązania (zaproponowane przez Joe'go oraz VCGC) [[cite:Armstrong1995,Huelsbergen1998]]
+
 ** Kolekcja obiektów cyklicznych
+- Opisać, że obiekty cykliczne nie występują.
+- Wspomnieć o możliwości zaimplementowania zapasowego stop-the-world GC.
+- Wspomnieć o możliwości cyklicznego uruchamiania D'owego GC.
 
 * Model przetwarzania współbieżnego
-** Model Aktorowy
-** Notacja procesu w ThesisVM
-** Harmonogramowanie procesów
-** Przesyłanie wiadomości
+- Diagram SMP.
+- Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
+- Opisać bardziej szczegółowo działanie SMP - wiadomości kontrolne oraz RQue.
 
-* Podsumowanie i analiza wydajności ThesisVM
-Przeanalizować wydajność GC i SMP.
+** Implementacja Modelu Aktorowego
+- Opisać logiczną autonomiczność procesów (brak mutacji = inne procesy nie mogą ingerować).
+- Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
+- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,]]Groves2008
+- Opisać sposób pobierania wiadomości z kolejki.
+- Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
+- Opisać krótko wady i możliwe usprawnienia zastosowanego rozwiązania (dynamic size, wait-free, optimistic FIFO). [[cite:Herlihy2002,Kogan2011,Ladan-Mozes2004]]
+- Opisać krótko alternatywne podejścia (synchroniczne przekazywanie wiadomości - kanały, locki/mutexy/semafory).
+
+** Implementacja przesyłania wiadomości
+- Opisać implementację prymitywów =send= oraz =receive=.
+- Zwrócić uwagę na konieczność wykorzystania operacji atomowych oraz barier pamięci.
+- Snippet kodu przesyłającego wiadomość.
+- Diagram przesyłania wiadomości (pokazać, że nie występuje kopiowaine).
+- Opisać co dzieje się podczas wysyłania wiadomości.
+- Zwrócić uwagę na fakt, że problem kopiowania został zniwelowany kosztem lekkich barier pamięci.
+
+** Harmonogramowanie procesów
+- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn)
+- Opisać implementację prymitywów =spawn= i =sleep= oraz sleep-table.
+- Opisać wiadomości kontrolne.
+- Opisać możliwe usprawnienia (load-balancing i dzielenie zużycia).
+
+* Podsumowanie
+- Opisać co udało się zrobić.
+- Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
+- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla Core Erlang, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism).
+
 ** Leniwe zliczanie referencji
-Przeanalizować szybkość, pauzy, zużycie pamięci.
+- Przeanalizować szybkość, pauzy, zużycie pamięci.
+
 ** Przesyłanie wiadomości
-Przeanalizować szybkość przesyłania wiadomości/konieczność czekania procesów/wątków.
-** Porównanie szybkości działania ThesisVM
-Porównać kilka implementacji prostych programów (z Haskell'em, leniwym Lispem itp).
+- Przeanalizować szybkość przesyłania wiadomości/konieczność czekania procesów, wielkość kolejek wiadomości.
+
 
 # The bibliography
 #+begin_latex
@@ -113,11 +245,30 @@ Porównać kilka implementacji prostych programów (z Haskell'em, leniwym Lispem
 #+end_latex
 
 #+latex: \appendix
-* Wizualizacja stanu maszyny wirtualnej
-Opisać narzędzie do rysowania grafów stanu.
-
 * Przykładowe programy
-Dać kilka przykładów prostych programów razem z grafami stanów.
+- Opisać sposób uruchamiania maszyny wirtualnej.
+- Hello world.
+- Factorial.
+- Fibonacci.
+- Concurrent Hello world.
+- Map-reduce.
+
+* Wizualizacja stanu maszyny wirtualnej
+- Opisać narzędzie do rysowania grafów stanu maszyny i dać kilka przykładów.
+
+* Spisy wbudowanych funkcji i operatorów
+#+begin_latex
+\Large\noindent\textbf{Spis funkcji wbudowanych}
+#+end_latex
+
+- Wylistować funkcje wbudowane.
+
+#+begin_latex
+\vspace{2cm}
+\Large\noindent\textbf{Spis operatorów wbudowanych}
+#+end_latex
+
+- Wylistować operacje prymitywne.
 
 * Spisy rysunków i tablic
 #+latex: \listoffigures
