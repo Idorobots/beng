@@ -201,7 +201,7 @@ Supervisor: & {\itshape \@supervisor}\\
 \renewcommand{\cftloftitlefont}{\bfseries\Large}
 \renewcommand{\cftlottitlefont}{\bfseries\Large}
 \renewcommand{\cftbeforetoctitleskip}{20mm}
-\renewcommand{\cftaftertoctitleskip}{19mm}
+\renewcommand{\cftaftertoctitleskip}{20mm}
 \renewcommand{\cftbeforeloftitleskip}{0mm}
 \renewcommand{\cftafterloftitleskip}{5mm}
 \renewcommand{\cftbeforelottitleskip}{20mm}
@@ -213,6 +213,10 @@ Supervisor: & {\itshape \@supervisor}\\
 \renewcommand{\cftchapaftersnum}{.}
 \renewcommand{\cftsecaftersnum}{.}
 \renewcommand{\cftsubsecaftersnum}{.}
-\setlength{\cftparskip}{2pt}
-\setlength{\cftbeforechapskip}{0mm}
+\renewcommand{\cftparskip}{2pt}
+\renewcommand{\cftbeforechapskip}{0mm}
 \renewcommand{\cftchappagefont}{\normalsize}
+\renewcommand{\cftfigaftersnum}{.}
+\renewcommand{\cfttabaftersnum}{.}
+\renewcommand{\cftfigindent}{0pt}
+\renewcommand{\cfttabindent}{0pt}

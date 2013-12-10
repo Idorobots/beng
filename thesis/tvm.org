@@ -11,6 +11,7 @@
 #+LaTeX_HEADER: \usepackage[polish]{babel}
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+LATEX_HEADER: \usepackage{minted}
+#+LATEX_HEADER: \usepackage{listings}
 #+LATEX_HEADER: \usepackage[nottoc, notlof, notlot]{tocbibind}
 #+OPTIONS: tags:nil, todo:nil, toc:nil, date:nil
 #+END_OPTIONS
@@ -59,8 +60,30 @@
 \tableofcontents
 #+end_latex
 
+# List of Listings specific:
+#+begin_latex
+\newcommand{\listlistingname}{\bfseries\Large{Spis listingów}}
+\newlistof[chapter]{mylisting}{mlol}{\listlistingname}
+\newcommand{\mylisting}[1]{%
+  \refstepcounter{mylisting}%
+  #1%
+  \addcontentsline{mlol}{figure}
+    {\protect\numberline{\thechapter.\thelisting}#1}\par%
+}
+\renewcommand{\cftbeforemloltitleskip}{20mm}
+\renewcommand{\cftaftermloltitleskip}{5mm}
+#+end_latex
+
 * Wstęp
 - Opisać temat pracy.
+
+#+begin_center
+#+label: ref:vm-arch
+#+caption: Schemat interakcji z Maszyną Wirtualną.
+#+attr_latex: scale=0.7
+[[file:./img/fullarch.pdf]]
+#+end_center
+
 - Opisać czym jest maszyna wirtualna.
 - Opisać czym jest przetwarzanie współbierzne w kontekście pracy.
 - Wspomnieć o Modelu Aktorowym. [[cite:Hewitt1973,Clinger1981]].
@@ -70,7 +93,48 @@
 ** Motywacja pracy
 - Sformułować problem do rozwiązania.
 - Opisać krótko kod Erlanga prezentujący problem.
+
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Fragment kodu prezentujący problem występujący w języku Erlang.}}
+#+latex: \label{erlang-problem}
+#+bind: org-export-latex-minted-options (("frame" "single"))
+#+begin_src erlang
+start() ->
+    Data = file:read("file.json"),    %% <<"Dane ...">>
+    transmogrify(Data).
+
+transmogrify(Data) ->
+    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
+    JSON = json:decode(Data),         %% {[Dane ...]}
+    framework:map_reduce(Pids, JSON). %% $#&^@
+
+do_stuff(JSON) ->
+    %% Operacje na danych.
+    result.
+#+end_src
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
 - Opisać konieczność kopiowania wiadomości w architekturze prywatnej sterty.
+
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Suboptymalne rozwiązanie problemu w języku Erlang.}}
+#+latex: \label{erlang-solution}
+#+bind: org-export-latex-minted-options (("frame" "lines"))
+#+begin_src erlang
+transmogrify(Data) ->
+    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
+    framework:map_reduce(Pids, Data).
+
+do_stuff(Data) ->             %% <<"Dane ...">>
+    JSON = json:decode(Data), %% {[Dane ...]} * bazylion
+    %% Operacje na danych.
+    result.
+#+end_src
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
+- Opisać sposób Erlanga na rozważany problem.
 - Opisać problemy publicznej sterty (związane z GC).
 - Opisać sposób w jaki ThesisVM ma je rozwiązać.
 
@@ -86,8 +150,17 @@
 - Opisać zawartość [[Spisy wbudowanych funkcji i operatorów]].
 
 * Architektura ThesisVM
-- Diagram architektury ThesisVM.
 - Opisać architekturę w odniesieniu do wyżej wymienionych celów pracy.
+
+#+begin_center
+#+label: ref:tvm-arch
+#+caption: Architektura maszyny wirtualnej ThesisVM.
+#+attr_latex: scale=1.0
+[[file:./img/arch.pdf]]
+#+end_center
+
+- Wspomnieć o wykorzystaniu TVMIR.
+- Wspomnieć o wykorzystaniu kodu bajtowego i jego kompilatora.
 
 ** Reprezentacja pośrednia programów (TVMIR)
 - Opisać krótko TVMIR. [[cite:Abelson1996,PeytonJones1992]]
@@ -97,7 +170,15 @@
 - Porównać TVMIR do Core Erlang. [[cite:Carlsson2001,Carlsson2004]]
 
 ** Kompilacja kodu bajtowego
-- Diagram pipeline'u kompilatora.
+
+# TODO Extend this a little bit.
+#+begin_center
+#+label: ref:tvm-compiler-pipeline
+#+caption: /Pipeline/ kompilatora kodu bajtowego ThesisVM.
+#+attr_latex: scale=0.8
+[[file:./img/pipeline.pdf]]
+#+end_center
+
 - Opisać krótko analizę leksykalną.
 - Opisać krótko analizę syntaktyczną.
 - Opisać krótko analizę semantyczną (+ proste transformacje TVMIR jeśli jakieś będą).
@@ -111,7 +192,16 @@
 - Wspomnieć o wybranym modelu.
 
 ** Zarządzanie pamięcią
-- Opisać krótko strategie alokacji.
+- Opisać krótko strategie alokacji i architektury sterty.
+
+# TODO Actually make this.
+#+begin_center
+#+label: ref:tvm-arch
+#+caption: Modele wykorzystania pamięci maszyn wirtualnych.
+#+attr_latex: scale=1.0
+[[file:./img/mem.pdf]]
+#+end_center
+
 - Opisać krótko strategie GC (ref-count vs tracing).
 - Wspomnieć o problemach kolekcji tracing GC (w kontekście problemu Erlanga). [[cite:Gudeman1993]]
 - Umotywować wykorzystanie zliczania referencji (wspomnieć, że Erlang też korzysta). [[cite:Shahriyar2012]]
@@ -123,12 +213,19 @@
 - Umotywować wybrany model przetwarzania i jego relację z Modelem Actorowym.
 
 * Interpreter kodu bajtowego
-- Diagram stanu interpretera.
+
 - Opisać wybrany model Three Instruction Machine. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
 - Opisać krótko działanie TIM, zwrócić uwagę na leniwość. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
 - Opisać modyfikacje modelu TIM.
-- Diagram poszczególnych rejestrów ThesisVM.
-- Opisać wykorzystane rejestry.
+
+#+begin_center
+#+label: ref:tvm-regs
+#+caption: Schemat stanu maszyny wirtualnej.
+#+attr_latex: scale=1.5
+[[file:./img/uProc2.pdf]]
+#+end_center
+
+- Opisać wykorzystywane rejestry.
 - Opisać krótko alternatywne rozwiązania (SECD, TRSECD, SICP machine). [[cite:VanHorn2010,Ramsdell1999,Abelson1996,Steele1978]], [[cite:Kaser1992]]
 
 ** Implementacja obietków prostych
@@ -165,8 +262,16 @@
 - Opisać szczegółowo generację kodu bajtowego. [[cite:PeytonJones1992]]
 
 * Model zarządzania pamięcią
-- Diagram modelu pamięci.
 - Opisać krótko architekturę wspólnej sterty. [[cite:Wilhelmsson2005]]
+
+# TODO Actually make this.
+#+begin_center
+#+label: ref:tvm-shared-mem
+#+caption: Model wspólnej pamięci ThesisVM.
+#+attr_latex: scale=1.0
+[[file:./img/sharedmem.pdf]]
+#+end_center
+
 - Opisać strategie zarządzania pamięcią (alokator i GC). [[cite:Bacon2004]]
 
 ** Architektura wspólnej sterty
@@ -178,8 +283,16 @@
 - Wspomnięć o problemach rozwiązań hybrydowych (usunięte z Erlang/OTP R15B02).
 
 ** Implementacja alokatora obiektów
-- Diagram alokatora (kaskadowe alokatory w stylu alokatorów języka D).
 - Opisać działanie kaskadowego alokatora.
+
+# TODO Actually make this.
+#+begin_center
+#+label: ref:tvm-alloc
+#+caption: Schemat kaskadowych alokatorów.
+#+attr_latex: scale=1.0
+[[file:./img/allocator.pdf]]
+#+end_center
+
 - Opisać implementację wykorzystanego alokatora.
 - Opisać optymalizacje alokatora (wykorzystanie free listy).
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
@@ -187,8 +300,25 @@
 
 ** Kolekcja nieosiągalnych obiektów
 - Opisać leniwe zliczanie referencji. [[cite:Boehm2004]]
+
+# TODO Actually make this.
+#+begin_center
+#+label: ref:tvm-lazy-refcount
+#+caption: Schemat działania algorytmu leniwego zliczania referencji.
+#+attr_latex: scale=0.8
+[[file:./img/lazyrefcount.pdf]]
+#+end_center
+
 - Opisać implementację algorytmu leniwego zliczania referencji. [[cite:Bacon2004]]
 - Opisać konieczność wykorzystania operacji atomowych i barier pamięci (liczniki referencji).
+
+#+begin_center
+#+label: ref:tvm-gc-regs
+#+caption: Schemat rejestrów wymaganych przez implementację kolektora obiektów nieosiągalnych.
+#+attr_latex: scale=1.5
+[[file:./img/GC2.pdf]]
+#+end_center
+
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
 - Opisać narzut pamięci związany z licznikiem referencji i leniwością algorytmu. cite:Boehm2004,Bacon2004
 - Opisać krótko wady, możliwe usprawnienia i alternatywne rozwiązania (zaproponowane przez Joe'go oraz VCGC) [[cite:Armstrong1995,Huelsbergen1998]]
@@ -199,8 +329,16 @@
 - Wspomnieć o możliwości cyklicznego uruchamiania D'owego GC.
 
 * Model przetwarzania współbieżnego
-- Diagram SMP.
 - Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
+
+# TODO Actually make this.
+#+begin_center
+#+label: ref:tvm-smp
+#+caption: Schemat symetrycznego multiprocesora ThesisVM.
+#+attr_latex: scale=1.0
+[[file:./img/SMP2.pdf]]
+#+end_center
+
 - Opisać bardziej szczegółowo działanie SMP - wiadomości kontrolne oraz RQue.
 
 ** Implementacja Modelu Aktorowego
@@ -208,6 +346,14 @@
 - Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
 - Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,]]Groves2008
 - Opisać sposób pobierania wiadomości z kolejki.
+
+#+begin_center
+#+label: ref:tvm-actor-regs
+#+caption: Schemat rejestrów wymaganych przez implementację Modelu Aktorowego.
+#+attr_latex: scale=1.5
+[[file:./img/Actor2.pdf]]
+#+end_center
+
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
 - Opisać krótko wady i możliwe usprawnienia zastosowanego rozwiązania (dynamic size, wait-free, optimistic FIFO). [[cite:Herlihy2002,Kogan2011,Ladan-Mozes2004]]
 - Opisać krótko alternatywne podejścia (synchroniczne przekazywanie wiadomości - kanały, locki/mutexy/semafory).
@@ -216,7 +362,15 @@
 - Opisać implementację prymitywów =send= oraz =receive=.
 - Zwrócić uwagę na konieczność wykorzystania operacji atomowych oraz barier pamięci.
 - Snippet kodu przesyłającego wiadomość.
-- Diagram przesyłania wiadomości (pokazać, że nie występuje kopiowaine).
+
+# TODO Actually make this.
+#+begin_center
+#+label: ref:tvm-lazy-refcount
+#+caption: Schemat działania przesyłania wiadomości.
+#+attr_latex: scale=0.8
+[[file:./img/messagepassing.pdf]]
+#+end_center
+
 - Opisać co dzieje się podczas wysyłania wiadomości.
 - Zwrócić uwagę na fakt, że problem kopiowania został zniwelowany kosztem lekkich barier pamięci.
 
@@ -224,6 +378,15 @@
 - Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn)
 - Opisać implementację prymitywów =spawn= i =sleep= oraz sleep-table.
 - Opisać wiadomości kontrolne.
+
+# TODO Move this to earlier section?
+#+begin_center
+#+label: ref:tvm-scheduler-regs
+#+caption: Schemat rejestrów wymaganych przez usprawnienia hanmonogramowania SMP.
+#+attr_latex: scale=1.5
+[[file:./img/Scheduler2.pdf]]
+#+end_center
+
 - Opisać możliwe usprawnienia (load-balancing i dzielenie zużycia).
 
 * Podsumowanie
@@ -258,18 +421,25 @@
 
 * Spisy wbudowanych funkcji i operatorów
 #+begin_latex
-\Large\noindent\textbf{Spis funkcji wbudowanych}
+{\Large\noindent\textbf{Spis funkcji wbudowanych}}
 #+end_latex
 
 - Wylistować funkcje wbudowane.
 
 #+begin_latex
 \vspace{2cm}
-\Large\noindent\textbf{Spis operatorów wbudowanych}
+{\Large\noindent\textbf{Spis operatorów wbudowanych}}
 #+end_latex
 
 - Wylistować operacje prymitywne.
 
-* Spisy rysunków i tablic
-#+latex: \listoffigures
-#+latex: \listoftables
+* Spisy rysunków, fragmentów kodu i tablic
+#+begin_latex
+\begingroup
+  \renewcommand*{\addvspace}[1]{}
+  \listoffigures
+  \listofmylisting
+  \listoftables
+\endgroup
+#+end_latex
+
