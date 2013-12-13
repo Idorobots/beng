@@ -171,11 +171,10 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 
 ** Kompilacja kodu bajtowego
 
-# TODO Extend this a little bit.
 #+begin_center
 #+label: ref:tvm-compiler-pipeline
-#+caption: /Pipeline/ kompilatora kodu bajtowego ThesisVM.
-#+attr_latex: scale=0.8
+#+caption: /Pipeline/ kompilatora kodu bajtowego ThesisVM wraz ze schematami reprezentacji danych poszczególnych faz.
+#+attr_latex: scale=0.55
 [[file:./img/pipeline.pdf]]
 #+end_center
 
@@ -196,8 +195,8 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 
 # TODO Actually make this.
 #+begin_center
-#+label: ref:tvm-arch
-#+caption: Modele wykorzystania pamięci maszyn wirtualnych.
+#+label: ref:mem-archs
+#+caption: Różne modele wykorzystania pamięci maszyn wirtualnych.
 #+attr_latex: scale=1.0
 [[file:./img/mem.pdf]]
 #+end_center
@@ -393,7 +392,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 * Podsumowanie
 - Opisać co udało się zrobić.
 - Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
-- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla Core Erlang, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism).
+- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla Core Erlang, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism, optymalizacja wykorzystania stosu, hardłerowa implementacja interpretera kodu bajtowego).
 
 ** Leniwe zliczanie referencji
 - Przeanalizować szybkość, pauzy, zużycie pamięci.
