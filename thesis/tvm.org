@@ -76,6 +76,7 @@
 
 * Wstęp
 - Opisać temat pracy.
+- Opisać czym jest maszyna wirtualna.
 
 #+begin_center
 #+label: ref:vm-arch
@@ -84,11 +85,10 @@
 [[file:./img/fullarch.pdf]]
 #+end_center
 
-- Opisać czym jest maszyna wirtualna.
 - Opisać czym jest przetwarzanie współbierzne w kontekście pracy.
 - Wspomnieć o Modelu Aktorowym. [[cite:Hewitt1973,Clinger1981]].
 - Krótko opisać cel pracy - implementacja interpretera kodu bajtowego, GC i SMP.
-- Wspomnieć o języku implementacji - język D.
+- Wspomnieć o języku implementacji - język D. [[cite:Alexandrescu2010]]
 
 ** Motywacja pracy
 - Sformułować problem do rozwiązania.
@@ -192,7 +192,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Wspomnieć o wybranym modelu.
 
 ** Zarządzanie pamięcią
-- Opisać krótko strategie alokacji i architektury sterty.
+- Opisać krótko strategie alokacji i architektury sterty. [[cite:Wilson1995,Wilhelmsson2005]]
 
 # TODO Actually make this.
 #+begin_center
@@ -283,7 +283,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Wspomnięć o problemach rozwiązań hybrydowych (usunięte z Erlang/OTP R15B02).
 
 ** Implementacja alokatora obiektów
-- Opisać działanie kaskadowego alokatora.
+- Opisać działanie kaskadowego alokatora. [[cite:Wilson1995]]
 
 # TODO Actually make this.
 #+begin_center
@@ -296,7 +296,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Opisać implementację wykorzystanego alokatora.
 - Opisać optymalizacje alokatora (wykorzystanie free listy).
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
-- Opisać krótko alternatywne rozwiązania (mallocator, etc).
+- Opisać krótko alternatywne rozwiązania (mallocator, etc). [[cite:Wilson1995]]
 
 ** Kolekcja nieosiągalnych obiektów
 - Opisać leniwe zliczanie referencji. [[cite:Boehm2004]]
@@ -342,10 +342,10 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Opisać bardziej szczegółowo działanie SMP - wiadomości kontrolne oraz RQue.
 
 ** Implementacja Modelu Aktorowego
+- Opisać powstawanie procesów i prymityw =spawn=.
 - Opisać logiczną autonomiczność procesów (brak mutacji = inne procesy nie mogą ingerować).
 - Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
-- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,]]Groves2008
-- Opisać sposób pobierania wiadomości z kolejki.
+- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,]]Groves2008- Opisać wykorzystanie CAS i problem ABA.
 
 #+begin_center
 #+label: ref:tvm-actor-regs
@@ -372,14 +372,15 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 #+end_center
 
 - Opisać co dzieje się podczas wysyłania wiadomości.
+- Opisać sposób pobierania wiadomości z kolejki.
 - Zwrócić uwagę na fakt, że problem kopiowania został zniwelowany kosztem lekkich barier pamięci.
 
 ** Harmonogramowanie procesów
-- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn)
-- Opisać implementację prymitywów =spawn= i =sleep= oraz sleep-table.
+- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn).
+- Opisać implementację prymitywu =sleep= oraz sleep-table.
 - Opisać wiadomości kontrolne.
 
-# TODO Move this to earlier section?
+# TODO Move this to an earlier section?
 #+begin_center
 #+label: ref:tvm-scheduler-regs
 #+caption: Schemat rejestrów wymaganych przez usprawnienia hanmonogramowania SMP.
