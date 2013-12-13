@@ -266,7 +266,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 #+begin_center
 #+label: ref:tvm-shared-mem
 #+caption: Model wspólnej pamięci ThesisVM.
-#+attr_latex: scale=1.0
+#+attr_latex: scale=1.2
 [[file:./img/sharedmem.pdf]]
 #+end_center
 
