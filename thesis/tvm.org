@@ -193,7 +193,6 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 ** Zarządzanie pamięcią
 - Opisać krótko strategie alokacji i architektury sterty. [[cite:Wilson1995,Wilhelmsson2005]]
 
-# TODO Actually make this.
 #+begin_center
 #+label: ref:mem-archs
 #+caption: Różne modele wykorzystania pamięci maszyn wirtualnych.
@@ -201,7 +200,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 [[file:./img/mem.pdf]]
 #+end_center
 
-- Opisać krótko strategie GC (ref-count vs tracing).
+- Opisać krótko strategie GC (ref-count vs tracing). [[cite:Bacon2004]]
 - Wspomnieć o problemach kolekcji tracing GC (w kontekście problemu Erlanga). [[cite:Gudeman1993]]
 - Umotywować wykorzystanie zliczania referencji (wspomnieć, że Erlang też korzysta). [[cite:Shahriyar2012]]
 
