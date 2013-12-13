@@ -334,7 +334,6 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 * Model przetwarzania współbieżnego
 - Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
 
-# TODO Actually make this.
 #+begin_center
 #+label: ref:tvm-smp
 #+caption: Schemat symetrycznego multiprocesora ThesisVM.
@@ -348,7 +347,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Opisać powstawanie procesów i prymityw =spawn=.
 - Opisać logiczną autonomiczność procesów (brak mutacji = inne procesy nie mogą ingerować).
 - Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
-- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,]]Groves2008- Opisać wykorzystanie CAS i problem ABA.
+- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,Groves2008]]- Opisać wykorzystanie CAS i problem ABA.
 
 #+begin_center
 #+label: ref:tvm-actor-regs
@@ -366,11 +365,10 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Zwrócić uwagę na konieczność wykorzystania operacji atomowych oraz barier pamięci.
 - Snippet kodu przesyłającego wiadomość.
 
-# TODO Actually make this.
 #+begin_center
-#+label: ref:tvm-lazy-refcount
+#+label: ref:tvm-msgs
 #+caption: Schemat działania przesyłania wiadomości.
-#+attr_latex: scale=0.8
+#+attr_latex: scale=1.2
 [[file:./img/messagepassing.pdf]]
 #+end_center
 
@@ -383,7 +381,6 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Opisać implementację prymitywu =sleep= oraz sleep-table.
 - Opisać wiadomości kontrolne.
 
-# TODO Move this to an earlier section?
 #+begin_center
 #+label: ref:tvm-scheduler-regs
 #+caption: Schemat rejestrów wymaganych przez usprawnienia hanmonogramowania SMP.
