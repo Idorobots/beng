@@ -283,11 +283,10 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 ** Implementacja alokatora obiektów
 - Opisać działanie kaskadowego alokatora. [[cite:Wilson1995]]
 
-# TODO Actually make this.
 #+begin_center
 #+label: ref:tvm-alloc
-#+caption: Schemat kaskadowych alokatorów.
-#+attr_latex: scale=1.0
+#+caption: Schemat kaskadowych alokatorów wykorzystanych w ThesisVM.
+#+attr_latex: scale=0.8
 [[file:./img/allocator.pdf]]
 #+end_center
 
@@ -299,12 +298,18 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 ** Kolekcja nieosiągalnych obiektów
 - Opisać leniwe zliczanie referencji. [[cite:Boehm2004]]
 
-# TODO Actually make this.
 #+begin_center
-#+label: ref:tvm-lazy-refcount
-#+caption: Schemat działania algorytmu leniwego zliczania referencji.
+#+label: ref:tvm-lazy-refcount-free
+#+caption: Schemat działania zwalniania pamięci obiektów.
 #+attr_latex: scale=0.8
-[[file:./img/lazyrefcount.pdf]]
+[[file:./img/lazyrefcountfree.pdf]]
+#+end_center
+
+#+begin_center
+#+label: ref:tvm-lazy-refcount-alloc
+#+caption: Schemat działania alokacji pamięci nowych obiektów.
+#+attr_latex: scale=0.8
+[[file:./img/lazyrefcountalloc.pdf]]
 #+end_center
 
 - Opisać implementację algorytmu leniwego zliczania referencji. [[cite:Bacon2004]]
