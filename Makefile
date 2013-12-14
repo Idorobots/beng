@@ -1,32 +1,11 @@
-AR = ar
-DC = gdc
-DFLAGS = -Wall -Wextra -pedantic -Isrc
-GDB = -funittest -fdebug -ggdb3
-#GDB = -O3
-LIB = 
+# Defaults to GDC. Change the extension to ".dmd" to use DMD instead.
 
-VPATH = src:src/compiler/codegen:src/compiler/parser:src/compiler/pretty:src/eval/gc:src/eval/smp:src/eval/vm
+DEFAULT=Makefile.gdc
 
-COMPILER_OBJS = token.o scanner.o parser.o ast.o parse.o compile.o bytecode.o graph.o print.o
-VM_OBJS = alloc.o gc.o memory.o mqueue.o rqueue.o smp.o builtins.o run.o state.o
-OTHER_OBJS = main.o
+default:
+	$(MAKE) -f $(DEFAULT)
 
-OBJS = $(COMPILER_OBJS) $(VM_OBJS) $(OTHER_OBJS)
-
-TARGET = tvm
-
-all : $(TARGET)
-
-$(TARGET) : $(OBJS) $(LIB)
-	$(DC) $^ $(DLDLIBS) -o$@
-
-%.o : %.d
-	$(DC) $(DFLAGS) $(GDB) $< -c
+.PHONY: clean
 
 clean:
-	rm -f $(TARGET)
-	rm -f *.o
-
-# FIXME GDC isn't in the PATH of the flymake process.
-# check-syntax:
-#	/opt/gdc/bin/gdc $(DFLAGS) $(GDB) -c ${CHK_SOURCES} -o /dev/null
+	$(MAKE) clean -f $(DEFAULT)

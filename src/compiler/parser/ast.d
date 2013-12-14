@@ -58,7 +58,7 @@ class Expression {
     }
 
     override string toString() {
-        return format("%x", cast(size_t) this);
+        return format("%x", (*cast(size_t*) &this));
     }
 
     double toNumber() {
