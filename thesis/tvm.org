@@ -75,81 +75,94 @@
 #+end_latex
 
 * Wstęp
-- Opisać temat pracy.
-- Opisać czym jest maszyna wirtualna.
+#+latex: \label{sec:intro}
+
+Tematem pracy jest implementacja /maszyny wirtualnej/ dla funkcyjnych języków programowania wspierających /przetwarzanie współbieżne/.
+
+Maszyna wirtualna jest warstwą abstrakcji leżącą pomiędzy programem a rzeczywistym sprzętem, która pozwala uniezależnić ów program od rozbieżności w działaniu różnych architektur komputerów. Wystarczy zaimplementować maszynę wirtualną dla danej architektury rzeczywistego sprzętu by umożliwić uruchamianie na niej wszystkich kompatybilnych z programów. Rysunek [[ref:fig:vm-arch]] prezentuje uproszczony schemat takiego rozwiązania - programy docelowe zostają skompilowane do /kodu bajtowego/ akceptowanego przez maszynę wirtualną a dopiero ów bajtkod jest przez nią uruchamiany.
 
 #+begin_center
-#+label: ref:vm-arch
+#+label: fig:vm-arch
 #+caption: Schemat interakcji z Maszyną Wirtualną.
 #+attr_latex: scale=0.7
 [[file:./img/fullarch.pdf]]
 #+end_center
 
-- Opisać czym jest przetwarzanie współbierzne w kontekście pracy.
-- Wspomnieć o Modelu Aktorowym. [[cite:Hewitt1973,Clinger1981]].
-- Krótko opisać cel pracy - implementacja interpretera kodu bajtowego, GC i SMP.
-- Wspomnieć o języku implementacji - język D. [[cite:Alexandrescu2010]]
+Przetwarzanie współbieżne opiera się o współistnienie wielu procesów, które konkurują o dostęp do współdzielonych zasobów. W kontekście pracy, przetwarzanie współbieżne jest rozumiane jako asynchroniczne przekazywanie wiadomości pomiędzy działającymi, autonomicznymi procesami, czyli przez Model Aktorowy ([[cite:Hewitt1973,Clinger1981]]).
+
+Celem pracy jest stworzenie interpretera kodu bajtowego zdolnego uruchamiać kod skompilowanych programów, kolektora obiektów nieosiągalnych umożliwiającego automatyczne zarządzanie pamięcią oraz architektury symetrycznego multiprocesora (SMP) zapewniającego rzeczywistą współbieżność uruchamianych programów w oparciu o Model Aktorowy.
+Językiem implementacji projektu jest język =D= (w wersji 2.0 opisanej w [[cite:Alexandrescu2010]]), stosunkowo nowoczesny, kompilowany natywnie następca języka =C++=.
 
 ** Motywacja pracy
-- Sformułować problem do rozwiązania.
-- Opisać krótko kod Erlanga prezentujący problem.
+Motywacją powstania pracy są problemy napotkane podczas użytkowania języka Erlang, dotyczące wydajności przesyłania wiadomości średniego rozmiaru w obecnej, standardowej jego implementacji. Problemy owe zilustrowano na listingu [[ref:code:erlang-problem]].
+
+Zaprezentowany fragment kodu odczytuje plik w formacie JSON, który następnie jest dekodowany do wewnętrznej reprezentacji posiadającej skomplikowaną strukturę, by ostatecznie został on wysłany do dużej liczby współbieżnie działających procesów celem dalszego przetwarzania (linia [[ref:line:bad]]). Rozwiązanie takie powoduje znaczący spadek wydajności.
 
 #+latex: \begin{listing}[ht]
 #+latex: \caption{\mylisting{Fragment kodu prezentujący problem występujący w języku Erlang.}}
-#+latex: \label{erlang-problem}
-#+bind: org-export-latex-minted-options (("frame" "single"))
+#+latex: \label{code:erlang-problem}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src erlang
-start() ->
-    Data = file:read("file.json"),    %% <<"Dane ...">>
-    transmogrify(Data).
-
-transmogrify(Data) ->
-    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
-    JSON = json:decode(Data),         %% {[Dane ...]}
-    framework:map_reduce(Pids, JSON). %% $#&^@
-
-do_stuff(JSON) ->
-    %% Operacje na danych.
-    result.
+  start() ->
+      Data = file:read("file.json"),    %% <<"Dane ...">>
+      transmogrify(Data).
+  
+  transmogrify(Data) ->
+      Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
+      JSON = json:decode(Data),         %% {[Dane ...]}
+      framework:map_reduce(Pids, JSON). %% !#&^@ $\label{line:bad}$
+  
+  do_stuff(JSON) ->
+      %% Operacje na danych.
+      result.
 #+end_src
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
 
-- Opisać konieczność kopiowania wiadomości w architekturze prywatnej sterty.
+Język Erlang wykorzystuje skomplikowaną architekturę pamięci, która w różny sposób traktuje obiekty różnego typu. Większość obiektów, w szczególności skomplikowana strukturalnie reprezentacja danych w formacie JSON, przechowywana jest w prywatnych stertach każdego procesu i musi być kopiowana podczas przesyłania jej w wiadomościach pomiędzy nimi. Reguła ta nie dotyczy danych binarnych, w szczególności danych odczytanych z pliku, ponieważ te korzystają z innych algorytmów nie wymagających kopiowania kosztem większego zużycia pamięci.
+
+W związku z tym, aby zaradzić problemowi opisanemu powyżej, wystarczy przenieść operację dekodowania danych odczytanych z pliku bezpośrednio do procesów na nich operujących (listing [[ref:code:erlang-solution]]).
+W nowej wersji procesy przesyłają jedynie dane binarne, które nie wymagają kopiowania pamięci, a narzut wydajności spowodowany wielokrotnym ich dekodowaniem jest niższy niż ten spowodowany nadmiernym kopiowianiem. W efekcie, kod działa wydajniej, kosztem logiki przepływu danych i organizacji modułów.
 
 #+latex: \begin{listing}[ht]
 #+latex: \caption{\mylisting{Suboptymalne rozwiązanie problemu w języku Erlang.}}
-#+latex: \label{erlang-solution}
-#+bind: org-export-latex-minted-options (("frame" "lines"))
+#+latex: \label{code:erlang-solution}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true"))
 #+begin_src erlang
-transmogrify(Data) ->
-    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
-    framework:map_reduce(Pids, Data).
-
-do_stuff(Data) ->             %% <<"Dane ...">>
-    JSON = json:decode(Data), %% {[Dane ...]} * bazylion
-    %% Operacje na danych.
-    result.
+  transmogrify(Data) ->
+      Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
+      framework:map_reduce(Pids, Data).
+  
+  do_stuff(Data) ->             %% <<"Dane ...">>
+      JSON = json:decode(Data), %% {[Dane ...]} * bazylion
+      %% Operacje na danych.
+      result.
 #+end_src
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
 
-- Opisać sposób Erlanga na rozważany problem.
-- Opisać problemy publicznej sterty (związane z GC).
-- Opisać sposób w jaki ThesisVM ma je rozwiązać.
+Celem pracy jest uniknięcie problemu nadmiernego kopiowania pamięci przez wybranie odpowiedniego modelu pamięci i implementację algorytmów kolekcji obiektow nieosiągalnych, które umożliwiają przesyłanie wiadomości pomiędzy procesami bez konieczności kopiowania ich zawartości.
 
 ** Zawartość pracy
-- Opisać zakres pracy.
-- Opisać zawartość [[Architektura ThesisVW]].
-- Opisać zawartość [[Interpreter kodu bajtowego]].
-- Opisać zawartość [[Model zarządzania pamięcią]].
-- Opisać zawartość [[Model przetwarzania współbieżnego]].
-- Opisać zawartość [[Podsumowanie]].
-- Opisać zawartość [[Przykładowe programy]].
-- Opisać zawartość [[Wizualizacja stanu maszyny]].
-- Opisać zawartość [[Spisy wbudowanych funkcji i operatorów]].
+W skład pracy wchodzi implementacja interpretera kodu bajtowego, kolektora obiektów nieosiągalnych oraz symetrycznego multiprocesora (SMP).
+
+Sekcja [[ref:sec:intro]] opisuje cele, motywację, zakres oraz zawartość pracy.
+
+Sekcja [[ref:sec:tvm-arch]] przybliża architekturę maszyny wirtualnej ThesisVM zaimplementowanej w ramach pracy, zaczynając od reprezentacji pośredniej programów (TVMIR) i jej kompilacji do kodu bajtowego, przez interpretację kodu bajtowego i zarządzanie pamięcią do projektu przetwarzania współbieżnego.
+
+Sekcja [[ref:sec:tvm-vm]] szczegółowo opisuje implementację interpretera kodu bajtowego maszyny wirtualnej ThesisVM. Zaprezentowane zostają reprezentacje różnych obiektów, na których operuje maszyna, implementacja wpudowanych operatorów i funkcji prymitywnych oraz reprezentacja i generowanie kodu bajtowego akceptowanego przez interpreter.
+
+Sekcja [[ref:sec:tvm-gc]] szczegółowo prezentuje implementację wybranego modelu pamięci, alokatora nowych obiektów oraz kolektora obiektów nieosiągalnych.
+
+Sekcja [[ref:sec:tvm-smp]] szczegółowo opisuje implementację asynchronicznego przekazywania wiadomości i symetrycznego multiprocesora w maszynie ThesisVM. Zaprezentowana zostaje implementacja Modelu Aktorowego i harmonogramowania procesów.
+
+Sekcja [[ref:sec:conclusion]] zawiera podsumowanie pracy oraz zarys możliwych kierunków dalszego rozwoju projektu.
+
+Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio przykładowe programy gotowe do uruchomienia na maszynie wirtualnej ThesisVM, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
 
 * Architektura ThesisVM
+#+latex: \label{sec:tvm-arch}
+
 - Opisać architekturę w odniesieniu do wyżej wymienionych celów pracy.
 
 #+begin_center
@@ -211,6 +224,7 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Umotywować wybrany model przetwarzania i jego relację z Modelem Actorowym.
 
 * Interpreter kodu bajtowego
+#+latex: \label{sec:tvm-vm}
 
 - Opisać wybrany model Three Instruction Machine. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
 - Opisać krótko działanie TIM, zwrócić uwagę na leniwość. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
@@ -260,6 +274,8 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Opisać szczegółowo generację kodu bajtowego. [[cite:PeytonJones1992]]
 
 * Model zarządzania pamięcią
+#+latex: \label{sec:tvm-gc}
+
 - Opisać krótko architekturę wspólnej sterty. [[cite:Wilhelmsson2005]]
 
 # TODO Actually make this.
@@ -332,6 +348,8 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Wspomnieć o możliwości cyklicznego uruchamiania D'owego GC.
 
 * Model przetwarzania współbieżnego
+#+latex: \label{sec:tvm-smp}
+
 - Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
 
 #+begin_center
@@ -391,6 +409,8 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Opisać możliwe usprawnienia (load-balancing i dzielenie zużycia).
 
 * Podsumowanie
+#+latex: \label{sec:conclusion}
+
 - Opisać co udało się zrobić.
 - Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
 - Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla Core Erlang, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism, optymalizacja wykorzystania stosu, hardłerowa implementacja interpretera kodu bajtowego).
@@ -410,6 +430,8 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 
 #+latex: \appendix
 * Przykładowe programy
+#+latex: \label{sec:tvm-samples}
+
 - Opisać sposób uruchamiania maszyny wirtualnej.
 - Hello world.
 - Factorial.
@@ -417,10 +439,9 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Concurrent Hello world.
 - Map-reduce.
 
-* Wizualizacja stanu maszyny wirtualnej
-- Opisać narzędzie do rysowania grafów stanu maszyny i dać kilka przykładów.
-
 * Spisy wbudowanych funkcji i operatorów
+#+latex: \label{sec:tvm-primops}
+
 #+begin_latex
 {\Large\noindent\textbf{Spis funkcji wbudowanych}}
 #+end_latex
@@ -435,6 +456,8 @@ do_stuff(Data) ->             %% <<"Dane ...">>
 - Wylistować operacje prymitywne.
 
 * Spisy rysunków, fragmentów kodu i tablic
+#+latex: \label{sec:misc}
+
 #+begin_latex
 \begingroup
   \renewcommand*{\addvspace}[1]{}
