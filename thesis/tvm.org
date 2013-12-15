@@ -88,18 +88,18 @@ Maszyna wirtualna jest warstwą abstrakcji leżącą pomiędzy programem a rzecz
 [[file:./img/fullarch.pdf]]
 #+end_center
 
-Przetwarzanie współbieżne opiera się o współistnienie wielu procesów, które konkurują o dostęp do współdzielonych zasobów. W kontekście pracy, przetwarzanie współbieżne jest rozumiane jako asynchroniczne przekazywanie wiadomości pomiędzy działającymi, autonomicznymi procesami, czyli przez Model Aktorowy ([[cite:Hewitt1973,Clinger1981]]).
+Przetwarzanie współbieżne opiera się o współistnienie wielu procesów, które konkurują o dostęp do współdzielonych zasobów. W kontekście pracy, przetwarzanie współbieżne jest rozumiane jako asynchroniczne przekazywanie wiadomości pomiędzy działającymi, autonomicznymi procesami, czyli jako Model Aktorowy [[cite:Hewitt1973,Clinger1981]].
 
 Celem pracy jest stworzenie interpretera kodu bajtowego zdolnego uruchamiać kod skompilowanych programów, kolektora obiektów nieosiągalnych umożliwiającego automatyczne zarządzanie pamięcią oraz architektury symetrycznego multiprocesora (SMP) zapewniającego rzeczywistą współbieżność uruchamianych programów w oparciu o Model Aktorowy.
-Językiem implementacji projektu jest język =D= (w wersji 2.0 opisanej w [[cite:Alexandrescu2010]]), stosunkowo nowoczesny, kompilowany natywnie następca języka =C++=.
+Językiem implementacji projektu jest język =D= (w wersji 2.0 opisanej w [[cite:Alexandrescu2010]]), stosunkowo nowoczesny, kompilowany do kodu maszynowego następca języka =C++=.
 
 ** Motywacja pracy
-Motywacją powstania pracy są problemy napotkane podczas użytkowania języka Erlang, dotyczące wydajności przesyłania wiadomości średniego rozmiaru w obecnej, standardowej jego implementacji. Problemy owe zilustrowano na listingu [[ref:code:erlang-problem]].
+Motywacją powstania pracy są problemy napotkane podczas użytkowania języka =Erlang= [[cite:Armstrong1996]], dotyczące wydajności przesyłania wiadomości średniego rozmiaru w obecnej, standardowej jego implementacji. Problemy owe zilustrowano na listingu [[ref:code:erlang-problem]].
 
 Zaprezentowany fragment kodu odczytuje plik w formacie JSON, który następnie jest dekodowany do wewnętrznej reprezentacji posiadającej skomplikowaną strukturę, by ostatecznie został on wysłany do dużej liczby współbieżnie działających procesów celem dalszego przetwarzania (linia [[ref:line:bad]]). Rozwiązanie takie powoduje znaczący spadek wydajności.
 
 #+latex: \begin{listing}[ht]
-#+latex: \caption{\mylisting{Fragment kodu prezentujący problem występujący w języku Erlang.}}
+#+latex: \caption{\mylisting{Fragment kodu prezentujący problem występujący w języku \texttt{Erlang}.}}
 #+latex: \label{code:erlang-problem}
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src erlang
@@ -119,13 +119,13 @@ Zaprezentowany fragment kodu odczytuje plik w formacie JSON, który następnie j
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
 
-Język Erlang wykorzystuje skomplikowaną architekturę pamięci, która w różny sposób traktuje obiekty różnego typu. Większość obiektów, w szczególności skomplikowana strukturalnie reprezentacja danych w formacie JSON, przechowywana jest w prywatnych stertach każdego procesu i musi być kopiowana podczas przesyłania jej w wiadomościach pomiędzy nimi. Reguła ta nie dotyczy danych binarnych, w szczególności danych odczytanych z pliku, ponieważ te korzystają z innych algorytmów nie wymagających kopiowania kosztem większego zużycia pamięci.
+Język =Erlang= wykorzystuje skomplikowaną architekturę pamięci, która w różny sposób traktuje obiekty różnego typu. Większość obiektów, w szczególności skomplikowana strukturalnie reprezentacja danych w formacie JSON, przechowywana jest w prywatnych stertach każdego procesu i musi być kopiowana podczas przesyłania jej w wiadomościach pomiędzy nimi. Reguła ta nie dotyczy danych binarnych, w szczególności danych odczytanych z pliku, ponieważ te korzystają z innych algorytmów nie wymagających kopiowania kosztem większego zużycia pamięci.
 
 W związku z tym, aby zaradzić problemowi opisanemu powyżej, wystarczy przenieść operację dekodowania danych odczytanych z pliku bezpośrednio do procesów na nich operujących (listing [[ref:code:erlang-solution]]).
 W nowej wersji procesy przesyłają jedynie dane binarne, które nie wymagają kopiowania pamięci, a narzut wydajności spowodowany wielokrotnym ich dekodowaniem jest niższy niż ten spowodowany nadmiernym kopiowianiem. W efekcie, kod działa wydajniej, kosztem logiki przepływu danych i organizacji modułów.
 
 #+latex: \begin{listing}[ht]
-#+latex: \caption{\mylisting{Suboptymalne rozwiązanie problemu w języku Erlang.}}
+#+latex: \caption{\mylisting{Suboptymalne rozwiązanie problemu w języku \texttt{Erlang}.}}
 #+latex: \label{code:erlang-solution}
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true"))
 #+begin_src erlang
@@ -180,7 +180,7 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 - Opisać dostępne typy danych.
 - Opisać dostępne konstrukcje języka.
 - Porównać TVMIR do core lang. [[cite:PeytonJones1992]]
-- Porównać TVMIR do Core Erlang. [[cite:Carlsson2001,Carlsson2004]]
+- Porównać TVMIR do =Core Erlang=. [[cite:Carlsson2001,Carlsson2004]]
 
 ** Kompilacja kodu bajtowego
 
@@ -214,8 +214,8 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 #+end_center
 
 - Opisać krótko strategie GC (ref-count vs tracing). [[cite:Bacon2004]]
-- Wspomnieć o problemach kolekcji tracing GC (w kontekście problemu Erlanga). [[cite:Gudeman1993]]
-- Umotywować wykorzystanie zliczania referencji (wspomnieć, że Erlang też korzysta). [[cite:Shahriyar2012]]
+- Wspomnieć o problemach kolekcji tracing GC (w kontekście problemu =Erlang='a). [[cite:Gudeman1993]]
+- Umotywować wykorzystanie zliczania referencji (wspomnieć, że =Erlang= też korzysta). [[cite:Shahriyar2012]]
 
 ** Przetwarzanie współbieżne
 - Opisać różne sposoby przetwarzania wielowątkowego - SMP i AMP.
@@ -256,7 +256,7 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 ** Implementacja wbudowanych operatorów
 - Opisać wykorzystanie VStack.
 - Opisać dostępne operacje prymitywne (LispKit). [[cite:Abelson1996]]
-- Skonfrontować dostępne operacje prymitywne z Core Erlang. [[cite:Carlsson2004]]
+- Skonfrontować dostępne operacje prymitywne z =Core Erlang=. [[cite:Carlsson2004]]
 - Opisać optymalizacje operacji arytmetycznych. [[cite:Gudeman1993]]
 
 ** Ewaluacja argumentów i aplikacja funkcji
@@ -294,7 +294,7 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 - Skonfrontować publiczną stertę z architekturą prywatnej sterty. [[cite:Wilhelmsson2005]]
 - Wspomnieć o problemach prywatnej sterty (powolne przekazywanie wiadomości przez kopiowanie). cite:Wilhelmsson2005
 - Wspomnieć o istnieniu rozwiązań hybrydowych. [[cite:Wilhelmsson2005]]
-- Wspomnięć o problemach rozwiązań hybrydowych (usunięte z Erlang/OTP R15B02).
+- Wspomnięć o problemach rozwiązań hybrydowych (usunięte z =Erlang/OTP= R15B02).
 
 ** Implementacja alokatora obiektów
 - Opisać działanie kaskadowego alokatora. [[cite:Wilson1995]]
@@ -413,7 +413,7 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 
 - Opisać co udało się zrobić.
 - Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
-- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla Core Erlang, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism, optymalizacja wykorzystania stosu, hardłerowa implementacja interpretera kodu bajtowego).
+- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla =Core Erlang=, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism, optymalizacja wykorzystania stosu, hardłerowa implementacja interpretera kodu bajtowego).
 
 ** Leniwe zliczanie referencji
 - Przeanalizować szybkość, pauzy, zużycie pamięci.
