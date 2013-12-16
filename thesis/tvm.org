@@ -95,6 +95,8 @@ Celem pracy jest stworzenie interpretera kodu bajtowego zdolnego uruchamiać kod
 Językiem implementacji projektu jest język =D= (w wersji 2.0 opisanej w [[cite:Alexandrescu2010]]), stosunkowo nowoczesny, kompilowany do kodu maszynowego następca języka =C++=.
 
 ** Motywacja pracy
+#+latex: \label{sec:thesis-motivation}
+
 Motywacją powstania pracy są problemy napotkane podczas użytkowania języka =Erlang= [[cite:Armstrong1996]], dotyczące wydajności przesyłania wiadomości średniego rozmiaru w obecnej, standardowej jego implementacji. Problemy owe zilustrowano na listingu [[ref:code:erlang-problem]].
 
 Zaprezentowany fragment kodu odczytuje plik w formacie JSON, który następnie jest dekodowany do wewnętrznej reprezentacji posiadającej skomplikowaną strukturę, by ostatecznie został on wysłany do dużej liczby współbieżnie działających procesów celem dalszego przetwarzania (linia [[ref:line:bad]]). Rozwiązanie takie powoduje znaczący spadek wydajności.
@@ -322,34 +324,68 @@ Czwartą fazą jest faza optymalizacji, której zadaniem jest transformacja /drz
 Ostatnią, piątą fazą kompilacji jest faza generacji kodu bajtowego akceptowanego przez ThesisVM. Zadaniem tej fazy jest przetworzenie /drzewa składniowego/ do /strumienia kodu bajtowego/ za pomocą reguł kompilacji zgodnych z wybranym modelem maszyny wirtualnej (opisane szczegółowo w sekcji [[ref:sec:tvm-codegen]]).
 
 ** Interpretacja kodu bajtowego
+Istnieje wiele różnych modeli maszyn wirtualnych cechujących się różnymi architekturami interpreterów kodu bajtowego, czy nawet stopniem abstrakcyjności (tak zwane maszyny abstrakcyjne).
 
-- Opisać ogólnie architektury pamięci i przekazywanie wiadomości. [[cite:Wilhelmsson2005]]
-- Opisać sposób budowy interpreterów kodu bajtowego. [[cite:Steele1978]]
-- Opisać krótko różne architektury interpreterów (stosowa, rejestrowa, grafowa). [[cite:PeytonJones1992]]
-- Wspomnieć o wybranym modelu.
+Pod względem architektury interpretera kodu bajtowego można wyróżnić trzy główne architektury maszyn wirtualnych:
+
+- architekturę *stosową*, korzystającą ekskluzywnie z jednego lub wielu stosów podczas przetwarzania danych, która charakteryzuje się krótkimi, pod względem zajmowanej pamięci, instrukcjami;
+
+- architekturę *rejestrową*, korzystającą ekskluzywnie z wielu rejestrów podczas przetwarzania danych, która charakteryzuje się instrukcjami przyjmującymi wiele argumentów określających adresy rejestrów maszyny;
+
+- architektury *hybrydowe*, łączące dwa powyższe rozwiązania w różnym stopniu.
+
+Pod względem abstrakcyjności maszyny wirtualne można podzielić na dwie główne grupy:
+
+- *niskopoziomowe*, do których należą maszyny implementujące wyżej wymienione architektury; główną cechą maszyn niskopoziomowych jest obecność stosunkowo nieskomplikowanego kodu bajtowego, który jest przez maszynę interpretowany podczas jej działania;
+
+- *wysokopoziomowe*, które wymagają niestandardowego traktowania kodu programów; na przykład maszyna redukcji grafowych G-machine wykorzystująca grafową naturę kodu języków funkcyjnych do zrównoleglenia jego ewaluacji, opisana szczegółowo w [[cite:PeytonJones1992]].
+
+Od wyboru architektury interpretera kodu bajtowego bardzo często zależą dostępne funkcjonalności docelowego języka programowania. W celu wybrania odpowiedniej architektury należy przeprowadzić szczegółową analizę porządanych funkcjonalności implementowanego języka i możliwości ich zrealizowania w poszczególnych modelach maszyny wirtualnej. Szczegółowa analiza wpływu języka na możliwość jego zaimplementowania w danej architekturze została zawarta w [[cite:Steele1978]] wraz z praktycznymi wskazówkami dotyczącymi implementacji maszyn wirtualnych, co okazało się niezastąpionym źródłem wiedzy pomocnym przy implementacji ThesisVM.
+
+Interpreter kodu bajtowego zaimplementowany w ramach pracy wykorzystuje niskopoziomową architekturę stosową wykorzystującą wiele stosów oraz niewielki zbiór rejestrów i jest zmodyfikowaną wersją interpretera opisanego w $\cite[\text{rozdział 4}]{PeytonJones1992}$. Szczegółowy opis implementacji został zawarty w dedykowanej mu sekcji [[ref:sec:tvm-vm]] pracy.
 
 ** Zarządzanie pamięcią
-- Opisać krótko strategie alokacji i architektury sterty. [[cite:Wilson1995,Wilhelmsson2005]]
+Ważnym aspektem architektury maszyny wirtualnej jest sposób w jaki wykorzystuje ona pamięć operacyjną i rozdziela ją pomiędzy procesy w niej działające, czyli architektura wykorzystania sterty (ang. /heap architecture/).
+
+Rysunek [[ref:fig:mem-archs]] przedstawia trzy główne architektury wykorzystania sterty w środowisku wielo-procesowym, gdzie wiele autonomicznych procesów konkuruje o zasób jakim jest pamięć:
+
+- architektura *sterty prywatnej*, charakteryzująca się zupełną separacją pamięci poszczególnych procesów, co prowadzi do konieczności kopiowania obiektów składających się na wiadomości przesyłane pomiędzy nimi;
+
+- architektura *sterty współdzielonej*, charakteryzująca się współdzieleniem jednego obszaru pamięci pomiędzy wszystkie procesy, dzięki czemu wiadomości (a także ich części) mogą być współdzielone przez procesy bez konieczności ich kopiowania;
+
+- architektura *hybrydowa*, mająca za zadanie połączenie zalet obu powyższych rozwiązać przez separację danych lokalnych procesów i współdzielenie danych wiadomości przesyłanych pomiędzy procesami; rozwiązanie to wymaga skomplikowanej, statycznej analizy kodu programów, która nie zawsze może być przeprowadzone.
 
 #+begin_center
-#+label: ref:mem-archs
+#+label: fig:mem-archs
 #+caption: Różne modele wykorzystania pamięci maszyn wirtualnych.
 #+attr_latex: scale=1.0
 [[file:./img/mem.pdf]]
 #+end_center
 
-- Opisać krótko strategie GC (ref-count vs tracing). [[cite:Bacon2004]]
-- Wspomnieć o problemach kolekcji tracing GC (w kontekście problemu =Erlang='a). [[cite:Gudeman1993]]
-- Umotywować wykorzystanie zliczania referencji (wspomnieć, że =Erlang= też korzysta). [[cite:Shahriyar2012]]
+Szczegółowa analiza wydajności architektur przedstawionych na rysunku [[ref:fig:mem-archs]] w kontekście języka =Erlang=, do semantyki którego ThesisVM jest bardzo zbliżona, została zawarta w [[cite:Wilhelmsson2005]]. Na podstawie tej analizy zdecydowano się zastosować architekturę sterty współdzielonej, która minimalizuje problem kopiowania pamięci (/ergo/, spełnia nieformalny cel pracy sformułowany w sekcji [[ref:sec:thesis-motivation]]) oraz nie wymaga skomplikowanej statycznej analizy kodu programów. Implementacja pozostawia jednak możliwość późniejszej modyfikacji architektury wykorzystania sterty.
+
+Z problemem architektury wykorzystania sterty ściśle związany jest problem wyboru algorytmu alokacji pamięci. W [[cite:Wilson1995]] zawarto obszerne zestawienie algorytmów alokacji pamięci, na podstawie, którego zdecydowano się wykorzystać alokatory kaskadowe, /cache/'ujące pamięć zwolnionych obiektów w celu optymalizacji alokacji. Implementacja zastosowanego alokatora została zawarta w sekcji [[ref:sec:tvm-gc]].
+
+Ostatnim aspektem zarządzania pamięci maszyny wirtualnej jest kolekcja pamięci obiektow nieosiągalnych. Kolektory obiektów nieosiągalnych można podzielić na dwa typy, ze względu na dane, które analizują:
+
+- kolektory *śledzące* (ang. /tracing-GC/), które okresowo trawersują zbiór obiektów bazowych (ang. /root-set/) celem oznaczenia wszystkich obiektów /osiągalnych/ w danej chwili w systemie;
+
+- kolektory *zliczające* (ang. /reference-counting-GC/), które na bieżąco zliczają ilość aktywnych referencji do każdego obiektu i natychmiastowo usuwają obiekty, których licznik referencji osiąga zero, co oznacza, że dany obiekt jest /nieosiągalny/.
+
+Kolektory różnych typów mają bardzo różne charakterystyki wydajnościowe w zależności od architektury wykorzystania sterty zastosowanej w maszynie wirtualnej. Kolektory śledzące przeważnie generują długie pauzy w architekturach współdzielonych, natomiast kolektory zliczające prezentują stały narzut obliczeniowy związany z ciągłą modifykacją liczników referencji. Oczywiście istnieją dobrze poznane metody optymalizacji obu typu algorytmów [[cite:Shahriyar2012,Bacon2004]], które zacierają wszelkie różnice w ich charakterystykach wydajnościowych.
+
+W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci" oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje.
 
 ** Przetwarzanie współbieżne
-- Opisać różne sposoby przetwarzania wielowątkowego - SMP i AMP.
+Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP - symetryczny multiprocesor, którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych, wykonujących jednakowe operacje na różnych zbiorach danych.
 
-# TODO Jest to rozwiązanie alternatywne dla asymetrycznych architektur, gdzie dla różnych typów zadań istnieją dedykowane wątki, które skaluje się znacznie lepiej od asymetrycznego.
+Alternatywnym rozwiązaniem jest model asymetrycznego multiprocessingu, gdzie dla różnych typów zadań istnieją dedykowane jednostki operacyjne (na przykład dedykowane wątki aplikacji). Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy algorytmów zarządzania pamięci, których implementację umożliwiają (na przykład algorytm VCGC [[cite:Huelsbergen1998]] wykorzystujący trzy asymetryczne wątki), jednak przeważnie ich skalowalność jest ograniczona w związku z czym ich wykorzystanie w implementacji ThesisVM jest niewskazane.
 
-- Opisać wady i zalety poszczególnych modeli (SMP - skalowalność, AMP - VCGC). [[cite:Huelsbergen1998]]
-- Opisać krótko Model Aktorowy. [[cite:Hewitt1973,Clinger1981]].
-- Umotywować wybrany model przetwarzania i jego relację z Modelem Actorowym.
+W kontekście maszyny wirtualnej ThesisVM model symetrycznego multiprocessingu polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu. Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym współbieżności.
+
+Głównymi założeniami Modelu Aktorowego [[cite:Hewitt1973]] jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO, celem wykonania zaprogramowanych operacji.
+
+Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
 * Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
