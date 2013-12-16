@@ -12,6 +12,7 @@
 #+LaTeX_HEADER: \usepackage{amsmath}
 #+LATEX_HEADER: \usepackage{minted}
 #+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage{multicol}
 #+LATEX_HEADER: \usepackage[nottoc, notlof, notlot]{tocbibind}
 #+OPTIONS: tags:nil, todo:nil, toc:nil, date:nil
 #+END_OPTIONS
@@ -163,41 +164,165 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 * Architektura ThesisVM
 #+latex: \label{sec:tvm-arch}
 
-- Opisać architekturę w odniesieniu do wyżej wymienionych celów pracy.
+Ninejsza sekcja opisuje architekturę maszyny wirtualnej ThesisVM powstałej na potrzeby pracy oraz języka przez nią akceptowanego.
+
+Rysunek [[ref:fig:tvm-arch]] zawiera schematyczną reprezentację maszyny wirtualnej ThesisVM uwzględniającą architekturę procesora sprzętu, na którym działa system operacyjny oraz sama maszyna wirtualna. Na schemacie widać poszczególne podsystemy ThesisVM, takie jak autonomiczne procesy (zwane dalej /mikroprocesami/, =µProcN=), czy symetryczne multiprocesory (zwane dalej =SMPn=).
+
+Mikroprocesy są przypisane do symetrycznych multiprocesorów w stosunku wiele-do-jednego, to znaczy każdy mikroproces jest przypisany do dokładnie jednego symetrycznego multiprocesora, który natomiast może zarządzać zbiorem wielu mikroprocesów.
 
 #+begin_center
-#+label: ref:tvm-arch
+#+label: fig:tvm-arch
 #+caption: Architektura maszyny wirtualnej ThesisVM.
 #+attr_latex: scale=1.0
 [[file:./img/arch.pdf]]
 #+end_center
 
-- Wspomnieć o wykorzystaniu TVMIR.
-- Wspomnieć o wykorzystaniu kodu bajtowego i jego kompilatora.
+Każdy symetryczny multiprocesor działa w osobnym wątku procesora sprzętowego, zapewniając rzeczywistą współbieżność. Wszystkie =SMPn= są takie same i wykonują takie same zadania, czyli harmonogramowanie i wywłaszczanie mikroprocesów, a różni je jedynie stan, w którym się znajdują oraz zbiór procesów, którymi zarządzają.
+Na schemacie widnieje mapowanie jeden-do-jednego pomiędzy rdzeniami procesora (=CPUn=) a poszczególnymi =SMPn=, nie jest to jednak wymóg konieczny i zależy od konfiguracji maszyny wirtualnej. Konfigurowalna ilość równocześnie działających SMP pomaga osiągnąć lepszą skalowalność maszyny wirtualnej i może być zmieniana dynamicznie wedle potrzeb.
 
-** Reprezentacja pośrednia programów (TVMIR)
-- Opisać krótko TVMIR. [[cite:Abelson1996,PeytonJones1992]]
-- Opisać dostępne typy danych.
-- Opisać dostępne konstrukcje języka.
-- Porównać TVMIR do core lang. [[cite:PeytonJones1992]]
-- Porównać TVMIR do =Core Erlang=. [[cite:Carlsson2001,Carlsson2004]]
+Pozostając w zgodzie ze schematem przedstawionym na rysunku [[ref:fig:vm-arch]], interakcja z maszyną ThesisVM przebiega w analogiczny sposób. Kod programów w reprezentacji pośredniej (TVMIR) jest kompilowany do kodu bajtowego akceptowanego przez maszynę wirtualną, która następnie go ładuje i wykonuje umożliwiając zrównoleglenie obliczeń poprzez tworzenie nowych procesów i przesyłanie pomiędzy nimi wiadomości.
+
+** Reprezentacja pośrednia programów
+ThesisVM wykorzystuje prostą reprezentację pośrednią programów w postaci TVMIR - języka lisp'owego z rodziny =Scheme= [[cite:Abelson1996]], który jest dostatecznie ekspresywny, by można w nim było zapisać nietrywialne algorytmy, a jednocześnie na tyle prosty, by ułatwić jego późniejszą kompilację do kodu bajtowego akceptowanego przez maszynę wirtualną.
+
+Języki pośrednie reprezentacji programów są często stosowane w implementacjach wielu maszyn wirtualnych, takich jak ParrotVM, czy CoreVM [[cite:PeytonJones1992]], a także w implementacjach kompilatorów kodu maszynowego wielu języków programowania (na przykład GCC, LLVM). Reprezentacje pośrednie mają wiele zalet, począwszy od ułatwienia wsparcia dla szerszej gamy języków wysokiego poziomu, na możliwości tworzenia wygodnych założeń dodatkowych kończąc.
+
+Na listingu [[ref:code:tvmir]] spisana w formacie BNF została gramatyka języka reprezentacji pośredniej wykorzystanego w maszynie wirtualnej ThesisVM. Gramatyka ta jest nieskomplikowana i w dużej mierze przypomina gramatiki różnych dialektów języka =Lisp=.
+
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Gramatyka języka TVMIR.}}
+#+latex: \label{code:tvmir}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src xml
+  <program>           ::= <definitions>
+  <definitions>       ::= <definition> <definitions> | ''
+  <definition>        ::= '(' 'define' <argument-list>
+                                       <function-body> ')'
+  <argument-list>     ::= '(' <function-name> <arguments> ')'
+  <arguments>         ::= <argument-name> <arguments> | ''
+  <argument-name>     ::= <symbol>
+  <function-name>     ::= <symbol>
+  <function-body>     ::= <expression>
+  <expression>        ::= <simple-expression> | <application>
+                        | <conditional> | <quote>
+  <simple-expression> ::= <list> | <symbol> | <number>
+  <application>       ::= '(' <expression> <expressions> ')'
+  <expressions>       ::= <exrpession> <exrpessions> | ''
+  <conditional>       ::= '(' 'if' <expression>
+                                   <expression>
+                                   <expression> ')'
+  <quote>             ::= ''' <expression>
+  <list>              ::= '(' <expression> ')'
+  <symbol>            ::= <literal-string> | <atom>
+  <literal-string>    ::= '"' "Dowolny literał znakowy." '"'
+  <atom>              ::= "Dowolny literał znakowy bez znaków białych."
+  <number>            ::= "Dowolny literał liczbowy."
+#+end_src
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
+Języki z rodziny =Lisp= są bardzo wygodnym medium dla pośredniej reprezentacji programów ponieważ przedstawiają one drzewo syntaktyczne analizowanego kodu programu i nie wymagają skomplikowanego algorytmu parsowania. Dodatkowo, homoikoniczność tych języków może pomóc w tworzeniu narzędzi służących do przetwarzania kodu rozpatrywanego języka (w szczególności kompilatorów) bezpośrednio w rozpatrywanym języku. Temat ten został dogłębnie zbadany w [[cite:Abelson1996]]. Dodatek [[ref:sec:tvm-samples]] zawiera przykłady kodu w języku pośredniej reprezentacji programów TVMIR.
+
+Język reprezentacji pośredniej przedstawiony w pracy wymaga stworzenia kilku założeń dodatkowych dotyczących transformacji kodu. Najważniejszym z nich jest konieczność przeprowadzenia operacji lambda-unoszenia (ang. /lambda lifting/), opisanej bardzo dokładnie w [[cite:PeytonJones1992]], której efekt zaprezentowano na listingu [[ref:code:lambda-lifting]].
+
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Fragmenty kodu prezentujące operację lambda-unoszenia.}}
+#+latex: \label{code:lambda-lifting}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+
+#+latex: \begin{multicols}{2}
+#+begin_src scheme
+  ;; Przed lambda-unoszeniem:
+  (define (make-adder n)
+    (lambda (x)
+      (+ x n)))
+#+end_src
+
+#+latex: \columnbreak
+#+begin_src scheme
+  ;; Po lambda-unoszeniu:
+  (define (__make-adder_lambda0 n x)
+    (+ x n))
+  
+  (define (make-adder n)
+    (__make-adder_lambda n))
+#+end_src
+#+latex: \end{multicols}
+
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
+Lambda-unoszenie polega na transformacji ciał funkcji w taki sposób, by tworzone w nich funkcje anonimowe zostały przeniesione na poziom główny zasięgu nazw (ang. /top-level scope/) dzięki czemu do ich implementacji wystarczy jedynie częściowa aplikacja funkcji. Na drugiej części listingu [[ref:code:lambda-lifting]] funkcja =make-adder= zwracająca anonimową funkcję została transformowana na dwie funkcje, z których =make-adder= pozostaje funkcją unarną, która korzysta z częściowej aplikacji funkcji binarnej =__make-adder_lambda0= wykonującej operację dodawania.
+
+Pełna i poprawna implementacja operacji lambda-unoszenia jest skomplikowana, toteż nie została zawarta w dołączonym do projektu kompilatorze kodu bajtowego i musi zostać wykonana ręcznie.
+
+Język pośredniej reprezentacji programów zastosowany w maszynie wirtualnej ThesisVM jest bardzo podobny do języka =Core Lang= wykorzystywanego w [[cite:PeytonJones1992]], jednak nie wspiera on niektórych jego konstrukcji, takich jak =let(rec)=, czy definicje dowolnych obiektów złożonych. Z drugiej strony wspiera on konstrukcje związane z Modelem Aktorowym (=receive=, =send= oraz =spawn=) oraz jest w stanie emulować brakujące konstrukcje odpowiednio przez wykorzystanie transformacji kodu połączonej z lambda-unoszeniem (listing [[ref:code:poor-mans-let]]) oraz "tagowania" list (przechowywania informacji o typie obiektu w pierwszym elemencie listy enkodującej ten obiekt).
+
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Ograniczona implementacja konstrukcji \texttt{let}.}}
+#+latex: \label{code:poor-mans-let}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+
+#+latex: \begin{multicols}{2}
+#+begin_src scheme
+  ;; Przed transformacją:
+  (define (function x)
+    (let ((value (* 2 x)))
+      (* value value)))
+
+  ;; Po transformacji:
+  (define (function x)
+    ((lambda (value)
+       (* value value))
+     (* 2 x)))
+#+end_src
+
+#+latex: \columnbreak
+#+begin_src scheme
+  ;; Po lambda-unoszeniu:
+  (define (__function_lambda0 value)
+    (* value value))
+
+  (define (function x)
+    (__function_lambda0 (* 2 x)))
+#+end_src
+#+latex: \end{multicols}
+
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
+Kolejnym podobnym językiem reprezentacji pośredniej jest =Core Erlang= [[cite:Carlsson2001]] wykorzystywany w standardowej implementacji języka =Erlang=. TVMIR jest bardzo okrojoną wersją języka =Core Erlang=, pozbawioną elementów dopasowywania wzorców, która jednak wspiera pozostałe ważne jego elementy, takie jak konstrukcje odpowiedzialne za tworzenie procesów oraz przesyłanie i odbieranie wiadomości.
+Istnieje możliwość rozszerzenia funkcjonalności TVMIR celem wsparcia pełnej specyfikacji =Core Erlang= [[cite:Carlsson2004]], jednak jest to poza zakresem pracy. Więcej informacji o przyszłych kierunkach rozwoju projektu zostało zawarte w sekcji [[ref:sec:future-development]].
 
 ** Kompilacja kodu bajtowego
 
+Język pośredniej reprezentacji programów jest wygodnym medium do zapisu algorytmów, jednak wymaga on uprzedniego skompilowania do kodu bajtowego, który jest akceptowany przez maszynę wirtualną ThesisVM.
+
+Ponieważ kompilacja kodu nie jest /stricte/ tematem pracy, mniej ważne szczegóły implementacji zostały pominięte, a niniejsza sekcja zarysowuje poszczególne fazy kompilacji kodu bajtowego ThesisVM.
+
+Rysunek [[ref:fig:tvm-compiler-pipeline]] zawiera schemat działania kompilatora kodu bajtowego ThesisVM wraz z przykładami pośrednich reprezentacji kompilowanego kodu w poszczególnych fazach kompilacji.
+
 #+begin_center
-#+label: ref:tvm-compiler-pipeline
-#+caption: /Pipeline/ kompilatora kodu bajtowego ThesisVM wraz ze schematami reprezentacji danych poszczególnych faz.
-#+attr_latex: scale=0.55
+#+label: fig:tvm-compiler-pipeline
+#+caption: Schemat potokowega działania kompilatora kodu bajtowego ThesisVM wraz ze przykładami reprezentacji danych poszczególnych faz kompilacji.
+#+attr_latex: scale=0.5
 [[file:./img/pipeline.pdf]]
 #+end_center
 
-- Opisać krótko analizę leksykalną.
-- Opisać krótko analizę syntaktyczną.
-- Opisać krótko analizę semantyczną (+ proste transformacje TVMIR jeśli jakieś będą).
-- Opisać krótko fazę optymalizacji (+ proste optymalizacje jak constant folding, etc).
-- Opisać krótko generację kodu bajtowego.
+Kompilator został zaimplementowany w sposób /potokowy/, to znaczy poszczególne fazy są logicznie odseparowane od siebie i wykonywane jedna po drugiej. Dzięki zastosowaniu leniwych konstrukcji języka =D= [[cite:Alexandrescu2010]] wszystkie te fazy odbywają się /jednocześnie/ i /na rządanie/ a w przypadku wykrycia błędu w danej fazie poprzednie fazy natychmiastowo się kończą, bez konieczności przetworzenia całego zestawu danych, które otrzymały na wejściu.
+
+Pierwszą fazą jest faza analizy leksykalnej, której zadaniem jest przetworzenie /strumienia znaków/ kodu źródłowego programu w pośredniej reprezentacji TVMIR do /strumienia tokenów/, czyli elementarnych ciągów znaków będących leksemami języka. Faza ta przeprowadza także walidację składni na poziomie tokenów oraz filtrację niepotrzebnych tokenów (takich jak znaki białe, które nie mają znaczenia w TVMIR).
+
+Drugą fazą jest faza analizy syntaktycznej, której zadaniem jest przetworzenie powstającego leniwie /strumienia tokenów/ na /wstępne drzewo parsowania/ składające się z prymitywnych konstrukcji języka TVMIR, takich jak listy, symbole i liczby. Faza ta waliduje składnię na poziomie zaawansowanych konstrukcji języka, które dzięki jego homoikoniczności zbudowane są z prymitywniejszych jego konstrukcji.
+
+Trzecią fazą jest faza analizy semantycznej, której zadaniem jest przetworzenie /wstępnego drzewa parsowania/ na bardziej abstrakcyjne /drzewo składniowe/ składające się semantycznie znaczących węzłów, takich jak aplikacja funkcji, wywołania operatorów wbudowanych, czy odwołania do zmiennych. Faza ta waliduje kod na poziomie semantycznym, sprawdzając poprawność wykorzystania różnych konstrukcji języka TVMIR.
+
+Czwartą fazą jest faza optymalizacji, której zadaniem jest transformacja /drzewa składniowego/ powstałego w poprzedniej fazie do jego ekwiwalentu działającego szybciej po skompilowaniu. Faza ta obecnie nie wykonuje rzadnych interesujących transformacji, jednak istnieje możliwość rozszerzenia jej funkcjonalności w przyszłości (opisane krótko w sekcji [[ref:sec:future-development]]).
+
+Ostatnią, piątą fazą kompilacji jest faza generacji kodu bajtowego akceptowanego przez ThesisVM. Zadaniem tej fazy jest przetworzenie /drzewa składniowego/ do /strumienia kodu bajtowego/ za pomocą reguł kompilacji zgodnych z wybranym modelem maszyny wirtualnej (opisane szczegółowo w sekcji [[ref:sec:tvm-codegen]]).
 
 ** Interpretacja kodu bajtowego
+
 - Opisać ogólnie architektury pamięci i przekazywanie wiadomości. [[cite:Wilhelmsson2005]]
 - Opisać sposób budowy interpreterów kodu bajtowego. [[cite:Steele1978]]
 - Opisać krótko różne architektury interpreterów (stosowa, rejestrowa, grafowa). [[cite:PeytonJones1992]]
@@ -219,6 +344,9 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 
 ** Przetwarzanie współbieżne
 - Opisać różne sposoby przetwarzania wielowątkowego - SMP i AMP.
+
+# TODO Jest to rozwiązanie alternatywne dla asymetrycznych architektur, gdzie dla różnych typów zadań istnieją dedykowane wątki, które skaluje się znacznie lepiej od asymetrycznego.
+
 - Opisać wady i zalety poszczególnych modeli (SMP - skalowalność, AMP - VCGC). [[cite:Huelsbergen1998]]
 - Opisać krótko Model Aktorowy. [[cite:Hewitt1973,Clinger1981]].
 - Umotywować wybrany model przetwarzania i jego relację z Modelem Actorowym.
@@ -271,6 +399,8 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 - Opisać dostępne opkody kodu bajtowego. [[cite:Fairbairn1987,PeytonJones1992]]
 
 ** Generacja kodu bajtowego ThesisVM
+#+latex: \label{sec:tvm-codegen}
+
 - Opisać szczegółowo generację kodu bajtowego. [[cite:PeytonJones1992]]
 
 * Model zarządzania pamięcią
@@ -413,7 +543,6 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 
 - Opisać co udało się zrobić.
 - Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
-- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla =Core Erlang=, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism, optymalizacja wykorzystania stosu, hardłerowa implementacja interpretera kodu bajtowego).
 
 ** Leniwe zliczanie referencji
 - Przeanalizować szybkość, pauzy, zużycie pamięci.
@@ -421,6 +550,10 @@ Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawi
 ** Przesyłanie wiadomości
 - Przeanalizować szybkość przesyłania wiadomości/konieczność czekania procesów, wielkość kolejek wiadomości.
 
+** Kierunki przyszłego rozwoju
+#+latex: \label{sec:future-development}
+
+- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla =Core Erlang=, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism, optymalizacja wykorzystania stosu, hardłerowa implementacja interpretera kodu bajtowego).
 
 # The bibliography
 #+begin_latex
