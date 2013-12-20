@@ -161,7 +161,7 @@ Sekcja [[ref:sec:tvm-smp]] szczegółowo opisuje implementację asynchronicznego
 
 Sekcja [[ref:sec:conclusion]] zawiera podsumowanie pracy oraz zarys możliwych kierunków dalszego rozwoju projektu.
 
-Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio przykładowe programy gotowe do uruchomienia na maszynie wirtualnej ThesisVM, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
+Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio wskazówki użytkowania ThesisVM i przykładowe programy gotowe do uruchomienia na maszynie wirtualnej, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
 
 * Architektura ThesisVM
 #+latex: \label{sec:tvm-arch}
@@ -612,12 +612,14 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 * Przykładowe programy
 #+latex: \label{sec:tvm-samples}
 
+** Interfejs i użytkowanie ThesisVM
 - Opisać sposób uruchamiania maszyny wirtualnej.
-- Hello world.
-- Factorial.
-- Fibonacci.
-- Concurrent Hello world.
-- Map-reduce.
+
+** Hello world
+** Factorial
+** Fibonacci
+** Concurrent Hello world
+** Map-reduce
 
 * Spisy wbudowanych funkcji i operatorów
 #+latex: \label{sec:tvm-primops}
