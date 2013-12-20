@@ -44,7 +44,7 @@
 
 * Wprowadzenie
 ** skiptitle
-*Maszyna wirtualna* - środowisko uruchomieniowe języków programowania uniezależniające je od platformy uruchomieniowej.
+*Maszyna wirtualna* - środowisko uruchomieniowe języków programowania uniezależniające je od platformy sprzętowej.
 
 #+latex: \vfill
 #+latex: \pause
@@ -58,39 +58,12 @@ W skład pracy wchodzą:
 #+latex: \pause
 - Implementacja Modelu Aktorowego (ang. Actor Model).
 
-* Motywacja pracy
-** Problemy Erlanga
-
-#+begin_src erlang
-start() ->
-    Data = file:read("file.json"),    %% <<"Dane ...">>
-    transmogrify(Data).
-#+end_src
-
-#+latex: \pause
-
+** Motywacja pracy
 #+begin_src erlang
 transmogrify(Data) ->
     Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
-    JSON = json:decode(Data),         %% {[Dane ...]}
+    JSON = json:decode(Data),
     framework:map_reduce(Pids, JSON). %% $#&^@
-
-do_stuff(JSON) ->
-    %% Operacje na danych.
-    result.
-#+end_src
-
-** Problemy Erlanga
-
-#+begin_src erlang
-transmogrify(Data) ->
-    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
-    framework:map_reduce(Pids, Data).
-
-do_stuff(Data) ->             %% <<"Dane ...">>
-    JSON = json:decode(Data), %% {[Dane ...]} * bazylion
-    %% Operacje na danych.
-    result.
 #+end_src
 
 #+latex: \pause
@@ -138,21 +111,21 @@ Oparty o *Three Instruction Machine*:
            ENTER add   # Wejdź do domknięcia "add".
   add:     TAKE 2      # Pobierz dwa argumenty ze stosu.
            PUSH __add0
-           ENTER 1
+           ENTER 1     # PUSHC 2, RETURN
   __add0:  PUSH __add1
-           ENTER 0     # PUSHC 2, RETURN
+           ENTER 0
   __add1:  OP_ADD
            RETURN
 #+end_src
 
-** Kolekcja śmieci
+** Kolekcja obiektów nieosiągalnych
 #+begin_center
 #+ATTR_LATEX: scale=0.8
 [[file:./img/GC.pdf]]
 #+end_center
 
 #+latex: \pause
-- Wykorzystuje zliczanie referencji.
+- Wykorzystuje leniwe zliczanie referencji.
 
 #+latex: \pause
 - Kolekcja pamięci procesu nie zależy od innych procesów.
@@ -163,54 +136,14 @@ Oparty o *Three Instruction Machine*:
 #+latex: \pause
 - Proste obiekty ($\leq$ 8 bajtów) są kopiowane.
 
-** Opóźnione zliczanie referencji
-#+begin_latex
-{
-\tiny
-\begin{multicols}{2}
-#+end_latex
-#+begin_src d
-TVMObj* alloc(uProc* context, size_t size) {
-    TVMObj* newObject;
-    if(!hasSuitableObject(context, size)) {
-        newObject = alloc(context.allocator, size);
-    } else {
-        newObject = popFreeList(context, size);
-        collect(context, newObject);
-    }
-    atomicIncrement(&newObject.refCount);
-    return newObject;
-}
-#+end_src
-
-#+latex: \columnbreak
-#+latex: \pause
-#+begin_src d
-void collect(uProc* context, TVMObj* object) {
-    foreach(TVMObj* pointer; object) {
-         free(context, pointer);
-    }
-}
-#+end_src
+** Leniwe zliczanie referencji
+- Opóźnienie kolekcji obiektu do następnej alokacji.
 
 #+latex: \pause
-#+begin_src d
-void free(uProc* contex, TVMObj* object) {
-    if(atomicDecrement(&object.refCount) == 0) {
-        pushFreeList(context, object);
-    }
-}
-#+end_src
-
-#+begin_latex
-\end{multicols}
-}
-#+end_latex
-#+latex: \pause
-- Szybka dealokacje.
+- Szybkie dealokacje.
 
 #+latex: \pause
-- Szybka alokacja zamortyzowana listą wolnych obiektów.
+- Szybkie alokacje zamortyzowane listą wolnych obiektów.
 
 #+latex: \pause
 - Pamięć nie jest natychmiastowo zwracana do Systemu Operacyjnego.
@@ -225,14 +158,16 @@ void free(uProc* contex, TVMObj* object) {
 #+end_center
 
 #+latex: \pause
-- *Pid* == wskaźnik na kontekst procesu.
+- Idetyfikator procesu (pid) to wskaźnik na kontekst procesu.
 
 #+latex: \pause
 - Wykorzystuje kolejki nieblokujące.
 
-** Symmetric Multiprocessing
+** Symetryczny Multiprocessing
+#+latex: \vspace{0.5cm}
+
 #+begin_center
-#+ATTR_LATEX: scale=0.8
+#+ATTR_LATEX: scale=0.5
 [[file:./img/SMP.pdf]]
 #+end_center
 
@@ -240,26 +175,28 @@ void free(uProc* contex, TVMObj* object) {
 - Wykorzystuje Model Aktorowy!
 
 #+latex: \pause
+#+begin_center
+#+ATTR_LATEX: scale=0.8
+[[file:./img/Sched.pdf]]
+#+end_center
+
 - Procesy są wywłaszczane (ang. preemptive concurrency).
 
-#+latex: \pause
-- Obecnie brak automatycznego balansowania obciążenia procesorów.
-
-
-* Podsumowanie - TODO
+* Podsumowanie
 ** skiptitle
 #+latex: \vfill
 Projekt implementuje:
+
 - Interpreter kodu bajtowego oparty o *Three Instruction Machine*.
 
 #+latex: \pause
 - Kompilator kodu bajtowego.
 
 #+latex: \pause
-- Kolektor obiektów nieosiągalnych oparty o *opóźnione zliczanie referencji*.
+- Kolektor obiektów nieosiągalnych oparty o *leniwe zliczanie referencji*.
 
 #+latex: \pause
-- Model Aktorowy oparty o *kolejki nieblokujące*.
+- Architekturę SMP oraz Model Aktorowy oparty o *kolejki nieblokujące*.
 
 #+latex: \vfill
 * 
