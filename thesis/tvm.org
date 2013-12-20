@@ -195,6 +195,7 @@ Na listingu [[ref:code:tvmir]] spisana w formacie BNF została gramatyka języka
 #+latex: \caption{\mylisting{Gramatyka języka TVMIR.}}
 #+latex: \label{code:tvmir}
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+# TODO Add primop, apply, send, receive and spawn.
 #+begin_src xml
   <program>           ::= <definitions>
   <definitions>       ::= <definition> <definitions> | ''
@@ -374,23 +375,27 @@ Ostatnim aspektem zarządzania pamięci maszyny wirtualnej jest kolekcja pamięc
 
 Kolektory różnych typów mają bardzo różne charakterystyki wydajnościowe w zależności od architektury wykorzystania sterty zastosowanej w maszynie wirtualnej. Kolektory śledzące przeważnie generują długie pauzy w architekturach współdzielonych, natomiast kolektory zliczające prezentują stały narzut obliczeniowy związany z ciągłą modifykacją liczników referencji. Oczywiście istnieją dobrze poznane metody optymalizacji obu typu algorytmów [[cite:Shahriyar2012,Bacon2004]], które zacierają wszelkie różnice w ich charakterystykach wydajnościowych.
 
-W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci" oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje.
+W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci", oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje.
 
 ** Przetwarzanie współbieżne
-Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP - symetryczny multiprocesor, którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych, wykonujących jednakowe operacje na różnych zbiorach danych (rysunek [[ref:fig:amp-vs-smp]]).
+Systemy współbieżne często realizują model symetrycznego multiprocessingu (/SMP/), którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych wykonujących jednakowe operacje na różnych zbiorach danych (=SMPn= na rysunku [[ref:fig:amp-vs-smp]]).
 
 #+begin_center
 #+label: fig:amp-vs-smp
 #+caption: Różne modele przetwarzania współbieżnego.
-#+attr_latex: scale=1.0
+#+attr_latex: scale=0.5
 [[file:./img/ampvssmp.pdf]]
 #+end_center
 
-Alternatywnym rozwiązaniem jest model asymetrycznego multiprocessingu (rysunek [[ref:fig:amp-vs-smp]]), gdzie dla różnych typów zadań istnieją dedykowane jednostki operacyjne, takie jak wątki, czy procesy systemu operacyjnego. Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy algorytmów zarządzania pamięcią, których implementację umożliwiają (na przykład algorytm VCGC [[cite:Huelsbergen1998]] wykorzystujący trzy asymetryczne wątki).
+Alternatywnym rozwiązaniem jest model asymetrycznego multiprocessingu (/AMP/) (=AMPn= na rysunku [[ref:fig:amp-vs-smp]]), gdzie dla różnych typów zadań istnieją dedykowane, wyspecjalizowane jednostki operacyjne, takie jak wątki, lub procesy systemu operacyjnego.
 
-W kontekście maszyny wirtualnej ThesisVM model symetrycznego multiprocessingu polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu.
+Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy algorytmów, których implementację umożliwiają (na przykład algorytm zarządzania pamięcią VCGC [[cite:Huelsbergen1998]] wykorzystujący trzy asymetryczne wątki), jednak charakteryzują się skomplikowaniem interakcji poszczególnych jednostek operacyjnych a niejednokrotnie także słabą skalowalnością całego rozwiązania.
 
-Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym. Głównymi założeniami Modelu Aktorowego [[cite:Hewitt1973]] jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO, celem wykonania zaprogramowanych operacji.
+# TODO Rewrite the preceeding sentence.
+
+Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP, który w kontekście maszyny wirtualnej ThesisVM polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu.
+
+Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[cite:Hewitt1973]], którego głównym założeniem jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO (ang. /First In Last Out/).
 
 Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
