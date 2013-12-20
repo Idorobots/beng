@@ -405,7 +405,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 #+label: ref:tvm-regs
 #+caption: Schemat stanu maszyny wirtualnej.
 #+attr_latex: scale=1.5
-[[file:./img/uProc2.pdf]]
+[[file:./img/uProc.pdf]]
 #+end_center
 
 - Opisać wykorzystywane rejestry.
@@ -451,11 +451,10 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 
 - Opisać krótko architekturę wspólnej sterty. [[cite:Wilhelmsson2005]]
 
-# TODO Actually make this.
 #+begin_center
 #+label: ref:tvm-shared-mem
 #+caption: Model wspólnej pamięci ThesisVM.
-#+attr_latex: scale=1.2
+#+attr_latex: scale=1.5
 [[file:./img/sharedmem.pdf]]
 #+end_center
 
@@ -508,7 +507,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 #+label: ref:tvm-gc-regs
 #+caption: Schemat rejestrów wymaganych przez implementację kolektora obiektów nieosiągalnych.
 #+attr_latex: scale=1.5
-[[file:./img/GC2.pdf]]
+[[file:./img/GC.pdf]]
 #+end_center
 
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
@@ -529,7 +528,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 #+label: ref:tvm-smp
 #+caption: Schemat symetrycznego multiprocesora ThesisVM.
 #+attr_latex: scale=1.0
-[[file:./img/SMP2.pdf]]
+[[file:./img/SMP.pdf]]
 #+end_center
 
 - Opisać bardziej szczegółowo działanie SMP - wiadomości kontrolne oraz RQue.
@@ -544,7 +543,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 #+label: ref:tvm-actor-regs
 #+caption: Schemat rejestrów wymaganych przez implementację Modelu Aktorowego.
 #+attr_latex: scale=1.5
-[[file:./img/Actor2.pdf]]
+[[file:./img/Actor.pdf]]
 #+end_center
 
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
@@ -576,7 +575,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 #+label: ref:tvm-scheduler-regs
 #+caption: Schemat rejestrów wymaganych przez usprawnienia hanmonogramowania SMP.
 #+attr_latex: scale=1.5
-[[file:./img/Scheduler2.pdf]]
+[[file:./img/Scheduler.pdf]]
 #+end_center
 
 - Opisać możliwe usprawnienia (load-balancing i dzielenie zużycia).
