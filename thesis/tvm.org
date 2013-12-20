@@ -317,7 +317,7 @@ Pierwszą fazą jest faza analizy leksykalnej, której zadaniem jest przetworzen
 
 Drugą fazą jest faza analizy syntaktycznej, której zadaniem jest przetworzenie powstającego leniwie /strumienia tokenów/ na /wstępne drzewo parsowania/ składające się z prymitywnych konstrukcji języka TVMIR, takich jak listy, symbole i liczby. Faza ta waliduje składnię na poziomie zaawansowanych konstrukcji języka, które dzięki jego homoikoniczności zbudowane są z prymitywniejszych jego konstrukcji.
 
-Trzecią fazą jest faza analizy semantycznej, której zadaniem jest przetworzenie /wstępnego drzewa parsowania/ na bardziej abstrakcyjne /drzewo składniowe/ składające się semantycznie znaczących węzłów, takich jak aplikacja funkcji, wywołania operatorów wbudowanych, czy odwołania do zmiennych. Faza ta waliduje kod na poziomie semantycznym, sprawdzając poprawność wykorzystania różnych konstrukcji języka TVMIR.
+Trzecią fazą jest faza analizy semantycznej, której zadaniem jest przetworzenie /wstępnego drzewa parsowania/ na bardziej abstrakcyjne /drzewo składniowe/ (ang. /Abstract Syntax Tree/, /AST/) składające się semantycznie znaczących węzłów, takich jak aplikacja funkcji, wywołania operatorów wbudowanych, czy odwołania do zmiennych. Faza ta waliduje kod na poziomie semantycznym, sprawdzając poprawność wykorzystania różnych konstrukcji języka TVMIR.
 
 Czwartą fazą jest faza optymalizacji, której zadaniem jest transformacja /drzewa składniowego/ powstałego w poprzedniej fazie do jego ekwiwalentu działającego szybciej po skompilowaniu. Faza ta obecnie nie wykonuje rzadnych interesujących transformacji, jednak istnieje możliwość rozszerzenia jej funkcjonalności w przyszłości (opisane krótko w sekcji [[ref:sec:future-development]]).
 
@@ -353,7 +353,7 @@ Rysunek [[ref:fig:mem-archs]] przedstawia trzy główne architektury wykorzystan
 
 - architektura *sterty współdzielonej*, charakteryzująca się współdzieleniem jednego obszaru pamięci pomiędzy wszystkie procesy, dzięki czemu wiadomości (a także ich części) mogą być współdzielone przez procesy bez konieczności ich kopiowania;
 
-- architektura *hybrydowa*, mająca za zadanie połączenie zalet obu powyższych rozwiązać przez separację danych lokalnych procesów i współdzielenie danych wiadomości przesyłanych pomiędzy procesami; rozwiązanie to wymaga skomplikowanej, statycznej analizy kodu programów, która nie zawsze może być przeprowadzone.
+- architektura *hybrydowa*, mająca za zadanie połączenie zalet obu powyższych rozwiązań przez separację danych lokalnych procesów i współdzielenie danych wiadomości przesyłanych pomiędzy procesami; rozwiązanie to wymaga skomplikowanej, statycznej analizy kodu programów, która nie zawsze może być przeprowadzona.
 
 #+begin_center
 #+label: fig:mem-archs
@@ -377,13 +377,20 @@ Kolektory różnych typów mają bardzo różne charakterystyki wydajnościowe w
 W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci" oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje.
 
 ** Przetwarzanie współbieżne
-Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP - symetryczny multiprocesor, którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych, wykonujących jednakowe operacje na różnych zbiorach danych.
+Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP - symetryczny multiprocesor, którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych, wykonujących jednakowe operacje na różnych zbiorach danych (rysunek [[ref:fig:amp-vs-smp]]).
 
-Alternatywnym rozwiązaniem jest model asymetrycznego multiprocessingu, gdzie dla różnych typów zadań istnieją dedykowane jednostki operacyjne (na przykład dedykowane wątki aplikacji). Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy algorytmów zarządzania pamięci, których implementację umożliwiają (na przykład algorytm VCGC [[cite:Huelsbergen1998]] wykorzystujący trzy asymetryczne wątki), jednak przeważnie ich skalowalność jest ograniczona w związku z czym ich wykorzystanie w implementacji ThesisVM jest niewskazane.
+#+begin_center
+#+label: fig:amp-vs-smp
+#+caption: Różne modele przetwarzania współbieżnego.
+#+attr_latex: scale=1.0
+[[file:./img/ampvssmp.pdf]]
+#+end_center
 
-W kontekście maszyny wirtualnej ThesisVM model symetrycznego multiprocessingu polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu. Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym współbieżności.
+Alternatywnym rozwiązaniem jest model asymetrycznego multiprocessingu (rysunek [[ref:fig:amp-vs-smp]]), gdzie dla różnych typów zadań istnieją dedykowane jednostki operacyjne, takie jak wątki, czy procesy systemu operacyjnego. Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy algorytmów zarządzania pamięcią, których implementację umożliwiają (na przykład algorytm VCGC [[cite:Huelsbergen1998]] wykorzystujący trzy asymetryczne wątki).
 
-Głównymi założeniami Modelu Aktorowego [[cite:Hewitt1973]] jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO, celem wykonania zaprogramowanych operacji.
+W kontekście maszyny wirtualnej ThesisVM model symetrycznego multiprocessingu polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu.
+
+Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym. Głównymi założeniami Modelu Aktorowego [[cite:Hewitt1973]] jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO, celem wykonania zaprogramowanych operacji.
 
 Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
@@ -404,7 +411,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 - Opisać wykorzystywane rejestry.
 - Opisać krótko alternatywne rozwiązania (SECD, TRSECD, SICP machine). [[cite:VanHorn2010,Ramsdell1999,Abelson1996,Steele1978]], [[cite:Kaser1992]]
 
-** Implementacja obietków prostych
+** Implementacja obiektów prostych
 - Opisać implementację atomów ($\leq$ 8 bajtów).
 - Opisać metodę tagowania atomów (dolne trzy bity) [[cite:Gudeman1993]], [[cite:Cook2013]]
 - Opisąć optymalizacje/trejdofy wybranego sposobu tagowania. [[cite:Gudeman1993]], [[cite:Cook2013]]
@@ -561,7 +568,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 - Zwrócić uwagę na fakt, że problem kopiowania został zniwelowany kosztem lekkich barier pamięci.
 
 ** Harmonogramowanie procesów
-- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn).
+- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn). [[cite:Pabla2009]]
 - Opisać implementację prymitywu =sleep= oraz sleep-table.
 - Opisać wiadomości kontrolne.
 
