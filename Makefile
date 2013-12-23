@@ -1,6 +1,6 @@
 # Defaults to GDC. Change the extension to ".dmd" to use DMD instead.
 
-DEFAULT=Makefile.gdc
+DEFAULT=Makefile.dmd
 
 default:
 	$(MAKE) -f $(DEFAULT)

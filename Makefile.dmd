@@ -2,23 +2,19 @@ RM = rm -f
 AR = ar rcu
 DC = dmd
 DFLAGS = -w -Isrc
-GDB = -debug -unittest -g
+DLDLIBS = -L-Llib -L-llfds611
+GDB = -debug=verbose -unittest -g
 #GDB = -O -release
-LIB = 
 
-VPATH = src:src/compiler/codegen:src/compiler/parser:src/compiler/pretty:src/eval/gc:src/eval/smp:src/eval/vm
+VPATH = src:src/tvm:src/tvm/vm:src/tvm/compiler
 
-COMPILER_OBJS = token.o scanner.o parser.o ast.o parse.o compile.o bytecode.o graph.o print.o
-VM_OBJS = alloc.o gc.o memory.o mqueue.o rqueue.o smp.o builtins.o run.o state.o
-OTHER_OBJS = main.o
-
-OBJS = $(COMPILER_OBJS) $(VM_OBJS) $(OTHER_OBJS)
+OBJS = tvm.o lfds611.o main.o ast.o codegen.o parser.o printer.o scanner.o sema.o tokens.o allocator.o bytecode.o interpreter.o objects.o scheduler.o utils.o
 
 TARGET = tvm
 
-all : $(TARGET)
+all: $(TARGET)
 
-$(TARGET) : $(OBJS) $(LIB)
+$(TARGET) : $(OBJS)
 	$(DC) $^ $(DLDLIBS) -of$@
 
 %.o : %.d
