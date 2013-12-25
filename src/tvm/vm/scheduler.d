@@ -28,7 +28,7 @@ bool waitScheduler(T)(T a, T b) {
     return a.wakeTime < b.wakeTime;
 }
 
-void schedule(string name, immutable TVMConfig config) {
+void schedule(string name, TVMConfig config) {
     register(name, thisTid);
     setMaxMailboxSize(thisTid, config.smpMSGqSize, OnCrowding.throwException);
 
@@ -173,13 +173,13 @@ void schedule(string name, immutable TVMConfig config) {
 
             write(currentTime(), " ", name, " RUNq:  ", RUNq.length, " - ");
             foreach(uProc; RUNq[]) {
-                write(uProc.toString(), ", ");
+                write(toString(uProc), ", ");
             }
             writeln();
 
             write(currentTime(), " ", name, " WAITq: ", WAITq.length, " - ");
             foreach(uProc; WAITq[]) {
-                write(uProc.toString(), ", ");
+                write(toString(uProc), ", ");
             }
             writeln();
         }

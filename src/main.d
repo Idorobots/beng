@@ -143,8 +143,7 @@ void main(string[] args) {
             auto meaning = vals[1];
             auto range = vals[2];
 
-            writef(format("%%-%ds %%s", size),
-                   option, meaning);
+            writef(format("%%-%ds %%s", size), option, meaning);
             if(range[0] != range[1]) {
                 writefln(" Accepted value range: [%s, %s], default value: %s.",
                          range[0], range[1], range[2]);
@@ -228,20 +227,11 @@ void main(string[] args) {
 
                 for(uint i = 0; i < 10; ++i) {
                     auto t = currentTime();
-                    auto header = TVMObject(i);
-                    auto nil = cast(TVMPointer) null;
-                    auto alloc = new shared TVMAllocator!GCAllocator(config.uProcHeapSize);
-                    auto msgq = new shared LockFreeQueue!TVMValue(config.uProcMSGqSize);
-
-                    auto uProc = new shared TVMMicroProc(header,           // header
-                                                         nil,              // code
-                                                         nil,              // stack
-                                                         nil,              // env
-                                                         nil,              // vstack
-                                                         alloc,            // alloc
-                                                         msgq,             // msgq
-                                                         i % 63 + 1,       // flags
-                                                         t + i * 100_000); // runtime
+                    // FIXME Awful GDC 4.7.1 copat syntax :(
+                    TVMContext uProc = cast(TVMContext) new shared(TVMMicroProc)(config.uProcHeapSize,
+                                                                                 config.uProcMSGqSize,
+                                                                                 i % 63 + 1,
+                                                                                 t + i * 100_000);
                     if(first is null) {
                         first = uProc;
                     } else {

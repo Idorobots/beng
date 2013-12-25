@@ -18,7 +18,7 @@ shared struct GCAllocator {
 }
 
 shared struct TVMAllocator(Allocator) {
-    static if (__traits(compiles, Allocator.it)) alias parent = Allocator.it;
+    static if (__traits(compiles, Allocator.it)) alias Allocator.it parent;
     else Allocator parent;
 
     private TVMPointer freeList;
@@ -32,7 +32,8 @@ shared struct TVMAllocator(Allocator) {
             header.refCount = cast(size_t) &mem[i+3];
 
             // FIXME Setup types etc.
-            mem[i..i+3] = cast(TVMValue[3]) TVMPair(header, TVMValue(0, 0), TVMValue(0, 0));
+            auto p = TVMPair();
+            mem[i..i+3] = *cast(TVMValue*) &p;
         }
 
         freeList = cast(TVMPointer) mem.ptr;

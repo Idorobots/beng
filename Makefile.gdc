@@ -2,19 +2,19 @@ RM = rm -f
 AR = ar rcu
 DC = gdc
 DFLAGS = -Wall -Wextra -pedantic -Isrc
-GDB = -funittest -fdebug -ggdb3
+DLDLIBS = -Llib -llfds611
+GDB = -funittest -fdebug=verbose -ggdb3
 #GDB = -O3
-LIB = 
 
 VPATH = src:src/tvm:src/tvm/vm:src/tvm/compiler
 
-OBJS = lfds611.o main.o all.o ast.o codegen.o parser.o printer.o scanner.o sema.o tokens.o allocator.o bytecode.o interpreter.o objects.o scheduler.o utils.o
+OBJS = tvm.o lfds611.o main.o ast.o codegen.o parser.o printer.o scanner.o sema.o tokens.o allocator.o bytecode.o interpreter.o objects.o scheduler.o utils.o
 
 TARGET = tvm
 
 all : $(TARGET)
 
-$(TARGET) : $(OBJS) $(LIB)
+$(TARGET) : $(OBJS)
 	$(DC) $^ $(DLDLIBS) -o$@
 
 %.o : %.d

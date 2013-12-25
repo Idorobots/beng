@@ -7,7 +7,7 @@ import tvm.vm.utils;
 import tvm.vm.allocator;
 
 // NOTE Pointer to a compound object is the same as a pointer to its object header.
-alias TVMPointer = shared(TVMObject)*;
+alias shared(TVMObject)* TVMPointer;
 
 // A convenient wrapper for the simple, built-in types.
 struct TVMValue {
@@ -22,7 +22,7 @@ struct TVMValue {
             size_t, "__value", 64 - TYPE_BITS));
     }
 
-    this(T)(ubyte type, T value) {
+    this(ubyte type, size_t value) {
         this.value = value;
         this.type = type;
     }
@@ -105,7 +105,7 @@ shared struct TVMClosure {
 }
 
 // A TVMIR uProc context.
-alias TVMContext = shared(TVMMicroProc)*;
+alias shared(TVMMicroProc)* TVMContext;
 
 shared struct TVMMicroProc {
     enum PRIORITY_BITS = 6;
@@ -138,6 +138,14 @@ shared struct TVMMicroProc {
         uint, "", 63 - PRIORITY_BITS));
 
     time_t runtime;
+
+    this(size_t heapSize, size_t msgqSize, ubyte priority, time_t wakeTime) {
+        this.code = this.stack = this.env = this.vstack = cast(TVMPointer) null;
+        this.alloc = cast(shared) new TVMAllocator!GCAllocator(heapSize);
+        this.msgq = cast(shared) new LockFreeQueue!TVMValue(msgqSize);
+        this.priority = priority;
+        this.wakeTime = wakeTime;
+    }
 
     @property void wakeTime(time_t wt) {
         asleep = true;
