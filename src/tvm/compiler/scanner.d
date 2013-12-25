@@ -236,3 +236,7 @@ struct Scanner {
         scan();
     }
 }
+
+auto scan(P)(P program) {
+    return Scanner(program);
+}

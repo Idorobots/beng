@@ -21,6 +21,6 @@ time_t step(time_t time, TVMContext uProc) {
         otherUProc.msgq.enqueue(v);
     }
 
-    return 0;
+    return time + 100_000;
 }
 

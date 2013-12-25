@@ -1,5 +1,7 @@
 module tvm.compiler.tokens;
 
+import std.string : format;
+
 enum TokenType : ubyte {
     EOF,
     COMMENT,
@@ -30,5 +32,9 @@ struct Token {
         this.column = column;
         this.offset = offset;
         this.value = value;
+    }
+
+    string toString() {
+        return format("%s(%s,%s): %s", type, line, column, value);
     }
 }

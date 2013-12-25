@@ -7,7 +7,7 @@ import tvm.compiler.tokens;
 import tvm.compiler.scanner;
 import tvm.compiler.ast;
 
-struct Filtered {
+struct Filtered(Scanner) {
     private Scanner scanner;
 
     void skipWhitespace() {
@@ -39,10 +39,10 @@ struct Filtered {
     }
 }
 
-struct Parser {
+struct Parser(Scanner) {
   private:
     Pair NIL;
-    Filtered scanner;
+    Scanner scanner;
     Expression lastParse;
     bool seenEOF;
 
@@ -168,7 +168,7 @@ struct Parser {
 
   public:
     this(Scanner scanner) {
-        this.scanner = Filtered(scanner);
+        this.scanner = scanner;
         this.NIL = new Pair(null, null);
         parse();
     }
@@ -186,14 +186,10 @@ struct Parser {
     }
 }
 
-Expression[] parse(string program) {
-    auto parser = Parser(Scanner(program));
+auto filter(T)(T tokens) {
+    return Filtered!T(tokens);
+}
 
-    Expression[] result;
-
-    foreach(expr; parser) {
-        result ~= expr;
-    }
-
-    return result;
+auto parse(T)(T tokens) {
+    return Parser!T(tokens);
 }

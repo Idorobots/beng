@@ -41,7 +41,7 @@ void handle(string name, string source, SemanticError e) {
 void main(string[] args) {
     enum VM_VERSION = "v.0.1.0";
 
-    enum Debug {scan, parse, sema, codegen, run}
+    enum Debug {scan, filter, parse, sema, compile, run}
     Debug debugVM = Debug.run;
 
     // Default VM configuration:
@@ -90,7 +90,7 @@ void main(string[] args) {
               tuple(0UL, cast(size_t) TVMMicroProc.PRIORITY_MASK, config.uProcDefaultPriority),
               &config.uProcDefaultPriority),
         tuple("   --debug=OPTION",
-              "Toggles various debuging options. Available options: scan, parse, sema, codegen, run, default value: run.",
+              "Toggles various debuging options. Available options: scan, filter, parse, sema, compile, run, default value: run.",
               tuple(0UL, 0UL, 0UL),
               cast(time_t*) null),
         tuple("-v --version",
@@ -196,22 +196,32 @@ void main(string[] args) {
 
         final switch(debugVM) {
             case Debug.scan:
-                foreach(token; Scanner(source)) {
+                foreach(token; scan(source)) {
+                    writeln(token);
+                }
+                break;
+
+            case Debug.filter:
+                foreach(token; filter(scan(source))) {
                     writeln(token);
                 }
                 break;
 
             case Debug.parse:
-                foreach(expr; parse(source)) {
+                foreach(expr; parse(filter(scan(source)))) {
                     writeln(expr);
                 }
                 break;
 
             case Debug.sema:
-                assert(0, "Implement this already :(");
+                foreach(expr; transform(parse(filter(scan(source))))) {
+                    writeln(expr);
+                }
+                break;
 
-            case Debug.codegen:
-                assert(0, "Implement this already :(");
+            case Debug.compile:
+                writeln(print(compile(transform(parse(filter(scan(source)))))));
+                break;
 
             case Debug.run:
                 // TODO Compile the source and send (main) to thisTid.
