@@ -8,6 +8,9 @@ import std.c.stdlib : exit;
 import std.algorithm : max;
 import std.concurrency;
 import std.random : uniform;
+import std.traits : EnumMembers;
+import std.typecons : Tuple;
+import std.typetuple : TypeTuple;
 
 import tvm.tvm;
 
@@ -40,8 +43,7 @@ void handle(string name, string source, SemanticError e) {
 
 void main(string[] args) {
     enum VM_VERSION = "v.0.1.0";
-
-    enum Debug {scan, filter, parse, sema, compile, run}
+    enum Debug {scan, filter, parse, sema, objects, compile, run,}
     Debug debugVM = Debug.run;
 
     // Default VM configuration:
@@ -90,7 +92,7 @@ void main(string[] args) {
               tuple(0UL, cast(size_t) TVMMicroProc.PRIORITY_MASK, config.uProcDefaultPriority),
               &config.uProcDefaultPriority),
         tuple("   --debug=OPTION",
-              "Toggles various debuging options. Available options: scan, filter, parse, sema, compile, run, default value: run.",
+              "Toggles various debuging options. Available options: [scan, filter, parse, sema, objects, compile, run], default value: run.",
               tuple(0UL, 0UL, 0UL),
               cast(time_t*) null),
         tuple("-v --version",
@@ -217,6 +219,24 @@ void main(string[] args) {
                 foreach(expr; transform(parse(filter(scan(source))))) {
                     writeln(expr);
                 }
+                break;
+
+            case Debug.objects:
+                /*static*/ foreach(T; TypeTuple!(TVMValue, TVMObject, TVMSymbol,
+                                                 TVMPair, TVMClosure, TVMMicroProc))
+                {
+                    writeln(T.stringof, ".sizeof = ", T.sizeof, ",");
+                }
+
+                auto lst = list(GCAllocator.it, value(1), value(2), value(3));
+                auto pr = pair(GCAllocator.it, value(use(lst)), value(use(lst)));
+                auto lambda = closure(GCAllocator.it, value(pr), value(lst));
+                free(GCAllocator.it, lst);
+
+                writefln("value: %b", value(0).rawValue);
+                writeln("list: ", print(lst));
+                writeln("pair: ", print(pr));
+                writeln("lambda: ", print(lambda));
                 break;
 
             case Debug.compile:
