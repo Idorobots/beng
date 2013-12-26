@@ -1,10 +1,12 @@
 module tvm.vm.objects;
 
+import std.typetuple : TypeTuple, anySatisfy;
 import std.bitmanip : bitfields;
 import core.atomic;
 
 import tvm.vm.utils;
 import tvm.vm.allocator;
+import tvm.vm.gc;
 
 // NOTE Pointer to a compound object is the same as a pointer to its object header.
 alias shared(TVMObject)* TVMPointer;
@@ -13,6 +15,10 @@ alias shared(TVMObject)* TVMPointer;
 struct TVMValue {
     enum TYPE_BITS = 3;
 
+    enum POINTER  = 0x0;
+    enum FLOATING = 0x1;
+    enum INTEGER  = 0x2;
+
     union {
         TVMPointer rawPtr;
         size_t rawValue;
@@ -20,6 +26,18 @@ struct TVMValue {
         mixin(bitfields!(
             ubyte, "type", TYPE_BITS,
             size_t, "__value", 64 - TYPE_BITS));
+    }
+
+    this(TVMPointer ptr) {
+        this(TVMValue.POINTER, cast(size_t) ptr);
+    }
+
+    this(double d) {
+        this(TVMValue.FLOATING, cast(size_t) d);
+    }
+
+    this(long i) {
+        this(TVMValue.INTEGER, cast(size_t) i);
     }
 
     this(ubyte type, size_t value) {
@@ -31,7 +49,7 @@ struct TVMValue {
         this.__value = cast(size_t) newValue;
     }
 
-    @property T value(T)() {
+    @property T value(T)() const {
         return cast(T) __value;
     }
 
@@ -40,14 +58,47 @@ struct TVMValue {
     }
 }
 
+auto value(T)(T value) {
+    return TVMValue(value);
+}
+
+// TODO These should do the unwrapping:
+//alias value!(long)       integer;
+//alias value!(double)     floating;
+//alias value!(TVMPointer) pointer;
+
+bool isType(size_t type, T)(T v) {
+    return v.type == type;
+}
+
+alias isType!(TVMValue.POINTER, TVMValue)  isPointer;
+alias isType!(TVMValue.FLOATING, TVMValue) isReal;
+alias isType!(TVMValue.INTEGER, TVMValue)  isInteger;
+
+bool isNil(TVMValue v) {
+    return isPointer(v) && (v.rawPtr is null);
+}
+
+bool isNil(TVMPointer ptr) {
+    return ptr is null;
+}
+
 // An object header used in other, compound objects.
-struct TVMObject {
+shared struct TVMObject {
     enum TYPE_BITS = 8;
     enum TYPE_MASK = (0x1 << TYPE_BITS) - 1;
-
     enum REF_COUNT_INCREMENT = (0x1 << TYPE_BITS);
 
-    private shared size_t value;
+    enum SYMBOL  = 0x0;
+    enum PAIR    = 0x1;
+    enum CLOSURE = 0x2;
+    enum UPROC   = 0x3;
+
+    private shared size_t value = 0;
+
+    this(ubyte type) {
+        this.type = type;
+    }
 
     size_t incRefCount() {
         return atomicOp!"+="(this.value, REF_COUNT_INCREMENT) >> TYPE_BITS;
@@ -84,27 +135,94 @@ struct TVMObject {
     }
 }
 
+alias isType!(TVMObject.SYMBOL, TVMPointer)  isSymbol;
+alias isType!(TVMObject.PAIR, TVMPointer)    isPair;
+alias isType!(TVMObject.CLOSURE, TVMPointer) isClosure;
+alias isType!(TVMObject.UPROC, TVMPointer)   isMicroProc;
+
+template isTVMObjectCompatible(T) {
+    template isT(U) {
+        static if(is(U == T)) enum isT = true;
+        else                  enum isT = false;
+    }
+
+    static if(anySatisfy!(isT, TypeTuple!(TVMPointer, TVMSymbolPtr, TVMPairPtr,
+                                          TVMClosurePtr, TVMMicroProcPtr, TVMContext)))
+    {
+        enum isTVMObjectCompatible = true;
+    } else {
+        enum isTVMObjectCompatible = false;
+    }
+}
+
 // A TVMIR symbol.
+alias shared(TVMSymbol)* TVMSymbolPtr;
+
 shared struct TVMSymbol {
-    TVMObject header;
-    string str; // NOTE This takes up two words.
+    TVMObject header = void;
+    string str       = void; // NOTE This takes up two words.
+
+    this(string str) {
+        this.header = shared(TVMObject)(TVMObject.SYMBOL);
+        this.str = str;
+    }
+}
+
+auto symbol(Allocator)(Allocator a, string str) {
+    auto ptr = alloc!TVMSymbol(a);
+    *ptr = TVMSymbol(str);
+    return use(ptr);
 }
 
 // A TVMIR ordered pair.
+alias shared(TVMPair)* TVMPairPtr;
+
 shared struct TVMPair {
-    TVMObject header;
-    TVMValue car;
-    TVMValue cdr;
+    TVMObject header = void;
+    TVMValue car     = void;
+    TVMValue cdr     = void;
+
+    this(TVMValue car, TVMValue cdr) {
+        this.header = shared(TVMObject)(TVMObject.PAIR);
+        this.car = cast(shared) car;
+        this.cdr = cast(shared) cdr;
+    }
+}
+
+auto pair(Allocator)(Allocator a, TVMValue car, TVMValue cdr) {
+    auto ptr = alloc!TVMPair(a);
+    *ptr = shared(TVMPair)(car, cdr);
+    return use(ptr);
+}
+
+auto list(Allocator, Ts...)(Allocator a, Ts values) {
+    static if(values.length == 0) return cast(TVMPointer) null;
+    else                          return pair(a, values[0], value(list(a, values[1..$])));
 }
 
 // A TVMIR closure.
+alias shared(TVMClosure)* TVMClosurePtr;
+
 shared struct TVMClosure {
-    TVMObject header;
-    TVMValue code;
-    TVMValue env;
+    TVMObject header = void;
+    TVMValue code    = void;
+    TVMValue env     = void;
+
+    this(TVMValue code, TVMValue env) {
+        this.header = shared(TVMObject)(TVMObject.CLOSURE);
+        this.code = cast(shared) code;
+        this.env = cast(shared) env;
+    }
+}
+
+auto closure(Allocator)(Allocator a, TVMValue car, TVMValue cdr) {
+    auto ptr = alloc!TVMClosure(a);
+    *ptr = shared(TVMClosure)(car, cdr);
+    return use(ptr);
 }
 
 // A TVMIR uProc context.
+alias shared(TVMMicroProc)* TVMMicroProcPtr;
 alias shared(TVMMicroProc)* TVMContext;
 
 shared struct TVMMicroProc {
@@ -115,21 +233,21 @@ shared struct TVMMicroProc {
     enum MAX_SLEEP_TIME = time_t.max;
 
     // Header:
-    TVMObject header;
+    TVMObject header = void;
 
     // State registers:
     // NOTE These are always pointers, so the TVMValue wrapper is skipped here.
     // NOTE It is guaranteed that these pointers are accessed only by a single thread.
-    TVMPointer code;
-    TVMPointer stack;
-    TVMPointer env;
-    TVMPointer vstack;
+    TVMPointer code   = null;
+    TVMPointer stack  = null;
+    TVMPointer env    = null;
+    TVMPointer vstack = null;
 
     // Allocator:
-    TVMAllocator!GCAllocator* alloc;
+    TVMAllocator!GCAllocator* alloc = null;
 
     // MSGq:
-    LockFreeQueue!TVMValue msgq;
+    LockFreeQueue!TVMValue msgq = null;
 
     // Scheduler registers:
     mixin(bitfields!(
@@ -137,10 +255,10 @@ shared struct TVMMicroProc {
         bool, "asleep", 1,
         uint, "", 63 - PRIORITY_BITS));
 
-    time_t runtime;
+    time_t runtime = void;
 
     this(size_t heapSize, size_t msgqSize, ubyte priority, time_t wakeTime) {
-        this.code = this.stack = this.env = this.vstack = cast(TVMPointer) null;
+        this.header = shared(TVMObject)(TVMObject.UPROC);
         this.alloc = cast(shared) new TVMAllocator!GCAllocator(heapSize);
         this.msgq = cast(shared) new LockFreeQueue!TVMValue(msgqSize);
         this.priority = priority;
