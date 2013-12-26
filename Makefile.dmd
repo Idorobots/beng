@@ -8,11 +8,11 @@ GDB = -debug=verbose -unittest -g
 
 VPATH = src:src/tvm:src/tvm/vm:src/tvm/compiler
 
-OBJS = tvm.o lfds611.o main.o ast.o codegen.o parser.o printer.o scanner.o sema.o tokens.o allocator.o bytecode.o interpreter.o objects.o scheduler.o utils.o
+OBJS = tvm.o lfds611.o main.o ast.o codegen.o parser.o printer.o scanner.o sema.o tokens.o allocator.o bytecode.o interpreter.o objects.o scheduler.o utils.o gc.o
 
 TARGET = tvm
 
-all: $(TARGET)
+all : $(TARGET)
 
 $(TARGET) : $(OBJS)
 	$(DC) $^ $(DLDLIBS) -of$@
