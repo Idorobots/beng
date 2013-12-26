@@ -14,58 +14,70 @@ alias shared(TVMObject)* TVMPointer;
 // A convenient wrapper for the simple, built-in types.
 struct TVMValue {
     enum TYPE_BITS = 3;
+    enum TYPE_MASK = (0x1 << TYPE_BITS) - 1;
 
     enum POINTER  = 0x0;
     enum FLOATING = 0x1;
     enum INTEGER  = 0x2;
 
-    union {
-        TVMPointer rawPtr;
-        size_t rawValue;
-
-        mixin(bitfields!(
-            ubyte, "type", TYPE_BITS,
-            size_t, "__value", 64 - TYPE_BITS));
-    }
+    size_t rawValue;
 
     this(TVMPointer ptr) {
-        this(TVMValue.POINTER, cast(size_t) ptr);
+        // NOTE Since pointers are tagged with 0x0 we don't need to do anything.
+        this.ptr = ptr;
     }
 
     this(double d) {
-        this(TVMValue.FLOATING, cast(size_t) d);
+        this(TVMValue.FLOATING, (cast(size_t) d) << TYPE_BITS);
     }
 
     this(long i) {
-        this(TVMValue.INTEGER, cast(size_t) i);
+        this(TVMValue.INTEGER, (cast(size_t) i) << TYPE_BITS);
     }
 
     this(ubyte type, size_t value) {
-        this.value = value;
+        this.rawValue = value;
         this.type = type;
     }
 
-    @property void value(T)(T newValue) {
-        this.__value = cast(size_t) newValue;
+    @property ubyte type() const {
+        return this.rawValue & TYPE_MASK;
+    }
+
+    @property void type(ubyte newType) {
+        this.rawValue &= ~TYPE_MASK;
+        this.rawValue |= (newType & TYPE_MASK);
     }
 
     @property T value(T)() const {
-        return cast(T) __value;
+        return cast(T) (this.rawValue >> TYPE_BITS);
+    }
+
+    @property void value(T)(T newValue) {
+        this.rawValue = (cast(size_t) newValue) << TYPE_BITS;
+    }
+
+    @property TVMPointer ptr() {
+        // NOTE Since pointers are tagged with 0x0 we can use them directly.
+        return cast(TVMPointer) rawValue;
+    }
+
+    @property void ptr(TVMPointer newPtr) {
+        this.rawValue = cast(size_t) newPtr;
     }
 
     @property T raw(T)() const {
         return cast(T) rawValue;
+    }
+
+    @property void raw(T)(T newValue) {
+        this.rawValue = cast(size_t) newValue;
     }
 }
 
 auto value(T)(T value) {
     return TVMValue(value);
 }
-
-// TODO These should do the unwrapping:
-//alias value!(long)       integer;
-//alias value!(double)     floating;
-//alias value!(TVMPointer) pointer;
 
 bool isType(size_t type, T)(T v) {
     return v.type == type;
@@ -76,7 +88,7 @@ alias isType!(TVMValue.FLOATING, TVMValue) isReal;
 alias isType!(TVMValue.INTEGER, TVMValue)  isInteger;
 
 bool isNil(TVMValue v) {
-    return isPointer(v) && (v.rawPtr is null);
+    return isPointer(v) && (v.ptr is null);
 }
 
 bool isNil(TVMPointer ptr) {
@@ -85,6 +97,7 @@ bool isNil(TVMPointer ptr) {
 
 // An object header used in other, compound objects.
 shared struct TVMObject {
+    alias ubyte type_t;
     enum TYPE_BITS = 8;
     enum TYPE_MASK = (0x1 << TYPE_BITS) - 1;
     enum REF_COUNT_INCREMENT = (0x1 << TYPE_BITS);
@@ -96,7 +109,7 @@ shared struct TVMObject {
 
     private shared size_t value = 0;
 
-    this(ubyte type) {
+    this(type_t type) {
         this.type = type;
     }
 
@@ -122,15 +135,12 @@ shared struct TVMObject {
         } while(!cas(&this.value, currVal, rc));
     }
 
-    @property size_t type() const {
+    @property type_t type() const {
         return atomicLoad(this.value) & TYPE_MASK;
     }
 
-    @property void type(size_t newType) {
-        auto t = this.type;
-        t |= TYPE_MASK;
-        t &= (newType & TYPE_MASK);
-
+    @property void type(type_t newType) {
+        size_t t = (newType & TYPE_MASK);
         atomicStore(this.value, t);
     }
 }
@@ -250,6 +260,7 @@ shared struct TVMMicroProc {
     LockFreeQueue!TVMValue msgq = null;
 
     // Scheduler registers:
+    // FIXME Create some custom methods for this.
     mixin(bitfields!(
         ubyte, "priority", PRIORITY_BITS,
         bool, "asleep", 1,

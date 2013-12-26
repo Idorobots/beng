@@ -233,7 +233,6 @@ void main(string[] args) {
                 auto lambda = closure(GCAllocator.it, value(pr), value(lst));
                 free(GCAllocator.it, lst);
 
-                writefln("value: %b", value(0).rawValue);
                 writeln("list: ", print(lst));
                 writeln("pair: ", print(pr));
                 writeln("lambda: ", print(lambda));
@@ -266,7 +265,7 @@ void main(string[] args) {
                         first = uProc;
                     } else {
                         TVMValue v = void;
-                        v.rawPtr = cast(TVMPointer) uProc;
+                        v.ptr = cast(TVMPointer) uProc;
                         first.msgq.enqueue(v);
                     }
 

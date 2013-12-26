@@ -6,10 +6,15 @@ import tvm.compiler.ast;
 import tvm.vm.objects;
 import tvm.vm.bytecode;
 
+string toString(shared(TVMValue) value) {
+    // FIXME GDC 4.7.1 compat :(
+    return toString(cast(TVMValue) value);
+}
+
 string toString(TVMValue value) {
     switch(value.type) {
         case TVMValue.POINTER:
-            return toString(value.value!TVMPointer);
+            return toString(value.ptr);
 
         case TVMValue.FLOATING:
             return format("%f", value.value!double);

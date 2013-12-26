@@ -14,10 +14,10 @@ time_t step(time_t time, TVMContext uProc) {
             writeln(currentTime(), " uProc #", uProc.priority, " got a message...");
         }
 
-        auto otherUProc = (cast(TVMContext) v.rawPtr);
+        auto otherUProc = (cast(TVMContext) v.ptr);
 
         // Send your own pid.
-        v.rawPtr = cast(TVMPointer) uProc;
+        v.ptr = cast(TVMPointer) uProc;
         otherUProc.msgq.enqueue(v);
     }
 
