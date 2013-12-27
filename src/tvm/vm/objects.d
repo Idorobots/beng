@@ -22,10 +22,6 @@ struct TVMValue {
 
     size_t rawValue;
 
-    this(TVMValue that) {
-        this.rawValue = that.rawValue;
-    }
-
     this(TVMPointer ptr) {
         // NOTE Since pointers are tagged with 0x0 we don't need to do anything.
         this.ptr = ptr;
