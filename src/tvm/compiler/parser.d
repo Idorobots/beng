@@ -8,10 +8,11 @@ import tvm.compiler.scanner;
 import tvm.compiler.ast;
 
 struct Filtered(Scanner) {
-    private Scanner scanner;
+  private:
+    Scanner scanner;
 
     void skipWhitespace() {
-        Token token = scanner.front();
+        auto token = scanner.front();
 
         while(token.type == TokenType.WHITESPACE || token.type == TokenType.COMMENT) {
             scanner.popFront();
@@ -29,7 +30,7 @@ struct Filtered(Scanner) {
         return scanner.empty;
     }
 
-    @property Token front() {
+    @property auto front() {
         skipWhitespace();
         return scanner.front;
     }
