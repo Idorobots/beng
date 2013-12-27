@@ -209,11 +209,6 @@ class Application : Expression {
         }
     }
 
-    this(Es...)(Es expressions) if(Es.length > 2) {
-        this.operator = new Application(expressions[0..$-1]);
-        this.operand = expressions[$-1];
-    }
-
     mixin Predicate!Application;
     mixin Coercion!Application;
 
