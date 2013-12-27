@@ -26,12 +26,11 @@ struct TVMInstruction {
 
         // FIXME Should pack it somehow.
         assert((arg.rawValue & OPCODE_MASK) == 0, "Bad instruction argument!");
-        this.arg.rawValue += (cast(size_t) opcode) << OPCODE_SHIFT;
+        this.arg.rawValue |= (cast(size_t) opcode) << OPCODE_SHIFT;
     }
 
     @property opcode_t opcode() const {
-        auto rawValue = argument.rawValue;
-        return rawValue >> OPCODE_SHIFT;
+        return this.rawValue >> OPCODE_SHIFT;
     }
 
     @property TVMValue argument() const {
@@ -45,16 +44,8 @@ TVMInstruction instruction(T)(opcode_t opcode, T argument) {
     return TVMInstruction(opcode, value(argument));
 }
 
-opcode_t opcode(TVMInstruction instruction) {
-    return instruction.opcode;
-}
-
-TVMValue argument(TVMInstruction instruction) {
-    return instruction.argument;
-}
-
 template makeInstr(opcode_t opcode) {
-    auto makeInstr(T)(T argument) {
+    auto makeInstr(T = long)(T argument = T.init) {
         return instruction!T(opcode, argument);
     }
 }
