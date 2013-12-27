@@ -1,26 +1,56 @@
 module tvm.vm.interpreter;
 
+import std.typecons;
+
 import tvm.vm.utils;
 import tvm.vm.objects;
 import tvm.vm.bytecode;
+import tvm.vm.gc;
 
-TVMInstruction fetch(TVMPointer IP) {
-    // TODO Fetch next instruction.
-    return halt();
+class RuntimeError : Exception {
+    this(string what) {
+        super(what);
+    }
 }
 
-TVMPointer pop(TVMPointer stack) {
-    // TODO Pop a value from a list-based stack.
-    return stack;
+auto fetch(Allocator)(Allocator a, TVMPointer code) {
+    if(isNil(code)) {
+        return tuple(ret(), code);
+    } else {
+        auto instrCode = pop(a, code);
+        // NOTE Assumes that the value returned is actually an instruction.
+        return tuple(cast(TVMInstruction) instrCode[0], instrCode[1]);
+    }
 }
 
-TVMPointer push(Allocator)(Allocator a, TVMPointer value, TVMPointer stack) {
-    // TODO Push a new value onto the stack.
-    return stack;
+auto pop(Allocator)(Allocator a, TVMPointer stack) {
+    if(isPair(stack)) {
+        if(!isNil(stack)) {
+            auto p = asPair(stack);
+            TVMValue rest = p.cdr;
+
+            auto r = tuple(use(p.car), use(rest.ptr)); // Use the two pair parts.
+            free(a, stack);                            // Free the pair reference.
+
+            return r;
+        } else {
+            throw new RuntimeError("Stack underflow!");
+        }
+    } else {
+        throw new RuntimeError("Malformed stack!");
+    }
+}
+
+TVMPointer push(Allocator)(Allocator a, TVMValue newValue, TVMPointer stack) {
+    return cast(TVMPointer) pair(a, newValue, value(stack));
 }
 
 time_t step(time_t time, TVMContext uProc) {
-    auto instruction = fetch(uProc.code);
+    auto ic = fetch(uProc.alloc, uProc.code);
+
+    auto instruction = ic[0];
+    uProc.code = ic[1];
+
     auto opcode = instruction.opcode;
     auto argument = instruction.argument;
 

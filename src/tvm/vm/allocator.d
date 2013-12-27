@@ -39,7 +39,7 @@ shared struct TVMAllocator(Allocator) {
             *ptr = shared TVMPair(TVMValue(cast(TVMPointer) null), TVMValue(cast(TVMPointer) null));
             ptr.header.refCount = cast(size_t) last;
 
-            last = cast(TVMPointer) ptr;
+            last = asObject(ptr);
 
             size -= 3;
         }
@@ -65,9 +65,9 @@ shared struct TVMAllocator(Allocator) {
 
     void deallocate(T)(T* object) {
         static if(T.sizeof == TVMPair.sizeof) {
-            auto ptr = cast(TVMPointer) object;
-            object.refCount = freeList;
-            freeList = object;
+            auto ptr = asObject(object);
+            ptr.refCount = cast(size_t) freeList;
+            freeList = ptr;
         } else {
             parent.deallocate(object);
         }

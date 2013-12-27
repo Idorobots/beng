@@ -88,11 +88,24 @@ alias isReal    = isType!(TVMValue.FLOATING, TVMValue);
 alias isInteger = isType!(TVMValue.INTEGER, TVMValue);
 
 bool isNil(TVMValue v) {
-    return isPointer(v) && (v.ptr is null);
+    // NOTE Requires explicit checking if the value is a pointer.
+    return v.ptr is null;
 }
 
 bool isNil(TVMPointer ptr) {
     return ptr is null;
+}
+
+TVMPointer asPointer(TVMValue v) {
+    return v.ptr;
+}
+
+double asReal(TVMValue v) {
+    return v.value!double;
+}
+
+double asInteger(TVMValue v) {
+    return v.value!long;
 }
 
 // An object header used in other, compound objects.
@@ -149,21 +162,6 @@ alias isSymbol    = isType!(TVMObject.SYMBOL, TVMPointer);
 alias isPair      = isType!(TVMObject.PAIR, TVMPointer);
 alias isClosure   = isType!(TVMObject.CLOSURE, TVMPointer);
 alias isMicroProc = isType!(TVMObject.UPROC, TVMPointer);
-
-template isTVMObjectCompatible(T) {
-    template isT(U) {
-        static if(is(U == T)) enum isT = true;
-        else                  enum isT = false;
-    }
-
-    static if(anySatisfy!(isT, TypeTuple!(TVMPointer, TVMSymbolPtr, TVMPairPtr,
-                                          TVMClosurePtr, TVMMicroProcPtr, TVMContext)))
-    {
-        enum isTVMObjectCompatible = true;
-    } else {
-        enum isTVMObjectCompatible = false;
-    }
-}
 
 // A TVMIR symbol.
 alias TVMSymbolPtr = shared(TVMSymbol)*;
@@ -293,4 +291,34 @@ shared struct TVMMicroProc {
         asleep = false;
         runtime = t / this.priority;
     }
+}
+
+template asType(T1) {
+    T1 asType(T2)(T2 v) {
+        return cast(T1) v;
+    }
+}
+
+alias asSymbol    = asType!TVMSymbolPtr;
+alias asPair      = asType!TVMPairPtr;
+alias asClosure   = asType!TVMClosurePtr;
+alias asMicroProc = asType!TVMMicroProcPtr;
+
+template isTVMObjectCompatible(T) {
+    template isT(U) {
+        static if(is(U == T)) enum isT = true;
+        else                  enum isT = false;
+    }
+
+    static if(anySatisfy!(isT, TypeTuple!(TVMPointer, TVMSymbolPtr, TVMPairPtr,
+                                          TVMClosurePtr, TVMMicroProcPtr, TVMContext)))
+    {
+        enum isTVMObjectCompatible = true;
+    } else {
+        enum isTVMObjectCompatible = false;
+    }
+}
+
+TVMPointer asObject(T)(T object) if (isTVMObjectCompatible!T) {
+    return cast(TVMPointer) object;
 }

@@ -4,18 +4,23 @@ import tvm.vm.objects;
 import tvm.vm.allocator;
 
 // The lazy ref-counting GC:
-TVMPointer use(T)(T object) if(isTVMObjectCompatible!T) {
+TVMPointer use(T)(T object) {
     // Every reference has to be use()'d and later free()'d.
-    auto ptr = cast(TVMPointer) object;
-    if(!isNil(ptr)) ptr.incRefCount;
+    auto ptr = asObject(object);
+    if(!isNil(ptr)) ptr.incRefCount();
     return ptr;
+}
+
+TVMValue use(TVMValue object) {
+    if(isPointer(object) && !isNil(object)) object.ptr.incRefCount();
+    return object;
 }
 
 auto alloc(T, Allocator)(Allocator a) {
     auto object = a.allocate!T();
 
     // Lazily collect the references this object points to.
-    collect(a, cast(TVMPointer) object);
+    collect(a, asObject(object));
 
     return object;
 }
@@ -53,7 +58,7 @@ auto refs(TVMPointer object) {
         }
 
         TVMPointer front() {
-            return cast(TVMPointer)(cast(size_t)ptr + count);
+            return cast(TVMPointer)(cast(size_t) ptr + count * TVMPointer.sizeof);
         }
 
         void popFront() {
@@ -73,7 +78,7 @@ auto refs(TVMPointer object) {
 
 void free(Allocator)(Allocator a, TVMPointer object) {
     // Deallocate the object if suitable.
-    if(object.decRefCount == 0) {
+    if(object.decRefCount() == 0) {
         switch(object.type) {
             case TVMObject.SYMBOL:
                 a.deallocate(cast(TVMSymbolPtr) object);

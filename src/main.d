@@ -41,6 +41,10 @@ void handle(string name, string source, SemanticError e) {
     writeln(name, ": Semantic Error: ", e.msg);
 }
 
+void handle(string name, string source, RuntimeError e) {
+    writeln(name, ": Runtime Error: ", e.msg);
+}
+
 void main(string[] args) {
     enum VM_VERSION = "v.0.1.0";
     enum Debug {scan, filter, parse, transform, optimize, objects, compile, run,}
@@ -270,7 +274,7 @@ void main(string[] args) {
                         first = uProc;
                     } else {
                         TVMValue v = void;
-                        v.ptr = cast(TVMPointer) uProc;
+                        v.ptr = asObject(uProc);
                         first.msgq.enqueue(v);
                     }
 
@@ -283,6 +287,8 @@ void main(string[] args) {
     } catch (SyntaxError e) {
         handle(file, source, e);
     } catch (SemanticError e) {
+        handle(file, source, e);
+    } catch (RuntimeError e) {
         handle(file, source, e);
     } catch (Exception e) {
         writeln(e.msg);
