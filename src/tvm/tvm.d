@@ -11,5 +11,6 @@ public import tvm.compiler.ast;
 public import tvm.compiler.scanner;
 public import tvm.compiler.parser;
 public import tvm.compiler.sema;
+public import tvm.compiler.optimizer;
 public import tvm.compiler.codegen;
 public import tvm.compiler.printer;

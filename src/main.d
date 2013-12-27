@@ -43,7 +43,7 @@ void handle(string name, string source, SemanticError e) {
 
 void main(string[] args) {
     enum VM_VERSION = "v.0.1.0";
-    enum Debug {scan, filter, parse, transform, objects, compile, run,}
+    enum Debug {scan, filter, parse, transform, optimize, objects, compile, run,}
     Debug debugVM = Debug.run;
 
     // Default VM configuration:
@@ -92,7 +92,7 @@ void main(string[] args) {
               tuple(0UL, cast(size_t) TVMMicroProc.PRIORITY_MASK, config.uProcDefaultPriority),
               &config.uProcDefaultPriority),
         tuple("   --debug=OPTION",
-              "Toggles various debuging options. Available options: [scan, filter, parse, transform, objects, compile, run], default value: run.",
+              "Toggles various debuging options. Available options: [scan, filter, parse, transform, optimize, objects, compile, run], default value: run.",
               tuple(0UL, 0UL, 0UL),
               cast(time_t*) null),
         tuple("-v --version",
@@ -221,6 +221,12 @@ void main(string[] args) {
                 }
                 break;
 
+            case Debug.optimize:
+                foreach(expr; optimize(transform(parse(filter(scan(source)))))) {
+                    writeln(expr);
+                }
+                break;
+
             case Debug.objects:
                 /*static*/ foreach(T; TypeTuple!(TVMValue, TVMObject, TVMSymbol,
                                                  TVMPair, TVMClosure, TVMMicroProc))
@@ -239,7 +245,7 @@ void main(string[] args) {
                 break;
 
             case Debug.compile:
-                writeln(print(compile(transform(parse(filter(scan(source)))))));
+                writeln(print(compile(optimize(transform(parse(filter(scan(source))))))));
                 break;
 
             case Debug.run:
