@@ -232,11 +232,12 @@ void main(string[] args) {
                 break;
 
             case Debug.objects:
-                /*static*/ foreach(T; TypeTuple!(TVMValue, TVMObject, TVMSymbol,
+                /*static*/ foreach(T; TypeTuple!(void*, TVMValue, TVMObject, TVMSymbol,
                                                  TVMPair, TVMClosure, TVMMicroProc))
                 {
                     writeln(T.stringof, ".sizeof = ", T.sizeof, ",");
                 }
+                writeln();
 
                 auto lst = list(GCAllocator.it, value(1), value(2), value(3));
                 auto pr = pair(GCAllocator.it, value(use(lst)), value(use(lst)));

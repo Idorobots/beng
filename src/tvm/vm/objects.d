@@ -92,8 +92,8 @@ bool isNil(TVMValue v) {
     return v.ptr is null;
 }
 
-bool isNil(TVMPointer ptr) {
-    return ptr is null;
+bool isNil(T)(T ptr) if (isTVMObjectCompatible!T) {
+    return asObject(ptr) is null;
 }
 
 TVMPointer asPointer(TVMValue v) {

@@ -75,7 +75,25 @@ string toString(TVMSymbolPtr symbol) {
 }
 
 string toString(TVMPairPtr pair) {
-    return format("(%s . %s)", toString(pair.car), toString(pair.cdr));
+    if(isNil(pair))
+        return "()";
+
+    // FIXME This is a direct copy of the AST code. Could be abstracted away.
+    string makeString(TVMPairPtr p) {
+        TVMValue next = p.cdr;
+
+        if(isNil(next) || isPair(next.ptr)) {
+            if(isNil(next)) {
+                return toString(p.car);
+            } else {
+                return toString(p.car) ~ " " ~ makeString(asPair(next.ptr));
+            }
+        } else {
+            return toString(p.car) ~ " . " ~ toString(p.cdr);
+        }
+    }
+    return "(" ~ makeString(pair) ~ ")";
+    //    return format("(%s . %s)", toString(pair.car), toString(pair.cdr));
 }
 
 string toString(TVMClosurePtr closure) {
