@@ -6,5 +6,5 @@ import tvm.vm.bytecode;
 
 auto compile(E)(E expressions) {
     // TODO Implement the compiler.
-    return value(23);
+    return enter(value(23));
 }
