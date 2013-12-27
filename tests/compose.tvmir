@@ -1,2 +1,2 @@
-(def (compose f g x)
+(define (compose f g x)
     (f (g x)))

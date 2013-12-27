@@ -1,0 +1,6 @@
+(define (main args)
+  (if (primop >= (length args) 0)
+      (print "Ok")
+      (print 'not-ok)))
+
+# (main '(1 2 3))
