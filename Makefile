@@ -1,4 +1,4 @@
-# Defaults to DMD >= 2.062. Change the extension to ".gdc" to use GDC >= 4.7.1 instead.
+# Defaults to DMD >= 2.064. Change the extension to ".gdc" to use GDC >= 4.8.2 instead.
 
 DEFAULT=Makefile.dmd
 

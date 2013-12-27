@@ -6,7 +6,7 @@ import core.time : TickDuration;
 
 import lfds611;
 
-alias size_t time_t;
+alias time_t = size_t;
 
 class PriorityQueue(T, alias comparator = "a < b") {
     private enum allowDuplicates = true;

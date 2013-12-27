@@ -2,7 +2,7 @@ module tvm.vm.bytecode;
 
 import tvm.vm.objects;
 
-alias ubyte opcode_t;
+alias opcode_t = ubyte;
 
 struct TVMInstruction {
     enum WORD_BITS = 8 * TVMValue.sizeof;
@@ -50,10 +50,10 @@ template makeInstr(opcode_t opcode) {
     }
 }
 
-alias makeInstr!(TVMInstruction.PUSH)   push;
-alias makeInstr!(TVMInstruction.TAKE)   take;
-alias makeInstr!(TVMInstruction.ENTER)  enter;
-alias makeInstr!(TVMInstruction.PRIMOP) primop;
-alias makeInstr!(TVMInstruction.COND)   cond;
-alias makeInstr!(TVMInstruction.RETURN) ret;
-alias makeInstr!(TVMInstruction.HALT)   halt;
+alias push   = makeInstr!(TVMInstruction.PUSH);
+alias take   = makeInstr!(TVMInstruction.TAKE);
+alias enter  = makeInstr!(TVMInstruction.ENTER);
+alias primop = makeInstr!(TVMInstruction.PRIMOP);
+alias cond   = makeInstr!(TVMInstruction.COND);
+alias ret    = makeInstr!(TVMInstruction.RETURN);
+alias halt   = makeInstr!(TVMInstruction.HALT);

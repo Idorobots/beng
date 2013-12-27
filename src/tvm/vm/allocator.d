@@ -20,8 +20,9 @@ shared struct GCAllocator {
 
 // TVM free-list allocator with D GC backup:
 shared struct TVMAllocator(Allocator) {
-    static if (__traits(compiles, Allocator.it)) alias Allocator.it parent;
-    else Allocator parent;
+    // FIXME Could use less ugly traits.
+    static if (__traits(compiles, Allocator.it)) alias parent = Allocator.it;
+    else                                         Allocator parent;
 
     private TVMPointer freeList = null;
 
@@ -35,7 +36,7 @@ shared struct TVMAllocator(Allocator) {
         while(size >= 3) {
             auto ptr = parent.allocate!TVMPair();
 
-            *ptr = shared(TVMPair)(TVMValue(cast(TVMPointer) null), TVMValue(cast(TVMPointer) null));
+            *ptr = shared TVMPair(TVMValue(cast(TVMPointer) null), TVMValue(cast(TVMPointer) null));
             ptr.header.refCount = cast(size_t) last;
 
             last = cast(TVMPointer) ptr;

@@ -34,11 +34,6 @@ string toString(TVMInstruction instr) {
     }
 }
 
-string toString(shared(TVMValue) value) {
-    // FIXME GDC 4.7.1 compat :(
-    return toString(cast(TVMValue) value);
-}
-
 string toString(TVMValue value) {
     switch(value.type) {
         case TVMValue.POINTER:

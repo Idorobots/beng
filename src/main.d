@@ -262,11 +262,10 @@ void main(string[] args) {
 
                 for(uint i = 0; i < 10; ++i) {
                     auto t = currentTime();
-                    // FIXME Awful GDC 4.7.1 copat syntax :(
-                    auto uProc = cast(TVMContext) new shared(TVMMicroProc)(config.uProcHeapSize,
-                                                                           config.uProcMSGqSize,
-                                                                           i % 63 + 1,
-                                                                           t + i * 100_000);
+                    auto uProc = new shared TVMMicroProc(config.uProcHeapSize,
+                                                         config.uProcMSGqSize,
+                                                         i % 63 + 1,
+                                                         t + i * 100_000);
                     if(first is null) {
                         first = uProc;
                     } else {

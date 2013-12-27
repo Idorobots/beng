@@ -5,7 +5,7 @@ extern(C) {
     enum LFDS611_RELEASE_NUMBER_STRING = "6.1.1";
 
     /***** lfds611_abstraction *****/
-    alias ulong lfds611_atom_t;
+    alias lfds611_atom_t = ulong;
 
     /***** enums *****/
     enum lfds611_data_structure_validity {
