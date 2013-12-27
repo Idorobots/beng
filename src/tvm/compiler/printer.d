@@ -7,21 +7,21 @@ import tvm.vm.objects;
 import tvm.vm.bytecode;
 
 string toString(TVMInstruction instr) {
-    switch(opcode(instr)) {
+    switch(instr.opcode) {
         case TVMInstruction.PUSH:
-            return format("PUSH %s", toString(argument(instr)));
+            return format("PUSH %s", toString(instr.argument));
 
         case TVMInstruction.TAKE:
-            return format("TAKE %s", toString(argument(instr)));
+            return format("TAKE %s", toString(instr.argument));
 
         case TVMInstruction.ENTER:
-            return format("ENTER %s", toString(argument(instr)));
+            return format("ENTER %s", toString(instr.argument));
 
         case TVMInstruction.PRIMOP:
-            return format("PRIMOP %s", toString(argument(instr)));
+            return format("PRIMOP %s", toString(instr.argument));
 
         case TVMInstruction.COND:
-            return format("COND %s", toString(argument(instr)));
+            return format("COND %s", toString(instr.argument));
 
         case TVMInstruction.RETURN:
             return "RETURN";
@@ -30,7 +30,7 @@ string toString(TVMInstruction instr) {
             return "HALT";
 
         default:
-            return format("OP0x%x %s", opcode(instr), toString(argument(instr)));
+            return format("OP0x%x %s", instr.opcode, toString(instr.argument));
     }
 }
 
