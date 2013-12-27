@@ -7,6 +7,7 @@ import tvm.vm.objects;
 // D GC allocator:
 shared struct GCAllocator {
     auto allocate(T)() {
+        // NOTE GC.malloc is assured to return aligned block of GC'd memory.
         auto ptr = GC.malloc(T.sizeof);
         return cast(shared(T)*) ptr;
     }
@@ -36,7 +37,7 @@ shared struct TVMAllocator(Allocator) {
         while(size >= 3) {
             auto ptr = parent.allocate!TVMPair();
 
-            *ptr = shared TVMPair(TVMValue(cast(TVMPointer) null), TVMValue(cast(TVMPointer) null));
+            *ptr = shared TVMPair(value(nil()), value(nil()));
             ptr.header.refCount = cast(size_t) last;
 
             last = asObject(ptr);
@@ -49,7 +50,7 @@ shared struct TVMAllocator(Allocator) {
 
     auto allocate(T)() {
         static if(T.sizeof == TVMPair.sizeof) {
-            if(freeList !is null) {
+            if(!isNil(freeList)) {
                 auto object = freeList;
                 collect(object);
                 freeList = cast(TVMPointer) object.refCount;

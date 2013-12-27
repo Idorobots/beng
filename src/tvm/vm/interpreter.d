@@ -19,7 +19,7 @@ auto fetch(Allocator)(Allocator a, TVMPointer code) {
     } else {
         auto instrCode = pop(a, code);
         // NOTE Assumes that the value returned is actually an instruction.
-        return tuple(cast(TVMInstruction) instrCode[0], instrCode[1]);
+        return tuple(asInstruction(instrCode[0]), instrCode[1]);
     }
 }
 
@@ -42,7 +42,7 @@ auto pop(Allocator)(Allocator a, TVMPointer stack) {
 }
 
 TVMPointer push(Allocator)(Allocator a, TVMValue newValue, TVMPointer stack) {
-    return cast(TVMPointer) pair(a, newValue, value(stack));
+    return asObject(pair(a, newValue, value(stack)));
 }
 
 time_t step(time_t time, TVMContext uProc) {

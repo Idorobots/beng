@@ -81,16 +81,16 @@ void free(Allocator)(Allocator a, TVMPointer object) {
     if(object.decRefCount() == 0) {
         switch(object.type) {
             case TVMObject.SYMBOL:
-                a.deallocate(cast(TVMSymbolPtr) object);
+                a.deallocate(asSymbol(object));
                 break;
             case TVMObject.PAIR:
-                a.deallocate(cast(TVMPairPtr) object);
+                a.deallocate(asPair(object));
                 break;
             case TVMObject.CLOSURE:
-                a.deallocate(cast(TVMClosurePtr) object);
+                a.deallocate(asClosure(object));
                 break;
             case TVMObject.UPROC:
-                a.deallocate(cast(TVMMicroProcPtr) object);
+                a.deallocate(asMicroProc(object));
                 break;
 
             default:

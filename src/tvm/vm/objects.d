@@ -204,8 +204,12 @@ auto pair(Allocator)(Allocator a, TVMValue car, TVMValue cdr) {
 }
 
 auto list(Allocator, Ts...)(Allocator a, Ts values) {
-    static if(values.length == 0) return cast(TVMPointer) null;
+    static if(values.length == 0) return nil();
     else                          return pair(a, values[0], value(list(a, values[1..$])));
+}
+
+auto nil() {
+    return cast(TVMPointer) null;
 }
 
 // A TVMIR closure.

@@ -55,16 +55,16 @@ string toString(TVMPointer object) {
 
     switch(object.type) {
         case TVMObject.SYMBOL:
-            return toString(cast(TVMSymbolPtr) object);
+            return toString(asSymbol(object));
 
         case TVMObject.PAIR:
-            return toString(cast(TVMPairPtr) object);
+            return toString(asPair(object));
 
         case TVMObject.CLOSURE:
-            return toString(cast(TVMClosurePtr) object);
+            return toString(asClosure(object));
 
         case TVMObject.UPROC:
-            return toString(cast(TVMMicroProcPtr) object);
+            return toString(asMicroProc(object));
 
         default:
             assert(0, "Bad type!");

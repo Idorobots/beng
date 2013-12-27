@@ -57,3 +57,7 @@ alias primop = makeInstr!(TVMInstruction.PRIMOP);
 alias cond   = makeInstr!(TVMInstruction.COND);
 alias ret    = makeInstr!(TVMInstruction.RETURN);
 alias halt   = makeInstr!(TVMInstruction.HALT);
+
+auto asInstruction(TVMValue v) {
+    return cast(TVMInstruction) v;
+}
