@@ -7,8 +7,6 @@ import tvm.vm.objects;
 import tvm.vm.bytecode;
 
 string toString(TVMInstruction instr) {
-    string op;
-
     switch(opcode(instr)) {
         case TVMInstruction.PUSH:
             return format("PUSH %s", toString(argument(instr)));
@@ -21,6 +19,9 @@ string toString(TVMInstruction instr) {
 
         case TVMInstruction.PRIMOP:
             return format("PRIMOP %s", toString(argument(instr)));
+
+        case TVMInstruction.COND:
+            return format("COND %s", toString(argument(instr)));
 
         case TVMInstruction.RETURN:
             return "RETURN";

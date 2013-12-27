@@ -14,8 +14,9 @@ struct TVMInstruction {
     enum TAKE   = 0x1;
     enum ENTER  = 0x2;
     enum PRIMOP = 0x3;
-    enum RETURN = 0x4;
-    enum HALT   = 0x5;
+    enum COND   = 0x4;
+    enum RETURN = 0x5;
+    enum HALT   = 0x6;
 
     TVMValue arg;
     alias arg this;
@@ -62,6 +63,6 @@ alias makeInstr!(TVMInstruction.PUSH)   push;
 alias makeInstr!(TVMInstruction.TAKE)   take;
 alias makeInstr!(TVMInstruction.ENTER)  enter;
 alias makeInstr!(TVMInstruction.PRIMOP) primop;
+alias makeInstr!(TVMInstruction.COND)   cond;
 alias makeInstr!(TVMInstruction.RETURN) ret;
 alias makeInstr!(TVMInstruction.HALT)   halt;
-
