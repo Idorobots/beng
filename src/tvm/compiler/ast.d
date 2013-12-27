@@ -3,7 +3,6 @@ module tvm.compiler.ast;
 import std.string;
 import std.conv : to;
 import std.range;
-import std.stdio; // FIXME Remoe
 
 class SemanticError : Exception {
     this(string what) {
@@ -22,6 +21,11 @@ class Expression {
     mixin Predicate!(Number, false, false);
     mixin Predicate!(Pair, false, false);
     mixin Predicate!(String, false, false);
+    mixin Predicate!(Variable, false, false);
+    mixin Predicate!(Application, false, false);
+    mixin Predicate!(Primop, false, false);
+    mixin Predicate!(Conditional, false, false);
+    mixin Predicate!(Definition, false, false);
 
     // Type coercion:
     protected mixin template Coercion(T, bool possible = true, bool over = true) {
@@ -38,6 +42,11 @@ class Expression {
     mixin Coercion!(Number, false, false);
     mixin Coercion!(Pair, false, false);
     mixin Coercion!(String, false, false);
+    mixin Coercion!(Variable, false, false);
+    mixin Coercion!(Application, false, false);
+    mixin Coercion!(Primop, false, false);
+    mixin Coercion!(Conditional, false, false);
+    mixin Coercion!(Definition, false, false);
 
     // Factory:
     static Expression build(double n) {
@@ -164,5 +173,121 @@ class Pair : Expression {
     @property Expression cdr() {
         if(isNil()) throw new SemanticError("Tried accessing the cdr part of a ()!");
         return _cdr;
+    }
+}
+
+class Variable : Symbol {
+    this(string var) {
+        super(var);
+    }
+
+    mixin Predicate!Variable;
+    mixin Coercion!Variable;
+
+    override string toString() {
+        return "$" ~ super.toString();
+    }
+}
+
+class Application : Expression {
+    private Expression operator, operand;
+
+    this(Expression operator, Expression operand) {
+        this.operator = operator;
+        this.operand = operand;
+    }
+
+    this(Expression[] expressions) {
+        if(expressions.length == 2) {
+            this.operator = expressions[0];
+            this.operand = expressions[1];
+        } else if(expressions.length > 2) {
+            this.operator = new Application(expressions[0..$-1]);
+            this.operand = expressions[$-1];
+        } else {
+            throw new SemanticError("Malformed application!");
+        }
+    }
+
+    this(Es...)(Es expressions) if(Es.length > 2) {
+        this.operator = new Application(expressions[0..$-1]);
+        this.operand = expressions[$-1];
+    }
+
+    mixin Predicate!Application;
+    mixin Coercion!Application;
+
+    override string toString() {
+        return format("#apply{%s, %s}", operator.toString(), operand.toString());
+    }
+}
+
+class Primop : Expression {
+    private string primop;
+    private Expression[] args;
+
+    this(string primop, Expression[] args...) {
+        this.primop = primop;
+        this.args = args;
+    }
+
+    mixin Predicate!Primop;
+    mixin Coercion!Primop;
+
+    override string toString() {
+        string str;
+        if(args.length > 0) {
+            foreach(arg; args[0..$-1]) {
+                str ~= arg.toString() ~ ", ";
+            }
+            str ~= args[$-1].toString();
+        }
+
+        return format("#primop{%s, %s}", primop, str);
+    }
+}
+
+class Conditional : Expression {
+    private Expression cond, then, else_;
+
+    this(Expression cond, Expression then, Expression else_) {
+        this.cond = cond;
+        this.then = then;
+        this.else_ = else_;
+    }
+
+    mixin Predicate!Conditional;
+    mixin Coercion!Conditional;
+
+    override string toString() {
+        return format("#cond{%s, %s, %s}", cond.toString(), then.toString(), else_.toString());
+    }
+}
+
+class Definition : Expression {
+    private string name;
+    private string[] args;
+    private Expression body_;
+
+    this(string name, string[] args, Expression body_) {
+        this.name = name;
+        this.args = args;
+        this.body_ = body_;
+    }
+
+    mixin Predicate!Definition;
+    mixin Coercion!Definition;
+
+    override string toString() {
+        string str;
+
+        if(args.length > 0) {
+            foreach(arg; args[0..$-1]) {
+                str ~= arg ~ ", ";
+            }
+            str ~= args[$-1];
+        }
+
+        return format("#def{%s, [%s], %s}", name, str, body_.toString());
     }
 }
