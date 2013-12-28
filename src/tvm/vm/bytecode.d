@@ -18,12 +18,13 @@ struct TVMInstruction {
     enum MIN_FLOATING_OPERAND = -MAX_FLOATING_OPERAND;
 
     enum PUSH   = 0x0;
-    enum TAKE   = 0x1;
-    enum ENTER  = 0x2;
-    enum PRIMOP = 0x3;
-    enum COND   = 0x4;
-    enum RETURN = 0x5;
-    enum HALT   = 0x6;
+    enum NEXT   = 0x1;
+    enum TAKE   = 0x2;
+    enum ENTER  = 0x3;
+    enum PRIMOP = 0x4;
+    enum COND   = 0x5;
+    enum RETURN = 0x6;
+    enum HALT   = 0x7;
 
     TVMValue arg;
     alias arg this;
@@ -102,7 +103,8 @@ struct TVMInstruction {
 }
 
 TVMInstruction instruction(T)(opcode_t opcode, T argument) {
-    return TVMInstruction(opcode, value(argument));
+    static if(is(T == TVMValue)) return TVMInstruction(opcode, argument);
+    else                         return TVMInstruction(opcode, value(argument));
 }
 
 template makeInstr(opcode_t opcode) {
@@ -112,6 +114,7 @@ template makeInstr(opcode_t opcode) {
 }
 
 alias push   = makeInstr!(TVMInstruction.PUSH);
+alias next   = makeInstr!(TVMInstruction.NEXT);
 alias take   = makeInstr!(TVMInstruction.TAKE);
 alias enter  = makeInstr!(TVMInstruction.ENTER);
 alias primop = makeInstr!(TVMInstruction.PRIMOP);
@@ -121,6 +124,14 @@ alias halt   = makeInstr!(TVMInstruction.HALT);
 
 auto asInstruction(TVMValue v) {
     return cast(TVMInstruction) v;
+}
+
+auto asValue(TVMValue v) {
+    return v;
+}
+
+auto asValue(TVMInstruction i) {
+    return cast(TVMValue) i;
 }
 
 unittest {

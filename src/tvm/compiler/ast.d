@@ -176,21 +176,23 @@ class Pair : Expression {
     }
 }
 
-class Variable : Symbol {
-    this(string var) {
-        super(var);
+class Variable : Expression {
+    string name;
+
+    this(string name) {
+        this.name = name;
     }
 
     mixin Predicate!Variable;
     mixin Coercion!Variable;
 
     override string toString() {
-        return "$" ~ super.toString();
+        return "$" ~ name;
     }
 }
 
 class Application : Expression {
-    private Expression operator, operand;
+    Expression operator, operand;
 
     this(Expression operator, Expression operand) {
         this.operator = operator;
@@ -218,11 +220,11 @@ class Application : Expression {
 }
 
 class Primop : Expression {
-    private string primop;
-    private Expression[] args;
+    string name;
+    Expression[] args;
 
-    this(string primop, Expression[] args...) {
-        this.primop = primop;
+    this(string name, Expression[] args...) {
+        this.name = name;
         this.args = args;
     }
 
@@ -238,31 +240,31 @@ class Primop : Expression {
             str ~= args[$-1].toString();
         }
 
-        return format("#primop{%s, %s}", primop, str);
+        return format("#primop{%s, %s}", name, str);
     }
 }
 
 class Conditional : Expression {
-    private Expression cond, then, else_;
+    Expression condition, then, otherwise;
 
     this(Expression cond, Expression then, Expression else_) {
-        this.cond = cond;
+        this.condition = cond;
         this.then = then;
-        this.else_ = else_;
+        this.otherwise = else_;
     }
 
     mixin Predicate!Conditional;
     mixin Coercion!Conditional;
 
     override string toString() {
-        return format("#cond{%s, %s, %s}", cond.toString(), then.toString(), else_.toString());
+        return format("#cond{%s, %s, %s}", condition.toString(), then.toString(), otherwise.toString());
     }
 }
 
 class Definition : Expression {
-    private string name;
-    private string[] args;
-    private Expression body_;
+    string name;
+    string[] args;
+    Expression body_;
 
     this(string name, string[] args, Expression body_) {
         this.name = name;

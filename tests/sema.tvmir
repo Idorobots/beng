@@ -1,3 +1,11 @@
+(define (length stuff)
+  (if (primop null? stuff)
+      0
+      (primop + 1 (length (primop cdr stuff)))))
+
+(define (print what)
+  (primop print what))
+
 (define (main args)
   (if (primop >= (length args) 0)
       (print "Ok")

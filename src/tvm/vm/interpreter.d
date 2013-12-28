@@ -64,6 +64,10 @@ time_t step(time_t time, TVMContext uProc) {
 
     switch(opcode) {
         case TVMInstruction.PUSH:
+            // TODO Push argument onto the vstack.
+            return 0;
+
+        case TVMInstruction.NEXT:
             // TODO Push argument onto the stack.
             return 0;
 

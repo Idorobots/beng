@@ -244,13 +244,21 @@ void main(string[] args) {
                 auto lambda = closure(GCAllocator.it, value(pr), value(lst));
                 free(GCAllocator.it, lst);
 
-                writeln("list: ", print(lst));
-                writeln("pair: ", print(pr));
-                writeln("lambda: ", print(lambda));
+                writeln(print(lambda));
                 break;
 
             case Debug.compile:
-                writeln(print(compile(optimize(transform(parse(filter(scan(source))))))));
+                auto namesEnv = compile(GCAllocator.it,
+                                        optimize(transform(parse(filter(scan(source))))));
+                auto names = namesEnv[0];
+                auto env = namesEnv[1];
+
+                foreach(name; names) {
+                    TVMValue closure = asPair(env).car;
+                    TVMValue rest = asPair(env).cdr;
+                    env = rest.ptr;
+                    writeln(name, ": ", print(closure));
+                }
                 break;
 
             case Debug.run:

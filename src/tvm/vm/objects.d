@@ -191,7 +191,7 @@ shared struct TVMSymbol {
 
 auto symbol(Allocator)(Allocator a, string str) {
     auto ptr = alloc!TVMSymbol(a);
-    *ptr = TVMSymbol(str);
+    *ptr = shared TVMSymbol(str);
     return use(ptr);
 }
 
@@ -240,9 +240,9 @@ shared struct TVMClosure {
     }
 }
 
-auto closure(Allocator)(Allocator a, TVMValue car, TVMValue cdr) {
+auto closure(Allocator)(Allocator a, TVMValue code, TVMValue env) {
     auto ptr = alloc!TVMClosure(a);
-    *ptr = shared TVMClosure(car, cdr);
+    *ptr = shared TVMClosure(code, env);
     return use(ptr);
 }
 

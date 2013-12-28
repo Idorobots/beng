@@ -9,19 +9,35 @@ import tvm.vm.bytecode;
 string toString(TVMInstruction instr) {
     switch(instr.opcode) {
         case TVMInstruction.PUSH:
-            return format("PUSH %s", toString(instr.argument));
+            return format("PUSH_%s", toString(instr.argument));
 
-        case TVMInstruction.TAKE:
-            return format("TAKE %s", toString(instr.argument));
+        case TVMInstruction.NEXT:
+            return format("NEXT_%s",
+                          isPointer(instr.argument) && isPair(instr.argument.ptr)
+                          ? codeToString(asPair(instr.argument.ptr))
+                          : toString(instr.argument));
 
         case TVMInstruction.ENTER:
-            return format("ENTER %s", toString(instr.argument));
+            return format("ENTER_%s", toString(instr.argument));
 
         case TVMInstruction.PRIMOP:
-            return format("PRIMOP %s", toString(instr.argument));
+            return format("OP_%s", toString(instr.argument));
 
         case TVMInstruction.COND:
-            return format("COND %s", toString(instr.argument));
+            auto branches = instr.argument.ptr;
+            if(isPair(branches) && !isNil(branches)) {
+                TVMValue car = asPair(branches).car;
+                TVMValue cdr = asPair(branches).cdr;
+
+                return format("COND_{%s, %s}",
+                              codeToString(asPair(car.ptr)),
+                              codeToString(asPair(cdr.ptr)));
+            } else {
+                assert(0, "Malformed bytecode instruction.");
+            }
+
+        case TVMInstruction.TAKE:
+            return "TAKE";
 
         case TVMInstruction.RETURN:
             return "RETURN";
@@ -37,7 +53,12 @@ string toString(TVMInstruction instr) {
 string toString(TVMValue value) {
     switch(value.type) {
         case TVMValue.POINTER:
-            return toString(asPointer(value));
+            // FIXME A hack to avoid bad pointers. :(
+            if(value.rawValue > ((0x1UL << 48)) - 1) {
+                return toString(asInstruction(value));
+            } else {
+                return toString(asPointer(value));
+            }
 
         case TVMValue.FLOATING:
             return format("%s", asFloating(value));
@@ -71,10 +92,10 @@ string toString(TVMPointer object) {
     }
 }
 string toString(TVMSymbolPtr symbol) {
-    return symbol.str;
+    return "\"" ~ symbol.str ~ "\"";
 }
 
-string toString(TVMPairPtr pair) {
+private string listToString(alias as)(TVMPairPtr pair) {
     if(isNil(pair))
         return "()";
 
@@ -84,20 +105,32 @@ string toString(TVMPairPtr pair) {
 
         if(isNil(next) || isPair(next.ptr)) {
             if(isNil(next)) {
-                return toString(p.car);
+                return toString(as(p.car));
             } else {
-                return toString(p.car) ~ " " ~ makeString(asPair(next.ptr));
+                return toString(as(p.car)) ~ " " ~ makeString(asPair(next.ptr));
             }
         } else {
-            return toString(p.car) ~ " . " ~ toString(p.cdr);
+            return toString(as(p.car)) ~ " . " ~ toString(as(p.cdr));
         }
     }
     return "(" ~ makeString(pair) ~ ")";
-    //    return format("(%s . %s)", toString(pair.car), toString(pair.cdr));
+}
+
+string toString(TVMPairPtr pair) {
+    return listToString!asValue(pair);
+}
+
+private string codeToString(TVMPairPtr pair) {
+    return listToString!asInstruction(pair);
 }
 
 string toString(TVMClosurePtr closure) {
-    return format("#{%s, %s}", toString(closure.code), toString(closure.env));
+    TVMValue code = closure.code;
+    if(isPair(code.ptr)) {
+        return format("#{%s, ...}", codeToString(asPair(code.ptr)));
+    } else {
+        assert(0, "Malformed bytecode stream.");
+    }
 }
 
 string toString(TVMMicroProcPtr uProc) {
