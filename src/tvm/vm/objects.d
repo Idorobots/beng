@@ -28,11 +28,11 @@ struct TVMValue {
     }
 
     this(double d) {
-        this(TVMValue.FLOATING, (cast(size_t) d) << TYPE_BITS);
+        this(TVMValue.FLOATING, *(cast(size_t*) &d));
     }
 
     this(long i) {
-        this(TVMValue.INTEGER, (cast(size_t) i) << TYPE_BITS);
+        this(TVMValue.INTEGER, *(cast(size_t*) &i) << TYPE_BITS);
     }
 
     this(ubyte type, size_t value) {
@@ -49,12 +49,24 @@ struct TVMValue {
         this.rawValue |= (newType & TYPE_MASK);
     }
 
-    @property T value(T)() const {
-        return cast(T) (this.rawValue >> TYPE_BITS);
+    @property double floating() const {
+        auto v = (this.rawValue >> TYPE_BITS) << TYPE_BITS;
+        return *cast(double*) &v;
     }
 
-    @property void value(T)(T newValue) {
-        this.rawValue = (cast(size_t) newValue) << TYPE_BITS;
+    @property void floating(double newValue) {
+        this.rawValue = (*cast(size_t*) &newValue);
+        this.type = TVMValue.FLOATING;
+    }
+
+    @property long integer() const {
+        auto v = *cast(long*) &this.rawValue;
+        return v >> TYPE_BITS;
+    }
+
+    @property void integer(long newValue) {
+        this.rawValue = ((*cast(size_t*) &newValue) << TYPE_BITS);
+        this.type = TVMValue.INTEGER;
     }
 
     @property TVMPointer ptr() {
@@ -63,6 +75,7 @@ struct TVMValue {
     }
 
     @property void ptr(TVMPointer newPtr) {
+        // NOTE Since pointers are tagged with 0x0 we can use them directly.
         this.rawValue = cast(size_t) newPtr;
     }
 
@@ -83,9 +96,9 @@ bool isType(size_t type, T)(T v) {
     return v.type == type;
 }
 
-alias isPointer = isType!(TVMValue.POINTER, TVMValue);
-alias isReal    = isType!(TVMValue.FLOATING, TVMValue);
-alias isInteger = isType!(TVMValue.INTEGER, TVMValue);
+alias isPointer  = isType!(TVMValue.POINTER, TVMValue);
+alias isFloating = isType!(TVMValue.FLOATING, TVMValue);
+alias isInteger  = isType!(TVMValue.INTEGER, TVMValue);
 
 bool isNil(TVMValue v) {
     // NOTE Requires explicit checking if the value is a pointer.
@@ -100,12 +113,12 @@ TVMPointer asPointer(TVMValue v) {
     return v.ptr;
 }
 
-double asReal(TVMValue v) {
-    return v.value!double;
+double asFloating(TVMValue v) {
+    return v.floating;
 }
 
 double asInteger(TVMValue v) {
-    return v.value!long;
+    return v.integer;
 }
 
 // An object header used in other, compound objects.

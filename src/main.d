@@ -291,7 +291,5 @@ void main(string[] args) {
         handle(file, source, e);
     } catch (RuntimeError e) {
         handle(file, source, e);
-    } catch (Exception e) {
-        writeln(e.msg);
     }
 }

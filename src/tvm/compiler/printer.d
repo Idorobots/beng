@@ -37,13 +37,13 @@ string toString(TVMInstruction instr) {
 string toString(TVMValue value) {
     switch(value.type) {
         case TVMValue.POINTER:
-            return toString(value.ptr);
+            return toString(asPointer(value));
 
         case TVMValue.FLOATING:
-            return format("%f", value.value!double);
+            return format("%s", asFloating(value));
 
         case TVMValue.INTEGER:
-            return format("%d", value.value!long);
+            return format("%s", asInteger(value));
 
         default:
             assert(0, "Bad type!");
