@@ -100,13 +100,13 @@ alias isPointer  = isType!(TVMValue.POINTER, TVMValue);
 alias isFloating = isType!(TVMValue.FLOATING, TVMValue);
 alias isInteger  = isType!(TVMValue.INTEGER, TVMValue);
 
+bool isNil(T)(T ptr) if (isTVMObjectCompatible!T) {
+    return asObject(ptr) is null;
+}
+
 bool isNil(TVMValue v) {
     // NOTE Requires explicit checking if the value is a pointer.
     return v.ptr is null;
-}
-
-bool isNil(T)(T ptr) if (isTVMObjectCompatible!T) {
-    return asObject(ptr) is null;
 }
 
 TVMPointer asPointer(TVMValue v) {
@@ -327,7 +327,8 @@ template isTVMObjectCompatible(T) {
         else                  enum isT = false;
     }
 
-    static if(anySatisfy!(isT, TypeTuple!(TVMPointer, TVMSymbolPtr, TVMPairPtr,
+    // FIXME shared(TVMPointer) probably shouldn't be here.
+    static if(anySatisfy!(isT, TypeTuple!(shared(TVMPointer), TVMPointer, TVMSymbolPtr, TVMPairPtr,
                                           TVMClosurePtr, TVMMicroProcPtr, TVMContext)))
     {
         enum isTVMObjectCompatible = true;

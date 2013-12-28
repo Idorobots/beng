@@ -1,1 +1,3 @@
-(define (foo x) '(1 2 3 4 . "foo")) 
+(define (foo args) args)
+
+(define (main args) (foo (foo args)))

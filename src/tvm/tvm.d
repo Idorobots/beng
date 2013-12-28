@@ -4,6 +4,7 @@ public import tvm.vm.utils;
 public import tvm.vm.objects;
 public import tvm.vm.allocator;
 public import tvm.vm.gc;
+public import tvm.vm.bytecode;
 public import tvm.vm.interpreter;
 public import tvm.vm.scheduler;
 

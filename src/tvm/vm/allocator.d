@@ -41,7 +41,6 @@ shared struct TVMAllocator(Allocator) {
             ptr.header.refCount = cast(size_t) last;
 
             last = asObject(ptr);
-
             size -= 3;
         }
 
@@ -50,11 +49,9 @@ shared struct TVMAllocator(Allocator) {
 
     auto allocate(T)() {
         static if(T.sizeof == TVMPair.sizeof) {
-            if(!isNil(freeList)) {
-                auto object = freeList;
-                collect(object);
-                freeList = cast(TVMPointer) object.refCount;
-
+            if(!isNil(this.freeList)) {
+                auto object = this.freeList;
+                this.freeList = cast(TVMPointer) object.refCount;
                 return cast(shared(T)*) object;
             } else {
                 return parent.allocate!T();

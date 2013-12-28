@@ -36,7 +36,7 @@ TVMPointer compileDefinition(Allocator)(Allocator a, Definition def, string[] en
     return closure(a, code, value(nil()));
 }
 
-private long assoc(string what, string[] where) {
+long assoc(string what, string[] where) {
     foreach(i, w; where) {
         if(what == w) return i;
     }
@@ -47,7 +47,7 @@ TVMValue compileR(Allocator)(Allocator a, Expression e, string[] env) {
     return typeDispatch(
         e,
         (Variable var) {
-            return value(pair(a, asValue(enter(assoc(var.name, env))), value(nil())));
+            return value(pair(a, asValue(enter(compileA(a, var, env))), value(nil())));
         },
         (Application app) {
             auto operand = compileR(a, app.operand, env);
@@ -60,7 +60,6 @@ TVMValue compileR(Allocator)(Allocator a, Expression e, string[] env) {
 }
 
 TVMValue compileA(Allocator)(Allocator a, Expression e, string[] env) {
-    // FIXME Determine whether this is even needed.
     return typeDispatch(
         e,
         (Variable var) {
@@ -81,7 +80,6 @@ TVMValue compileA(Allocator)(Allocator a, Expression e, string[] env) {
                                              compileA(a, pr.car, env),
                                              compileA(a, pr.cdr, env)));
         },
-        
         (Expression expr) {
             return value(pair(a, compileR(a, expr, env), value(nil())));
         });

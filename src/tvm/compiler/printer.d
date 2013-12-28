@@ -118,10 +118,6 @@ string toString(TVMPairPtr pair) {
     return listToString!asValue(pair);
 }
 
-private string codeToString(TVMPairPtr pair) {
-    return listToString!asInstruction(pair);
-}
-
 string toString(TVMClosurePtr closure) {
     TVMValue code = closure.code;
     if(isPair(code.ptr)) {
@@ -133,6 +129,10 @@ string toString(TVMClosurePtr closure) {
 
 string toString(TVMMicroProcPtr uProc) {
     return format("#%d{%d}", uProc.priority, uProc.asleep ? uProc.wakeTime : uProc.vRunTime);
+}
+
+string codeToString(TVMPairPtr pair) {
+    return listToString!asInstruction(pair);
 }
 
 string print(T)(T thing) {

@@ -262,34 +262,38 @@ void main(string[] args) {
                 break;
 
             case Debug.run:
-                // TODO Compile the source and send (main) to thisTid.
-
-                auto smps = [thisTid];
-
-                // Spawn the SMPs & run the program.
+                // Spawn the SMPs...
                 for(uint i = 1; i < config.smpNum; ++i) {
-                    smps ~= spawn(&schedule, format("SMP%d", i), config);
+                    spawn(&schedule, format("SMP%d", i), config);
                 }
 
-                TVMContext first = null;
+                // Create a root uProc...
+                auto t = currentTime();
+                auto uProc = new shared TVMMicroProc(config.uProcHeapSize,
+                                                     config.uProcMSGqSize,
+                                                     cast(ubyte) config.uProcDefaultPriority,
+                                                     t);
 
-                for(uint i = 0; i < 10; ++i) {
-                    auto t = currentTime();
-                    auto uProc = new shared TVMMicroProc(config.uProcHeapSize,
-                                                         config.uProcMSGqSize,
-                                                         i % 63 + 1,
-                                                         t + i * 100_000);
-                    if(first is null) {
-                        first = uProc;
-                    } else {
-                        TVMValue v = void;
-                        v.ptr = asObject(uProc);
-                        first.msgq.enqueue(v);
-                    }
+                // Compile the source code...
+                auto namesEnv = compile(uProc.alloc, optimize(transform(parse(filter(scan(source))))));
+                auto names = namesEnv[0];
+                auto env = namesEnv[1];
 
-                    send(smps[uniform(0, config.smpNum)], uProc);
+                // ...remember to pass some args to the boot code.
+                auto argList = value(nil());
+                foreach(arg; args) {
+                    argList = value(pair(uProc.alloc, value(symbol(uProc.alloc, arg)), argList));
                 }
 
+                auto cont = list(uProc.alloc, asValue(push(argList)));
+                auto halt = closure(uProc.alloc, value(list(uProc.alloc, halt())), value(env));
+
+                uProc.code = list(uProc.alloc, asValue(next(cont)), enter(assoc("main", names)));
+                uProc.env = env;
+                uProc.stack = list(uProc.alloc, value(halt));
+
+                // Execute the process
+                send(thisTid, uProc);
                 schedule("SMP0", config);
                 break;
         }

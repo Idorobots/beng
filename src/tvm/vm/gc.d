@@ -78,7 +78,7 @@ auto refs(TVMPointer object) {
 
 void free(Allocator)(Allocator a, TVMPointer object) {
     // Deallocate the object if suitable.
-    if(object.decRefCount() == 0) {
+    if(!isNil(object) && (object.decRefCount() == 0)) {
         switch(object.type) {
             case TVMObject.SYMBOL:
                 a.deallocate(asSymbol(object));
