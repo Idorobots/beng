@@ -76,8 +76,12 @@ TVMValue compileA(Allocator)(Allocator a, Expression e, string[] env) {
             return value(num.toNumber());
         },
         (Pair pr) {
-            return value(nil()); // FIXME Implement.
+            if(pr.isNil()) return value(nil());
+            else           return value(pair(a,
+                                             compileA(a, pr.car, env),
+                                             compileA(a, pr.cdr, env)));
         },
+        
         (Expression expr) {
             return value(pair(a, compileR(a, expr, env), value(nil())));
         });
@@ -96,7 +100,7 @@ TVMValue compileB(Allocator)(Allocator a, Expression e, string[] env, TVMValue c
             return value(pair(a, asValue(push(num.toNumber())), continuation));
         },
         (Pair pr) {
-            return value(nil()); // FIXME Implement.
+            return value(pair(a, asValue(push(compileA(a, pr, env))), continuation));
         },
         (Primop op) {
             auto name = op.name;

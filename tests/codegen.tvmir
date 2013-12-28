@@ -1,1 +1,1 @@
-(define (foo x) 'foo) 
+(define (foo x) '(1 2 3 4 . "foo")) 

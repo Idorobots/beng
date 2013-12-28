@@ -9,19 +9,19 @@ import tvm.vm.bytecode;
 string toString(TVMInstruction instr) {
     switch(instr.opcode) {
         case TVMInstruction.PUSH:
-            return format("PUSH_%s", toString(instr.argument));
+            return format("PUSH %s", toString(instr.argument));
 
         case TVMInstruction.NEXT:
-            return format("NEXT_%s",
+            return format("NEXT %s",
                           isPointer(instr.argument) && isPair(instr.argument.ptr)
                           ? codeToString(asPair(instr.argument.ptr))
                           : toString(instr.argument));
 
         case TVMInstruction.ENTER:
-            return format("ENTER_%s", toString(instr.argument));
+            return format("ENTER %s", toString(instr.argument));
 
         case TVMInstruction.PRIMOP:
-            return format("OP_%s", toString(instr.argument));
+            return format("PRIMOP %s", toString(instr.argument));
 
         case TVMInstruction.COND:
             auto branches = instr.argument.ptr;
@@ -29,7 +29,7 @@ string toString(TVMInstruction instr) {
                 TVMValue car = asPair(branches).car;
                 TVMValue cdr = asPair(branches).cdr;
 
-                return format("COND_{%s, %s}",
+                return format("COND {%s, %s}",
                               codeToString(asPair(car.ptr)),
                               codeToString(asPair(cdr.ptr)));
             } else {
@@ -46,7 +46,7 @@ string toString(TVMInstruction instr) {
             return "HALT";
 
         default:
-            return format("OP0x%x %s", instr.opcode, toString(instr.argument));
+            return format("OP_0x%x %s", instr.opcode, toString(instr.argument));
     }
 }
 
@@ -103,12 +103,10 @@ private string listToString(alias as)(TVMPairPtr pair) {
     string makeString(TVMPairPtr p) {
         TVMValue next = p.cdr;
 
-        if(isNil(next) || isPair(next.ptr)) {
-            if(isNil(next)) {
-                return toString(as(p.car));
-            } else {
-                return toString(as(p.car)) ~ " " ~ makeString(asPair(next.ptr));
-            }
+        if(isPointer(next)) {
+            if(isNil(next))           return toString(as(p.car));
+            else if(isPair(next.ptr)) return toString(as(p.car)) ~ " " ~ makeString(asPair(next.ptr));
+            else                      return toString(as(p.car)) ~ " . " ~ toString(as(p.cdr));
         } else {
             return toString(as(p.car)) ~ " . " ~ toString(as(p.cdr));
         }
