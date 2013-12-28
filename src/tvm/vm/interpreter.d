@@ -139,9 +139,12 @@ time_t step(time_t time, TVMContext uProc) {
         case TVMInstruction.ENTER:
             switch(argument.type) {
                 case TVMValue.POINTER:
-                    // TODO Enter a piece of code.
-                    // ...and remove the instruction from the stream.
-                    uProc.code = pop(uProc.alloc, uProc.code);
+                    // Enter a piece of code...
+                    free(uProc.alloc, uProc.code);
+                    uProc.code = argument.ptr;
+
+                    // ...and free the argument.
+                    free(uProc.alloc, argument.ptr);
                     return DEFAULT_DELAY;
 
                 case TVMValue.INTEGER:
@@ -154,11 +157,12 @@ time_t step(time_t time, TVMContext uProc) {
                     auto closure = use(val.ptr);
 
                     // ...and enter it by substituting current code and env...
-                    free(uProc.alloc, uProc.code);
                     TVMValue c = use(asClosure(closure).code);
+                    free(uProc.alloc, uProc.code);
                     uProc.code = c.ptr;
-                    free(uProc.alloc, uProc.env);
+
                     TVMValue e = use(asClosure(closure).env);
+                    free(uProc.alloc, uProc.env);
                     uProc.env = e.ptr;
 
                     // ...and lastly, free the closure object.
@@ -174,8 +178,22 @@ time_t step(time_t time, TVMContext uProc) {
             return DEFAULT_DELAY;
 
         case TVMInstruction.COND:
-            // TODO Check top of the vstack and select one of the alternatives.
-            return DEFAULT_DELAY;
+            // Extract both branches of the conditional...
+            auto then = asPair(argument.ptr).car;
+            auto else_ = asPair(argument.ptr).cdr;
+
+            // Check if top of the vstack is non-nil and select a branch...
+            auto val = peek(uProc.alloc, uProc.vstack);
+
+            TVMValue branch = void;
+            if(isNil(val)) branch = use(else_);
+            else           branch = use(then);
+
+            // ...free the other branch and enter the closure...
+            free(uProc.alloc, argument.ptr);
+            argument = branch;
+            uProc.vstack = pop(uProc.alloc, uProc.vstack);
+            goto case TVMInstruction.ENTER;
 
         case TVMInstruction.RETURN:
             // Get the closure on top of the stack...
@@ -188,11 +206,12 @@ time_t step(time_t time, TVMContext uProc) {
             uProc.stack = pop(uProc.alloc, uProc.stack);
 
             // ...and enter it by substituting current code and env...
-            free(uProc.alloc, uProc.code);
             TVMValue c = use(asClosure(closure).code);
+            free(uProc.alloc, uProc.code);
             uProc.code = c.ptr;
-            free(uProc.alloc, uProc.env);
+
             TVMValue e = use(asClosure(closure).env);
+            free(uProc.alloc, uProc.env);
             uProc.env = e.ptr;
 
             // ...and lastly, free the closure object.

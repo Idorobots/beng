@@ -157,7 +157,9 @@ void schedule(string name, TVMConfig config) {
                     break;
 
                 case TVMMicroProc.MAX_SLEEP_TIME:
-                    // uProc is sleeping indefinitely and may get GCed later.
+                    // FIXME uProc is sleeping indefinitely and may get GCed later.
+                    uProc.wakeTime = wakeTime;
+                    WAITq.enqueue(uProc);
                     break;
 
                 default:

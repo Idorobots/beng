@@ -1,0 +1,6 @@
+(define (main args)
+  (if ()
+      23
+      (if 'non-nil
+          42
+          5)))

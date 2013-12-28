@@ -7,6 +7,7 @@ import std.algorithm : reverse;
 import tvm.compiler.ast;
 import tvm.vm.objects;
 import tvm.vm.bytecode;
+import tvm.vm.gc;
 
 // FIXME This probably should be moved to the AST.
 // FIXME But it's so elegant...
@@ -152,7 +153,14 @@ private void updateEnvs(TVMPairPtr defs, TVMPointer env) {
 
     TVMValue car = defs.car;
     auto closure = asClosure(car.ptr);
-    closure.env = value(env);
+
+    // NOTE Each pointer has to be accounted for.
+    closure.env = value(use(env));
+
+    TVMValue rest = defs.cdr;
+
+    if(isPointer(rest)) updateEnvs(asPair(rest.ptr), env);
+    else                assert(0, "Malformed environment.");
 }
 
 auto compile(Allocator, E)(Allocator a, E expressions) {
