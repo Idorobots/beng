@@ -1,2 +1,3 @@
-#(define (fact n) (if (primop <= n 2) n (primop * n (fact (primop dec n)))))
-(define (main args) (if () args (main 5)))
+(define (fib n) (if (primop < n 2) n (primop + (fib (primop - n 2)) (fib (primop - n 1)))))
+(define (fact n) (if (primop = n 0) 1 (primop * n (fact (primop - n 1)))))
+(define (main args) (fact 6))

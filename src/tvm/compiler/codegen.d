@@ -32,7 +32,7 @@ TVMPointer compileDefinition(Allocator)(Allocator a, Definition def, string[] en
     auto body_ = def.body_;
 
     // NOTE Args will be pushed in reverse order onto the stack.
-    auto code = prefix(a, args.length, asValue(take()), compileR(a, body_, args ~ env));
+    auto code = prefix(a, args.length, value(take(a)), compileR(a, body_, args ~ env));
 
     // NOTE The environment will be updated later.
     return closure(a, code, value(nil()));
@@ -49,19 +49,19 @@ TVMValue compileR(Allocator)(Allocator a, Expression e, string[] env) {
     return typeDispatch(
         e,
         (Variable var) {
-            return value(pair(a, asValue(enter(compileA(a, var, env))), value(nil())));
+            auto v = compileA(a, var, env);
+            return value(list(a, value(enter(v[0], a, v[1]))));
         },
         (Application app) {
-            auto operand = compileR(a, app.operand, env); // FIXME Has to be compileA
-            auto operator = compileR(a, app.operator, env);
-            return value(pair(a, asValue(next(operand)), operator));
+            auto operand = compileA(a, app.operand, env);
+            return value(pair(a, value(next(operand[0], a, operand[1])), compileR(a, app.operator, env)));
         },
         (Expression expr) {
             return compileB(a, expr, env, value(nil()));
         });
 }
 
-TVMValue compileA(Allocator)(Allocator a, Expression e, string[] env) {
+TVMValue compileV(Allocator)(Allocator a, Expression e, string[] env) {
     return typeDispatch(
         e,
         (Variable var) {
@@ -79,11 +79,31 @@ TVMValue compileA(Allocator)(Allocator a, Expression e, string[] env) {
         (Pair pr) {
             if(pr.isNil()) return value(nil());
             else           return value(pair(a,
-                                             compileA(a, pr.car, env),
-                                             compileA(a, pr.cdr, env)));
+                                             compileV(a, pr.car, env),
+                                             compileV(a, pr.cdr, env)));
+        });
+}
+
+auto compileA(Allocator)(Allocator a, Expression e, string[] env) {
+    return typeDispatch(
+        e,
+        (Variable var) {
+            return tuple(arg(), compileV(a, var, env));
+        },
+        (Symbol sym) {
+            return tuple(val(), compileV(a, sym, env));
+        },
+        (String str) {
+            return tuple(val(), compileV(a, str, env));
+        },
+        (Number num) {
+            return tuple(val(), compileV(a, num, env));
+        },
+        (Pair pr) {
+            return tuple(val(), compileV(a, pr, env));
         },
         (Expression expr) {
-            return value(pair(a, compileR(a, expr, env), value(nil())));
+            return tuple(code(), value(compileR(a, expr, env)));
         });
 }
 
@@ -91,23 +111,23 @@ TVMValue compileB(Allocator)(Allocator a, Expression e, string[] env, TVMValue c
     return typeDispatch(
         e,
         (Symbol sym) {
-            return value(pair(a, asValue(push(symbol(a, sym.toString()))), continuation));
+            return value(pair(a, value(push(a, compileV(a, sym, env))), continuation));
         },
         (String str) {
-            return value(pair(a, asValue(push(symbol(a, str.dstring()))), continuation));
+            return value(pair(a, value(push(a, compileV(a, str, env))), continuation));
         },
         (Number num) {
-            return value(pair(a, asValue(push(cast(long) num.toNumber())), continuation));
+            return value(pair(a, value(push(a, compileV(a, num, env))), continuation));
         },
         (Pair pr) {
-            return value(pair(a, asValue(push(compileA(a, pr, env))), continuation));
+            return value(pair(a, value(push(a, compileV(a, pr, env))), continuation));
         },
         (Primop op) {
             auto name = op.name;
             auto args = op.args;
 
             if(primopDefined(name)) {
-                auto ret = value(pair(a, asValue(primop(primopOffset(name))), continuation));
+                auto ret = value(pair(a, value(primop(a, primopOffset(name))), continuation));
 
                 foreach(arg; args) {
                     ret = compileB(a, arg, env, ret);
@@ -122,14 +142,15 @@ TVMValue compileB(Allocator)(Allocator a, Expression e, string[] env, TVMValue c
             auto then_ = conditional.then;
             auto else_ = conditional.otherwise;
 
-            auto c = asValue(cond(pair(a,
-                                       compileR(a, then_, env),
-                                       compileR(a, else_, env))));
+            auto c = value(cond(a,
+                                pair(a,
+                                     compileR(a, then_, env),
+                                     compileR(a, else_, env))));
 
             return compileB(a, cond_, env, value(pair(a, c, continuation)));
         },
         (Expression expr) {
-            return value(pair(a, asValue(next(continuation.ptr)), compileR(a, expr, env)));
+            return value(pair(a, value(next(code(), a, continuation)), compileR(a, expr, env)));
         });
 }
 

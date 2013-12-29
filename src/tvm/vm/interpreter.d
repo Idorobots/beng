@@ -14,22 +14,16 @@ class RuntimeError : Exception {
     }
 }
 
-TVMInstruction fetch(Allocator)(Allocator a, TVMPointer code) {
-    if(isNil(code)) return ret();
+TVMInstructionPtr fetch(Allocator)(Allocator a, TVMPointer code) {
     // NOTE Assumes that the value returned is actually an instruction.
-    else            return asInstruction(peek(a, code));
+    TVMValue val = peek(a, code);
+    return asInstruction(val.ptr);
 }
 
 TVMValue peek(Allocator)(Allocator a, TVMPointer stack) {
-    if(isPair(stack)) {
-        if(!isNil(stack)) {
-            return asPair(stack).car;
-        } else {
-            return value(nil());
-        }
-    } else {
-        throw new RuntimeError("Malformed stack!");
-    }
+    if(isNil(stack))  return value(nil());
+    if(isPair(stack)) return asPair(stack).car;
+    else              throw new RuntimeError("Malformed stack!");
 }
 
 TVMPointer pop(Allocator)(Allocator a, TVMPointer stack) {
@@ -39,7 +33,7 @@ TVMPointer pop(Allocator)(Allocator a, TVMPointer stack) {
             TVMValue rest = p.cdr;
 
             auto r = use(rest.ptr); // Use the rest of the list.
-            free(a, stack);         // Free the pair reference.
+            //free(a, stack);         // Free the pair reference. // FIXME
 
             return r;
         } else {
@@ -64,172 +58,197 @@ TVMValue nth(Allocator)(Allocator a, size_t n, TVMPointer stack) {
     }
 }
 
+void fail(string fmt, TVMValue val) {
+    throw new RuntimeError(format(fmt, val.type));
+}
+
+void fail(TVMInstructionPtr instruction) {
+    throw new RuntimeError(format("Invalid bytecode instruction: %s.", instruction.opcode));
+}
+
 time_t step(time_t time, TVMContext uProc) {
     auto DEFAULT_DELAY = 0;
-
-    auto instruction = fetch(uProc.alloc, uProc.code);
-    auto opcode = instruction.opcode;
-    auto argument = instruction.argument;
 
     debug(verbose) {
         import std.stdio;
         import tvm.compiler.printer;
 
         writeln(time, " uProc @", uProc, ":");
-        writeln(time, " code:   ", codeToString(asPair(uProc.code)));
+        writeln(time, " code:   ", print(uProc.code));
         writeln(time, " env:    ", print(uProc.env));
         writeln(time, " stack:  ", print(uProc.stack));
         writeln(time, " vstack: ", print(uProc.vstack));
-        writeln(time, " instr:  ", print(instruction));
     }
 
-    switch(opcode) {
-        case TVMInstruction.PUSH:
-            // NOTE No need to free(argument) as the reference is transfered from one stack to the other.
-            uProc.vstack = push(uProc.alloc, argument, uProc.vstack);
+    if(!isNil(uProc.code)) {
+        auto instruction = fetch(uProc.alloc, uProc.code);
+        auto opcode = instruction.opcode;
+        auto addressing = instruction.addressing;
+        TVMValue argument = instruction.argument;
 
-            // Remove the instruction from the stream.
-            uProc.code = pop(uProc.alloc, uProc.code);
-            return DEFAULT_DELAY;
+        switch(opcode) {
+            case TVMInstruction.PUSH:
+                // Push argument onto the vstack...
+                uProc.vstack = push(uProc.alloc, use(argument), uProc.vstack);
 
-        case TVMInstruction.NEXT:
-            switch(argument.type) {
-                case TVMValue.POINTER:
-                    // Make a closure...
-                    auto closure = closure(uProc.alloc, use(argument), value(use(uProc.env)));
+                // ...and remove the instruction from the stream.
+                uProc.code = pop(uProc.alloc, uProc.code);
+                return DEFAULT_DELAY;
 
-                    // ...and push it onto the stack....
-                    uProc.stack = push(uProc.alloc, value(closure), uProc.stack);
+            case TVMInstruction.NEXT:
+                switch(addressing) {
+                    case TVMInstruction.ADDR_VAL:
+                        // Make a self-evaluating closure...
+                        auto c = list(uProc.alloc, value(tvm.vm.bytecode.push(uProc.alloc, use(argument))));
+                        auto closure = closure(uProc.alloc, value(c), value(use(uProc.env)));
 
-                    // ...and remove the instruction from the stream.
-                    uProc.code = pop(uProc.alloc, uProc.code);
-                    return DEFAULT_DELAY;
+                        // ...and push it onto the stack....
+                        uProc.stack = push(uProc.alloc, value(closure), uProc.stack);
 
-                case TVMValue.INTEGER:
-                    // Get the (nth argument uProc.env) closure...
-                    auto val = nth(uProc.alloc, argument.integer, uProc.stack);
+                        // ...and remove the instruction from the stream.
+                        uProc.code = pop(uProc.alloc, uProc.code);
+                        return DEFAULT_DELAY;
 
-                    if(!isPointer(val) || isNil(val) || !isClosure(val.ptr))
-                        throw new RuntimeError("Bad continuation.");
+                    case TVMInstruction.ADDR_CODE:
+                        // Make a closure...
+                        auto closure = closure(uProc.alloc, use(argument), value(use(uProc.env)));
 
-                    auto closure = use(asClosure(val.ptr));
+                        // ...and push it onto the stack....
+                        uProc.stack = push(uProc.alloc, value(closure), uProc.stack);
 
-                    // Push it onto the stack...
-                    uProc.stack = push(uProc.alloc, value(closure), uProc.stack);
+                        // ...and remove the instruction from the stream.
+                        uProc.code = pop(uProc.alloc, uProc.code);
+                        return DEFAULT_DELAY;
 
-                    // ...and remove the instruction from the stream.
-                    uProc.code = pop(uProc.alloc, uProc.code);
-                    return DEFAULT_DELAY;
+                    case TVMInstruction.ADDR_ARG:
+                        // Get the (nth argument uProc.env) closure...
+                        auto val = nth(uProc.alloc, argument.integer, uProc.env);
 
-                default:
-                    throw new RuntimeError("Invalid bytecode instruction.");
-            }
+                        if(!isPointer(val) || isNil(val) || !isClosure(val.ptr))
+                            fail("Bad continuation: %s.", val);
 
-        case TVMInstruction.TAKE:
-            // Take a value from the stack...
-            auto val = use(peek(uProc.alloc, uProc.stack));
-            uProc.stack = pop(uProc.alloc, uProc.stack);
+                        auto closure = use(asClosure(val.ptr));
 
-            // ...push it onto the env...
-            uProc.env = push(uProc.alloc, val, uProc.env);
+                        // Push it onto the stack...
+                        uProc.stack = push(uProc.alloc, value(closure), uProc.stack);
 
-            // ...and remove the instruction from the stream.
-            uProc.code = pop(uProc.alloc, uProc.code);
-            // NOTE No need to free(argument) as its a plain integer.
-            return DEFAULT_DELAY;
+                        // ...and remove the instruction from the stream.
+                        uProc.code = pop(uProc.alloc, uProc.code);
+                        return DEFAULT_DELAY;
 
-        case TVMInstruction.ENTER:
-            switch(argument.type) {
-                case TVMValue.POINTER:
-                    // Enter a piece of code...
-                    auto val = use(argument.ptr);
-                    free(uProc.alloc, uProc.code);
-                    uProc.code = val;
+                    default:
+                        fail(instruction);
+                        assert(0);
+                }
 
-                    // ...and free the argument.
-                    free(uProc.alloc, argument.ptr);
-                    return DEFAULT_DELAY;
+            case TVMInstruction.TAKE:
+                // Take a value from the stack...
+                auto val = use(peek(uProc.alloc, uProc.stack));
+                uProc.stack = pop(uProc.alloc, uProc.stack);
 
-                case TVMValue.INTEGER:
-                    // Get the (nth argument uProc.env) closure...
-                    auto val = nth(uProc.alloc, argument.integer, uProc.env);
+                // ...push it onto the env...
+                uProc.env = push(uProc.alloc, val, uProc.env);
 
-                    if(!isPointer(val) || isNil(val) || !isClosure(val.ptr))
-                        throw new RuntimeError("Bad continuation.");
+                // ...and remove the instruction from the stream.
+                uProc.code = pop(uProc.alloc, uProc.code);
+                // NOTE No need to free(argument) as its a plain integer.
+                return DEFAULT_DELAY;
 
-                    auto closure = use(val.ptr);
+            case TVMInstruction.ENTER:
+                switch(addressing) {
+                    case TVMInstruction.ADDR_CODE:
+                        // Enter a piece of code...
+                        auto val = use(argument.ptr);
+                        free(uProc.alloc, uProc.code);
+                        uProc.code = val;
 
-                    // ...and enter it by substituting current code and env...
-                    TVMValue c = use(asClosure(closure).code);
-                    free(uProc.alloc, uProc.code);
-                    uProc.code = c.ptr;
+                        // ...and free the argument.
+                        free(uProc.alloc, argument.ptr);
+                        return DEFAULT_DELAY;
 
-                    TVMValue e = use(asClosure(closure).env);
-                    free(uProc.alloc, uProc.env);
-                    uProc.env = e.ptr;
+                    case TVMInstruction.ADDR_ARG:
+                        // Get the (nth argument uProc.env) closure...
+                        auto val = nth(uProc.alloc, argument.integer, uProc.env);
 
-                    // ...and lastly, free the closure object.
-                    free(uProc.alloc, val.ptr);
-                    return DEFAULT_DELAY;
+                        if(!isPointer(val) || isNil(val) || !isClosure(val.ptr))
+                            fail("Bad continuation: %s.", val);
 
-                default:
-                    throw new RuntimeError("Invalid bytecode instruction.");
-            }
+                        auto closure = use(val.ptr);
 
-        case TVMInstruction.PRIMOP:
-            // Pop the instruction from the code stack...
-            uProc.code = pop(uProc.alloc, uProc.code);
+                        // ...and enter it by substituting current code and env...
+                        TVMValue c = use(asClosure(closure).code);
+                        free(uProc.alloc, uProc.code);
+                        uProc.code = c.ptr;
 
-            // ...and pass evaluation to the primitive operator...
-            return primopFun(argument.integer)(time, uProc);
+                        TVMValue e = use(asClosure(closure).env);
+                        free(uProc.alloc, uProc.env);
+                        uProc.env = e.ptr;
 
-        case TVMInstruction.COND:
-            // Extract both branches of the conditional...
-            auto then = asPair(argument.ptr).car;
-            auto else_ = asPair(argument.ptr).cdr;
+                        // ...and lastly, free the closure object.
+                        free(uProc.alloc, closure);
+                        return DEFAULT_DELAY;
 
-            // Check if top of the vstack is non-nil and select a branch...
-            auto val = peek(uProc.alloc, uProc.vstack);
+                    default:
+                        fail(instruction);
+                        assert(0);
+                }
 
-            TVMValue branch = void;
-            if(isNil(val)) branch = use(else_);
-            else           branch = use(then);
+            case TVMInstruction.PRIMOP:
+                // Pop the instruction from the code stack...
+                uProc.code = pop(uProc.alloc, uProc.code);
 
-            // ...free the other branch and enter the closure...
-            free(uProc.alloc, argument.ptr);
-            argument = branch;
-            uProc.vstack = pop(uProc.alloc, uProc.vstack);
-            goto case TVMInstruction.ENTER;
+                // ...and pass evaluation to the primitive operator...
+                return primopFun(argument.integer)(time, uProc);
 
-        case TVMInstruction.RETURN:
-            // Get the closure on top of the stack...
-            auto val = peek(uProc.alloc, uProc.stack);
+            case TVMInstruction.COND:
+                // Extract both branches of the conditional...
+                auto then = asPair(argument.ptr).car;
+                auto else_ = asPair(argument.ptr).cdr;
 
-            if(!isPointer(val) || isNil(val) || !isClosure(val.ptr))
-                throw new RuntimeError("Bad continuation.");
+                // Check if top of the vstack is non-nil and select a branch...
+                auto val = peek(uProc.alloc, uProc.vstack);
 
-            auto closure = use(val.ptr);
-            uProc.stack = pop(uProc.alloc, uProc.stack);
+                TVMValue branch = void;
+                if(isNil(val)) branch = use(else_);
+                else           branch = use(then);
 
-            // ...and enter it by substituting current code and env...
-            TVMValue c = use(asClosure(closure).code);
-            free(uProc.alloc, uProc.code);
-            uProc.code = c.ptr;
+                // ...and enter the closure...
+                argument = branch;
+                uProc.vstack = pop(uProc.alloc, uProc.vstack);
 
-            TVMValue e = use(asClosure(closure).env);
-            free(uProc.alloc, uProc.env);
-            uProc.env = e.ptr;
+                addressing = TVMInstruction.ADDR_CODE;
+                goto case TVMInstruction.ENTER;
 
-            // ...and lastly, free the closure object.
-            free(uProc.alloc, val.ptr);
-            return DEFAULT_DELAY;
+            case TVMInstruction.HALT:
+                // FIXME This should halt immediately.
+                return TVMMicroProc.MAX_SLEEP_TIME;
 
-        case TVMInstruction.HALT:
-            // FIXME This should halt immediately.
-            return TVMMicroProc.MAX_SLEEP_TIME;
+            default:
+                fail(instruction);
+                assert(0);
+        }
+    } else {
+        // NOTE This executes the TVMInstruction.RETURN instruction.
 
-        default:
-            assert(0, "Bad byte code instruction.");
+        // Get the closure on top of the stack...
+        auto val = peek(uProc.alloc, uProc.stack);
+
+        if(!isPointer(val) || isNil(val) || !isClosure(val.ptr))
+            fail("Bad continuation: %s.", val);
+
+        auto closure = asClosure(val.ptr);
+
+        // ...and enter it by substituting current code and env...
+        TVMValue c = use(closure.code);
+        free(uProc.alloc, uProc.code);
+        uProc.code = c.ptr;
+
+        TVMValue e = use(closure.env);
+        free(uProc.alloc, uProc.env);
+        uProc.env = e.ptr;
+
+        // ...and lastly, free the closure object.
+        uProc.stack = pop(uProc.alloc, uProc.stack);
+        return DEFAULT_DELAY;
     }
 }
-

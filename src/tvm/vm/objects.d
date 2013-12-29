@@ -15,12 +15,17 @@ alias TVMPointer = shared(TVMObject)*;
 struct TVMValue {
     enum TYPE_BITS = 3;
     enum TYPE_MASK = (0x1 << TYPE_BITS) - 1;
+    enum POINTER_MASK = (0x1UL << 48) - 1;
 
     enum POINTER  = 0x0;
     enum FLOATING = 0x1;
     enum INTEGER  = 0x2;
 
     size_t rawValue;
+
+    this(TVMValue value) {
+        this.rawValue = value.rawValue;
+    }
 
     this(TVMPointer ptr) {
         // NOTE Since pointers are tagged with 0x0 we don't need to do anything.
@@ -70,8 +75,8 @@ struct TVMValue {
     }
 
     @property TVMPointer ptr() {
-        // NOTE Since pointers are tagged with 0x0 we can use them directly.
-        return cast(TVMPointer) rawValue;
+        // FIXME Instructions dun goofed.
+        return cast(TVMPointer) (rawValue & POINTER_MASK);
     }
 
     @property void ptr(TVMPointer newPtr) {
@@ -104,7 +109,7 @@ bool isNumber(T)(T v) {
     return isInteger(v) || isFloating(v);
 }
 
-bool isNil(T)(T ptr) if (isTVMObjectCompatible!T) {
+bool isNil(T)(T ptr) {
     return asObject(ptr) is null;
 }
 
@@ -132,10 +137,11 @@ shared struct TVMObject {
     enum TYPE_MASK = (0x1 << TYPE_BITS) - 1;
     enum REF_COUNT_INCREMENT = (0x1 << TYPE_BITS);
 
-    enum SYMBOL  = 0x0;
-    enum PAIR    = 0x1;
-    enum CLOSURE = 0x2;
-    enum UPROC   = 0x3;
+    enum SYMBOL      = 0x0;
+    enum PAIR        = 0x1;
+    enum CLOSURE     = 0x2;
+    enum UPROC       = 0x3;
+    enum LAST_TYPE   = TVMObject.UPROC;
 
     private size_t value = 0;
 
@@ -325,22 +331,6 @@ alias asPair      = asType!TVMPairPtr;
 alias asClosure   = asType!TVMClosurePtr;
 alias asMicroProc = asType!TVMMicroProcPtr;
 
-template isTVMObjectCompatible(T) {
-    template isT(U) {
-        static if(is(U == T)) enum isT = true;
-        else                  enum isT = false;
-    }
-
-    // FIXME shared(TVMPointer) probably shouldn't be here.
-    static if(anySatisfy!(isT, TypeTuple!(shared(TVMPointer), TVMPointer, TVMSymbolPtr, TVMPairPtr,
-                                          TVMClosurePtr, TVMMicroProcPtr, TVMContext)))
-    {
-        enum isTVMObjectCompatible = true;
-    } else {
-        enum isTVMObjectCompatible = false;
-    }
-}
-
-TVMPointer asObject(T)(T object) if (isTVMObjectCompatible!T) {
+TVMPointer asObject(T)(T object) {
     return cast(TVMPointer) object;
 }

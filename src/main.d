@@ -266,24 +266,25 @@ void main(string[] args) {
                                                      config.uProcMSGqSize,
                                                      cast(ubyte) config.uProcDefaultPriority,
                                                      t);
+                auto a = uProc.alloc;
 
                 // Compile the source code...
-                auto namesEnv = compile(uProc.alloc, optimize(transform(parse(filter(scan(source))))));
+                auto namesEnv = compile(a, optimize(transform(parse(filter(scan(source))))));
                 auto names = namesEnv[0];
                 auto env = namesEnv[1];
 
                 // ...remember to pass some args to the boot code.
                 auto argList = value(nil());
                 foreach(arg; args) {
-                    argList = value(pair(uProc.alloc, value(symbol(uProc.alloc, arg)), argList));
+                    argList = value(pair(a, value(symbol(a, arg)), argList));
                 }
 
-                auto cont = list(uProc.alloc, asValue(push(argList)));
-                auto halt = closure(uProc.alloc, value(list(uProc.alloc, asValue(halt()))), value(env));
+                auto cont = closure(a, value(list(a, value(push(a, argList)))), value(env));
+                auto halt = closure(a, value(list(a, value(halt(a)))), value(env));
 
-                uProc.code = list(uProc.alloc, asValue(next(cont)), enter(assoc("main", names)));
+                uProc.code = list(a, value(enter(arg(), a, assoc("main", names))));
                 uProc.env = env;
-                uProc.stack = list(uProc.alloc, value(halt));
+                uProc.stack = list(a, value(cont), value(halt));
 
                 for(;;) {
                     writeln("step: ", step(currentTime(), uProc));
@@ -297,24 +298,25 @@ void main(string[] args) {
                                                      config.uProcMSGqSize,
                                                      cast(ubyte) config.uProcDefaultPriority,
                                                      t);
+                auto a = uProc.alloc;
 
                 // Compile the source code...
-                auto namesEnv = compile(uProc.alloc, optimize(transform(parse(filter(scan(source))))));
+                auto namesEnv = compile(a, optimize(transform(parse(filter(scan(source))))));
                 auto names = namesEnv[0];
                 auto env = namesEnv[1];
 
                 // ...remember to pass some args to the boot code.
                 auto argList = value(nil());
                 foreach(arg; args) {
-                    argList = value(pair(uProc.alloc, value(symbol(uProc.alloc, arg)), argList));
+                    argList = value(pair(a, value(symbol(a, arg)), argList));
                 }
 
-                auto cont = list(uProc.alloc, asValue(push(argList)));
-                auto halt = closure(uProc.alloc, value(list(uProc.alloc, asValue(halt()))), value(env));
+                auto cont = closure(a, value(list(a, value(push(a, argList)))), value(env));
+                auto halt = closure(a, value(list(a, value(halt(a)))), value(env));
 
-                uProc.code = list(uProc.alloc, asValue(next(cont)), enter(assoc("main", names)));
+                uProc.code = list(a, value(enter(arg(), a, assoc("main", names))));
                 uProc.env = env;
-                uProc.stack = list(uProc.alloc, value(halt));
+                uProc.stack = list(a, value(cont), value(halt));
 
                 // Spawn the SMPs...
                 for(uint i = 1; i < config.smpNum; ++i) {
