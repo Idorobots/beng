@@ -1,3 +1,14 @@
-(define (fib n) (if (primop < n 2) n (primop + (fib (primop - n 2)) (fib (primop - n 1)))))
-(define (fact n) (if (primop = n 0) 1 (primop * n (fact (primop - n 1)))))
-(define (main args) (primop cons (primop car args) (fact (fib 4))))
+(define (fib n)
+  (if (< n 2)
+      n
+      (+ (fib (- n 2))
+         (fib (- n 1)))))
+
+(define (fact n)
+  (if (= n 0)
+      1
+      (* n (fact (- n 1)))))
+
+(define (main args)
+  (print (cons (typeof (car args))
+               (fact (fib 4)))))

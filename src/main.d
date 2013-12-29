@@ -194,11 +194,39 @@ void main(string[] args) {
     }
 
     string file;
-    string source;
+    string source = "
+# Arithmetic:
+(define (+ a b) (primop + a b))
+(define (- a b) (primop - a b))
+(define (* a b) (primop * a b))
+(define (/ a b) (primop / a b))
+(define (mod a b) (primop mod a b))
+(define (pow a b) (primop pow a b))
+(define (inc n) (primop inc n))
+(define (dec n) (primop dec n))
+
+# Logic:
+(define (= a b) (primop = a b))
+(define (< a b) (primop < a b))
+(define (> a b) (primop > a b))
+(define (>= a b) (primop >= a b))
+(define (<= a b) (primop <= a b))
+
+# List operations:
+(define (null) (primop null))
+(define (null? p) (primop null? p))
+(define (car p) (primop car p))
+(define (cdr p) (primop cdr p))
+(define (cons a b) (primop cons a b))
+
+# Utils:
+(define (print what) (primop print what))
+(define (sleep time) (primop sleep time))
+(define (typeof what) (primop typeof what))";
 
     try {
         file = args[1];
-        source = readText(file);
+        source ~= readText(file);
 
         final switch(debugVM) {
             case Debug.scan:

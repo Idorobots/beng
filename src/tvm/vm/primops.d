@@ -2,11 +2,13 @@ module tvm.vm.primops;
 
 import std.math;
 import std.typecons : tuple;
+import std.stdio;
 
 import tvm.vm.utils;
 import tvm.vm.objects;
 import tvm.vm.interpreter;
 import tvm.vm.gc;
+import tvm.compiler.printer;
 
 alias TVMPrimop = time_t function (time_t time, TVMContext uProc);
 
@@ -160,14 +162,39 @@ time_t cdr(time_t time, TVMContext uProc) {
     return 0;
 }
 
-// TODO typeof, equal?, sleep, print
+// Actor model:
 // TODO self, recv, send, spawn
+
+// Misc:
+time_t typeOf(time_t time, TVMContext uProc) {
+    auto args = take!1(uProc);
+    auto t = args[0].type;
+    if(isPointer(args[0])) t += 1 + asObject(args[0].ptr).type;
+
+    swap!1(uProc, value(cast(double) t)); // FIXME Should be integer.
+    return 0;
+}
+
+time_t sleep(time_t time, TVMContext uProc) {
+    auto args = enforce!isFloating(take!1(uProc));
+    auto t = 1000 * cast(long) args[0].floating;
+    // NOTE Doesn't pop the vstack on purpose.
+    return t;
+}
+
+time_t print(time_t time, TVMContext uProc) {
+    auto args = take!1(uProc);
+    writeln(tvm.compiler.printer.print(args[0]));
+    // NOTE Doesn't pop the vstack on purpose.
+    return 0;
+}
 
 enum Primops = [tuple("+", &add, 2), tuple("-", &sub, 2), tuple("*", &mult, 2), tuple("/", &div, 2),
                 tuple("mod", &mod, 2), tuple("pow", &pow, 2), tuple("inc", &inc, 1), tuple("dec", &dec, 1),
                 tuple("=", &eq, 2), tuple("<", &less, 2), tuple(">", &greater, 2), tuple("<=", &leq, 2),
                 tuple(">=", &geq, 2), tuple("null?", &nullp, 1), tuple("null", &mknil, 0),
-                tuple("cons", &cons, 2), tuple("car", &car, 1), tuple("cdr", &cdr, 1)];
+                tuple("cons", &cons, 2), tuple("car", &car, 1), tuple("cdr", &cdr, 1),
+                tuple("typeof", &typeOf, 1), tuple("sleep", &sleep, 1), tuple("print", &print, 1)];
 
 long primopOffset(string name) {
     /*static*/ foreach(i, primop; Primops) {
