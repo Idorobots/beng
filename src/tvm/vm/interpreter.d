@@ -49,8 +49,8 @@ TVMPointer push(Allocator)(Allocator a, TVMValue newValue, TVMPointer stack) {
 }
 
 TVMValue nth(Allocator)(Allocator a, size_t n, TVMPointer stack) {
-    if(n == 0)         return peek(a, stack);
     if(isNil(stack))   throw new RuntimeError("Stack overflow!");
+    if(n == 0)         return peek(a, stack);
     if(!isPair(stack)) throw new RuntimeError("Malformed stack.");
     else {
         TVMValue rest = asPair(stack).cdr;

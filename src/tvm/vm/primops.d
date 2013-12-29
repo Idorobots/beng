@@ -18,9 +18,13 @@ auto take(size_t n)(TVMContext uProc) {
     return args;
 }
 
+void fail() {
+    throw new RuntimeError("Type mismatch.");
+}
+
 auto enforce(alias predicate, Ts)(Ts values) {
     /*static*/ foreach(i, val; values) {
-        if(!predicate(val)) throw new RuntimeError("Type mismatch.");
+        if(!predicate(val)) fail();
     }
     return values;
 }
@@ -36,105 +40,134 @@ auto swap(size_t n)(TVMContext uProc, TVMValue val) {
 
 // Arithmetic
 time_t add(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, value(args[0].integer + args[1].integer));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, value(args[0].floating + args[1].floating));
     return 0;
 }
 
 time_t sub(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, value(args[0].integer - args[1].integer));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, value(args[0].floating - args[1].floating));
     return 0;
 }
 
 time_t mult(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, value(args[0].integer * args[1].integer));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, value(args[0].floating * args[1].floating));
     return 0;
 }
 
 time_t div(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, value(args[0].integer / args[1].integer));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, value(args[0].floating / args[1].floating));
     return 0;
 }
 
 time_t mod(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, value(args[0].integer % args[1].integer));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, value(fmod(args[0].floating, args[1].floating)));
     return 0;
 }
 
 time_t pow(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, value(args[0].integer ^^ args[1].integer));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, value(args[0].floating ^^ args[1].floating));
     return 0;
 }
 
 time_t inc(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!1(uProc));
-    // FIXME Should use coercion and integers.
-    swap!1(uProc, value(args[0].integer + 1));
+    auto args = enforce!isFloating(take!1(uProc));
+    swap!1(uProc, value(args[0].floating + 1));
     return 0;
 }
 
 time_t dec(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!1(uProc));
-    // FIXME Should use coercion and integers.
-    swap!1(uProc, value(args[0].integer - 1));
+    auto args = enforce!isFloating(take!1(uProc));
+    swap!1(uProc, value(args[0].floating - 1));
     return 0;
 }
 
 // Logic:
 time_t eq(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, args[0].integer == args[1].integer ? value(1) : value(nil()));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, args[0].floating == args[1].floating ? value(1.0) : value(nil()));
     return 0;
 }
 
 time_t less(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, args[0].integer < args[1].integer ? value(1) : value(nil()));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, args[0].floating < args[1].floating ? value(1.0) : value(nil()));
     return 0;
 }
 
 time_t greater(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, args[0].integer > args[1].integer ? value(1) : value(nil()));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, args[0].floating > args[1].floating ? value(1.0) : value(nil()));
     return 0;
 }
 
 time_t leq(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, args[0].integer <= args[1].integer ? value(1) : value(nil()));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, args[0].floating <= args[1].floating ? value(1.0) : value(nil()));
     return 0;
 }
 
 time_t geq(time_t time, TVMContext uProc) {
-    auto args = enforce!isInteger(take!2(uProc));
-    // FIXME Should use coercion and integers.
-    swap!2(uProc, args[0].integer >= args[1].integer ? value(1) : value(nil()));
+    auto args = enforce!isFloating(take!2(uProc));
+    swap!2(uProc, args[0].floating >= args[1].floating ? value(1.0) : value(nil()));
     return 0;
 }
 
-// TODO null? null cons car cdr
-// TODO self, recv, send, spawn, sleep
-// TODO typeof equal?
+// List operations:
+time_t mknil(time_t time, TVMContext uProc) {
+    swap!0(uProc, value(nil()));
+    return 0;
+}
 
-enum Primops = [tuple("+", &add), tuple("-", &sub), tuple("*", &mult), tuple("/", &div),
-                tuple("mod", &mod), tuple("pow", &pow), tuple("inc", &inc), tuple("dec", &dec),
-                tuple("=", &eq), tuple("<", &less), tuple(">", &greater),
-                tuple("<=", &leq), tuple(">=", &geq)];
+time_t nullp(time_t time, TVMContext uProc) {
+    auto args = take!1(uProc);
+    swap!1(uProc, isNil(args[0]) ? value(1) : value(nil()));
+    return 0;
+}
+
+time_t cons(time_t time, TVMContext uProc) {
+    auto args = take!2(uProc);
+    swap!2(uProc, value(pair(uProc.alloc, use(args[0]), use(args[1]))));
+    return 0;
+}
+
+time_t car(time_t time, TVMContext uProc) {
+    auto args = take!1(uProc);
+
+    if(!isPointer(args[0]) || !isPair(args[0].ptr)) fail();
+    auto pair = asPair(args[0].ptr);
+
+    if(isNil(pair)) swap!1(uProc, value(nil()));
+    else            swap!1(uProc, value(use(pair.car)));
+
+    return 0;
+}
+
+time_t cdr(time_t time, TVMContext uProc) {
+    auto args = take!1(uProc);
+
+    if(!isPointer(args[0]) || !isPair(args[0].ptr)) fail();
+    auto pair = asPair(args[0].ptr);
+
+    if(isNil(pair)) swap!1(uProc, value(nil()));
+    else            swap!1(uProc, value(use(pair.cdr)));
+
+    return 0;
+}
+
+// TODO typeof, equal?, sleep, print
+// TODO self, recv, send, spawn
+
+enum Primops = [tuple("+", &add, 2), tuple("-", &sub, 2), tuple("*", &mult, 2), tuple("/", &div, 2),
+                tuple("mod", &mod, 2), tuple("pow", &pow, 2), tuple("inc", &inc, 1), tuple("dec", &dec, 1),
+                tuple("=", &eq, 2), tuple("<", &less, 2), tuple(">", &greater, 2), tuple("<=", &leq, 2),
+                tuple(">=", &geq, 2), tuple("null?", &nullp, 1), tuple("null", &mknil, 0),
+                tuple("cons", &cons, 2), tuple("car", &car, 1), tuple("cdr", &cdr, 1)];
 
 long primopOffset(string name) {
     /*static*/ foreach(i, primop; Primops) {
@@ -154,5 +187,10 @@ string primopName(size_t offset) {
 
 TVMPrimop primopFun(size_t offset) {
     if(offset < Primops.length) return Primops[offset][1];
+    assert(0, "Bad primop offset.");
+}
+
+uint primopArity(size_t offset) {
+    if(offset < Primops.length) return Primops[offset][2];
     assert(0, "Bad primop offset.");
 }

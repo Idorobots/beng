@@ -48,16 +48,38 @@ string toString(TVMPointer object) {
 }
 
 string toString(TVMInstructionPtr instr) {
-    auto ops = ["PUSH", "NEXT", "TAKE", "ENTER", "PRIMOP", "COND", "HALT"];
     auto addrs = ["VAL", "ARG", "CODE"];
-
-    if(instr.opcode >= ops.length)
-        assert(0, format("Bad bytecode instruction opcode: %s.", instr.opcode));
 
     if(instr.addressing >= addrs.length)
         assert(0, format("Bad bytecode instruction addressing: %s.", instr.addressing));
 
-    return format("%s %s %s", ops[instr.opcode], addrs[instr.addressing], toString(instr.argument));
+    switch(instr.opcode) {
+        case TVMInstruction.PUSH:
+            return format("PUSH %s", toString(instr.argument));
+
+        case TVMInstruction.NEXT:
+            return format("NEXT %s %s", addrs[instr.addressing], toString(instr.argument));
+
+        case TVMInstruction.TAKE:
+            return "TAKE";
+
+        case TVMInstruction.ENTER:
+            return format("ENTER %s %s", addrs[instr.addressing], toString(instr.argument));
+
+        case TVMInstruction.PRIMOP:
+            TVMValue arg = instr.argument;
+            return format("PRIMOP %s", primopName(arg.integer));
+
+        case TVMInstruction.COND:
+            TVMValue arg = instr.argument;
+            return format("COND {%s, %s}", asPair(arg.ptr).car, asPair(arg.ptr).cdr);
+
+        case TVMInstruction.HALT:
+            return "HALT";
+
+        default:
+            assert(0, format("Bad instruction: %s.", instr.opcode));
+    }
 }
 
 string toString(TVMSymbolPtr symbol) {

@@ -74,7 +74,7 @@ TVMValue compileV(Allocator)(Allocator a, Expression e, string[] env) {
             return value(symbol(a, str.dstring()));
         },
         (Number num) {
-            return value(cast(long) num.toNumber());
+            return value(num.toNumber());
         },
         (Pair pr) {
             if(pr.isNil()) return value(nil());
@@ -127,7 +127,14 @@ TVMValue compileB(Allocator)(Allocator a, Expression e, string[] env, TVMValue c
             auto args = op.args;
 
             if(primopDefined(name)) {
-                auto ret = value(pair(a, value(primop(a, primopOffset(name))), continuation));
+                auto offset = primopOffset(name);
+                auto arity = primopArity(offset);
+
+                if(args.length != arity)
+                    throw new SemanticError(format("Primitive operation `%s' requires %s operands.",
+                                                   name, arity));
+
+                auto ret = value(pair(a, value(primop(a, offset)), continuation));
 
                 foreach(arg; args) {
                     ret = compileB(a, arg, env, ret);
