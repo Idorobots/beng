@@ -10,5 +10,4 @@
       (* n (fact (- n 1)))))
 
 (define (main args)
-  (print (cons (typeof (car args))
-               (fact (fib 4)))))
+  (print (cons (fact 4) (fib 4))))

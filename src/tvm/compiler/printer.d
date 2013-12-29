@@ -72,7 +72,9 @@ string toString(TVMInstructionPtr instr) {
 
         case TVMInstruction.COND:
             TVMValue arg = instr.argument;
-            return format("COND {%s, %s}", asPair(arg.ptr).car, asPair(arg.ptr).cdr);
+            return format("COND {%s, %s}",
+                          toString(asPair(arg.ptr).car),
+                          toString(asPair(arg.ptr).cdr));
 
         case TVMInstruction.HALT:
             return "HALT";

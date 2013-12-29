@@ -122,7 +122,7 @@ time_t geq(time_t time, TVMContext uProc) {
 
 // List operations:
 time_t mknil(time_t time, TVMContext uProc) {
-    swap!0(uProc, value(nil()));
+    uProc.vstack = push(uProc.alloc, value(nil()), uProc.vstack);
     return 0;
 }
 
@@ -163,7 +163,38 @@ time_t cdr(time_t time, TVMContext uProc) {
 }
 
 // Actor model:
-// TODO self, recv, send, spawn
+time_t thisUProc(time_t time, TVMContext uProc) {
+    uProc.vstack = push(uProc.alloc, value(use(uProc)), uProc.vstack);
+    return 0;
+}
+
+time_t sendMsg(time_t time, TVMContext uProc) {
+    auto args = take!2(uProc);
+
+    if(!isPointer(args[0]) || !isMicroProc(args[0].ptr)) fail();
+
+    auto otherUProc = asMicroProc(args[0].ptr);
+    otherUProc.msgq.enqueue(use(args[1]));
+
+    swap!2(uProc, use(args[1]));
+    return 0;
+}
+
+time_t recvMsg(time_t time, TVMContext uProc) {
+    auto args = enforce!isFloating(take!1(uProc)); // FIXME Should be integer.
+    auto t = 1000 * cast(long) args[0].floating;
+
+    TVMValue v;
+    if(uProc.msgq.dequeue(v)) {
+        swap!1(uProc, v);
+        return 0;
+    } else {
+        swap!1(uProc, value(nil()));
+        return t;
+    }
+}
+
+// TODO spawn
 
 // Misc:
 time_t typeOf(time_t time, TVMContext uProc) {
@@ -194,7 +225,8 @@ enum Primops = [tuple("+", &add, 2), tuple("-", &sub, 2), tuple("*", &mult, 2), 
                 tuple("=", &eq, 2), tuple("<", &less, 2), tuple(">", &greater, 2), tuple("<=", &leq, 2),
                 tuple(">=", &geq, 2), tuple("null?", &nullp, 1), tuple("null", &mknil, 0),
                 tuple("cons", &cons, 2), tuple("car", &car, 1), tuple("cdr", &cdr, 1),
-                tuple("typeof", &typeOf, 1), tuple("sleep", &sleep, 1), tuple("print", &print, 1)];
+                tuple("typeof", &typeOf, 1), tuple("sleep", &sleep, 1), tuple("print", &print, 1),
+                tuple("self", &thisUProc, 0), tuple("send", &sendMsg, 2), tuple("recv", &recvMsg, 1)];
 
 long primopOffset(string name) {
     /*static*/ foreach(i, primop; Primops) {

@@ -53,6 +53,8 @@ TVMValue compileR(Allocator)(Allocator a, Expression e, string[] env) {
             return value(list(a, value(enter(v[0], a, v[1]))));
         },
         (Application app) {
+            if(app.operand.isNil()) return compileR(a, app.operator, env);
+
             auto operand = compileA(a, app.operand, env);
             return value(pair(a, value(next(operand[0], a, operand[1])), compileR(a, app.operator, env)));
         },

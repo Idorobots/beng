@@ -211,6 +211,9 @@ void main(string[] args) {
 (define (> a b) (primop > a b))
 (define (>= a b) (primop >= a b))
 (define (<= a b) (primop <= a b))
+(define (not a) (if (null? a) 1 ()))
+(define (and a b) (if a (if b b ()) ()))
+(define (or a b) (if a a (if b b ())))
 
 # List operations:
 (define (null) (primop null))
@@ -218,6 +221,11 @@ void main(string[] args) {
 (define (car p) (primop car p))
 (define (cdr p) (primop cdr p))
 (define (cons a b) (primop cons a b))
+
+# Actor model:
+(define (self) (primop self))
+(define (send uproc msg) (primop send uproc msg))
+(define (recv timeout) (primop recv timeout))
 
 # Utils:
 (define (print what) (primop print what))
