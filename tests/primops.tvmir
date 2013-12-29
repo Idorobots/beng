@@ -1,0 +1,2 @@
+#(define (fact n) (if (primop <= n 2) n (primop * n (fact (primop dec n)))))
+(define (main args) (if () args (main 5)))

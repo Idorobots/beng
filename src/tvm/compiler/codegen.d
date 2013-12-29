@@ -7,6 +7,7 @@ import std.algorithm : reverse;
 import tvm.compiler.ast;
 import tvm.vm.objects;
 import tvm.vm.bytecode;
+import tvm.vm.primops;
 import tvm.vm.gc;
 
 // FIXME This probably should be moved to the AST.
@@ -51,7 +52,7 @@ TVMValue compileR(Allocator)(Allocator a, Expression e, string[] env) {
             return value(pair(a, asValue(enter(compileA(a, var, env))), value(nil())));
         },
         (Application app) {
-            auto operand = compileR(a, app.operand, env);
+            auto operand = compileR(a, app.operand, env); // FIXME Has to be compileA
             auto operator = compileR(a, app.operator, env);
             return value(pair(a, asValue(next(operand)), operator));
         },
@@ -73,7 +74,7 @@ TVMValue compileA(Allocator)(Allocator a, Expression e, string[] env) {
             return value(symbol(a, str.dstring()));
         },
         (Number num) {
-            return value(num.toNumber());
+            return value(cast(long) num.toNumber());
         },
         (Pair pr) {
             if(pr.isNil()) return value(nil());
@@ -96,7 +97,7 @@ TVMValue compileB(Allocator)(Allocator a, Expression e, string[] env, TVMValue c
             return value(pair(a, asValue(push(symbol(a, str.dstring()))), continuation));
         },
         (Number num) {
-            return value(pair(a, asValue(push(num.toNumber())), continuation));
+            return value(pair(a, asValue(push(cast(long) num.toNumber())), continuation));
         },
         (Pair pr) {
             return value(pair(a, asValue(push(compileA(a, pr, env))), continuation));
@@ -105,12 +106,16 @@ TVMValue compileB(Allocator)(Allocator a, Expression e, string[] env, TVMValue c
             auto name = op.name;
             auto args = op.args;
 
-            auto ret = value(pair(a, asValue(primop(symbol(a, name))), continuation));
+            if(primopDefined(name)) {
+                auto ret = value(pair(a, asValue(primop(primopOffset(name))), continuation));
 
-            foreach(arg; args) {
-                ret = compileB(a, arg, env, ret);
+                foreach(arg; args) {
+                    ret = compileB(a, arg, env, ret);
+                }
+                return ret;
+            } else {
+                throw new SemanticError("Unknown primitive operation `" ~ name ~ "'.");
             }
-            return ret;
         },
         (Conditional conditional) {
             auto cond_ = conditional.condition;

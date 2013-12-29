@@ -5,6 +5,7 @@ import std.string : format;
 import tvm.compiler.ast;
 import tvm.vm.objects;
 import tvm.vm.bytecode;
+import tvm.vm.primops;
 
 string toString(TVMInstruction instr) {
     switch(instr.opcode) {
@@ -21,7 +22,7 @@ string toString(TVMInstruction instr) {
             return format("ENTER %s", toString(instr.argument));
 
         case TVMInstruction.PRIMOP:
-            return format("PRIMOP %s", toString(instr.argument));
+            return format("PRIMOP %s", primopName(instr.argument.integer));
 
         case TVMInstruction.COND:
             auto branches = instr.argument.ptr;
@@ -33,7 +34,7 @@ string toString(TVMInstruction instr) {
                               codeToString(asPair(car.ptr)),
                               codeToString(asPair(cdr.ptr)));
             } else {
-                assert(0, "Malformed bytecode instruction.");
+                assert(0, "Malformed bytecode instruction: " ~ toString(instr.argument) ~ ".");
             }
 
         case TVMInstruction.TAKE:
@@ -88,7 +89,7 @@ string toString(TVMPointer object) {
             return toString(asMicroProc(object));
 
         default:
-            assert(0, "Bad type!");
+            assert(0, format("Bad type: %s.", object.type));
     }
 }
 string toString(TVMSymbolPtr symbol) {
@@ -104,9 +105,9 @@ private string listToString(alias as)(TVMPairPtr pair) {
         TVMValue next = p.cdr;
 
         if(isPointer(next)) {
-            if(isNil(next))           return toString(as(p.car));
+            if(isNil(next.ptr))       return toString(as(p.car));
             else if(isPair(next.ptr)) return toString(as(p.car)) ~ " " ~ makeString(asPair(next.ptr));
-            else                      return toString(as(p.car)) ~ " . " ~ toString(as(p.cdr));
+            else                      return toString(as(p.car)) ~ " . " ~ toString(p.cdr);
         } else {
             return toString(as(p.car)) ~ " . " ~ toString(as(p.cdr));
         }

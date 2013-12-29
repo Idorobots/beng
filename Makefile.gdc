@@ -8,7 +8,7 @@ GDB = -funittest -fdebug=verbose -ggdb3
 
 VPATH = src:src/tvm:src/tvm/vm:src/tvm/compiler
 
-OBJS = tvm.o lfds611.o main.o ast.o codegen.o parser.o printer.o scanner.o sema.o tokens.o allocator.o bytecode.o interpreter.o objects.o scheduler.o utils.o gc.o optimizer.o
+OBJS = tvm.o lfds611.o main.o ast.o codegen.o parser.o printer.o scanner.o sema.o tokens.o allocator.o bytecode.o interpreter.o objects.o scheduler.o utils.o gc.o optimizer.o primops.o
 
 TARGET = tvm
 

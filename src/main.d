@@ -47,7 +47,7 @@ void handle(string name, string source, RuntimeError e) {
 
 void main(string[] args) {
     enum VM_VERSION = "v.0.1.0";
-    enum Debug {scan, filter, parse, transform, optimize, objects, compile, run,}
+    enum Debug {scan, filter, parse, transform, optimize, objects, compile, interpret, run,}
     Debug debugVM = Debug.run;
 
     // Default VM configuration:
@@ -96,7 +96,7 @@ void main(string[] args) {
               tuple(0UL, cast(size_t) TVMMicroProc.PRIORITY_MASK, config.uProcDefaultPriority),
               &config.uProcDefaultPriority),
         tuple("   --debug=OPTION",
-              "Toggles various debuging options. Available options: [scan, filter, parse, transform, optimize, objects, compile, run], default value: run.",
+              "Toggles various debuging options. Available options: [scan, filter, parse, transform, optimize, objects, compile, interpret, run], default value: run.",
               tuple(0UL, 0UL, 0UL),
               cast(time_t*) null),
         tuple("-v --version",
@@ -260,13 +260,37 @@ void main(string[] args) {
                     writeln(name, ": ", print(closure));
                 }
                 break;
+            case Debug.interpret:
+                auto t = currentTime();
+                auto uProc = new shared TVMMicroProc(config.uProcHeapSize,
+                                                     config.uProcMSGqSize,
+                                                     cast(ubyte) config.uProcDefaultPriority,
+                                                     t);
 
-            case Debug.run:
-                // Spawn the SMPs...
-                for(uint i = 1; i < config.smpNum; ++i) {
-                    spawn(&schedule, format("SMP%d", i), config);
+                // Compile the source code...
+                auto namesEnv = compile(uProc.alloc, optimize(transform(parse(filter(scan(source))))));
+                auto names = namesEnv[0];
+                auto env = namesEnv[1];
+
+                // ...remember to pass some args to the boot code.
+                auto argList = value(nil());
+                foreach(arg; args) {
+                    argList = value(pair(uProc.alloc, value(symbol(uProc.alloc, arg)), argList));
                 }
 
+                auto cont = list(uProc.alloc, asValue(push(argList)));
+                auto halt = closure(uProc.alloc, value(list(uProc.alloc, asValue(halt()))), value(env));
+
+                uProc.code = list(uProc.alloc, asValue(next(cont)), enter(assoc("main", names)));
+                uProc.env = env;
+                uProc.stack = list(uProc.alloc, value(halt));
+
+                for(;;) {
+                    writeln("step: ", step(currentTime(), uProc));
+                    readln();
+                }
+
+            case Debug.run:
                 // Create a root uProc...
                 auto t = currentTime();
                 auto uProc = new shared TVMMicroProc(config.uProcHeapSize,
@@ -286,11 +310,16 @@ void main(string[] args) {
                 }
 
                 auto cont = list(uProc.alloc, asValue(push(argList)));
-                auto halt = closure(uProc.alloc, value(list(uProc.alloc, halt())), value(env));
+                auto halt = closure(uProc.alloc, value(list(uProc.alloc, asValue(halt()))), value(env));
 
                 uProc.code = list(uProc.alloc, asValue(next(cont)), enter(assoc("main", names)));
                 uProc.env = env;
                 uProc.stack = list(uProc.alloc, value(halt));
+
+                // Spawn the SMPs...
+                for(uint i = 1; i < config.smpNum; ++i) {
+                    spawn(&schedule, format("SMP%d", i), config);
+                }
 
                 // Execute the process
                 send(thisTid, uProc);

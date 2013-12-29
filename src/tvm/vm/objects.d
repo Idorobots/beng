@@ -100,6 +100,10 @@ alias isPointer  = isType!(TVMValue.POINTER, TVMValue);
 alias isFloating = isType!(TVMValue.FLOATING, TVMValue);
 alias isInteger  = isType!(TVMValue.INTEGER, TVMValue);
 
+bool isNumber(T)(T v) {
+    return isInteger(v) || isFloating(v);
+}
+
 bool isNil(T)(T ptr) if (isTVMObjectCompatible!T) {
     return asObject(ptr) is null;
 }

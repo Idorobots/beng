@@ -5,6 +5,7 @@ import std.typecons;
 import tvm.vm.utils;
 import tvm.vm.objects;
 import tvm.vm.bytecode;
+import tvm.vm.primops;
 import tvm.vm.gc;
 
 class RuntimeError : Exception {
@@ -74,11 +75,12 @@ time_t step(time_t time, TVMContext uProc) {
         import std.stdio;
         import tvm.compiler.printer;
 
-        writeln(time, " uProc #", uProc.priority, " code:   ", codeToString(asPair(uProc.code)));
-        writeln(time, " uProc #", uProc.priority, " env:    ", print(uProc.env));
-        writeln(time, " uProc #", uProc.priority, " stack:  ", print(uProc.stack));
-        writeln(time, " uProc #", uProc.priority, " vstack: ", print(uProc.vstack));
-        writeln(time, " uProc #", uProc.priority, " interpreting: ", print(instruction), "...");
+        writeln(time, " uProc @", uProc, ":");
+        writeln(time, " code:   ", codeToString(asPair(uProc.code)));
+        writeln(time, " env:    ", print(uProc.env));
+        writeln(time, " stack:  ", print(uProc.stack));
+        writeln(time, " vstack: ", print(uProc.vstack));
+        writeln(time, " instr:  ", print(instruction));
     }
 
     switch(opcode) {
@@ -94,7 +96,7 @@ time_t step(time_t time, TVMContext uProc) {
             switch(argument.type) {
                 case TVMValue.POINTER:
                     // Make a closure...
-                    auto closure = closure(uProc.alloc, argument, value(use(uProc.env)));
+                    auto closure = closure(uProc.alloc, use(argument), value(use(uProc.env)));
 
                     // ...and push it onto the stack....
                     uProc.stack = push(uProc.alloc, value(closure), uProc.stack);
@@ -140,8 +142,9 @@ time_t step(time_t time, TVMContext uProc) {
             switch(argument.type) {
                 case TVMValue.POINTER:
                     // Enter a piece of code...
+                    auto val = use(argument.ptr);
                     free(uProc.alloc, uProc.code);
-                    uProc.code = argument.ptr;
+                    uProc.code = val;
 
                     // ...and free the argument.
                     free(uProc.alloc, argument.ptr);
@@ -174,8 +177,11 @@ time_t step(time_t time, TVMContext uProc) {
             }
 
         case TVMInstruction.PRIMOP:
-            // TODO Apply the primop to the arguments on vstack.
-            return DEFAULT_DELAY;
+            // Pop the instruction from the code stack...
+            uProc.code = pop(uProc.alloc, uProc.code);
+
+            // ...and pass evaluation to the primitive operator...
+            return primopFun(argument.integer)(time, uProc);
 
         case TVMInstruction.COND:
             // Extract both branches of the conditional...
