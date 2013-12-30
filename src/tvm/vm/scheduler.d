@@ -1,6 +1,8 @@
 module tvm.vm.scheduler;
 
 import std.concurrency;
+import std.random : uniform;
+import std.string : format;
 import core.time : dur;
 
 import tvm.vm.utils;
@@ -26,6 +28,11 @@ bool procScheduler(T)(T a, T b) {
 
 bool waitScheduler(T)(T a, T b) {
     return a.wakeTime < b.wakeTime;
+}
+
+void runProc(TVMContext uProc, ref TVMConfig config) {
+    // FIXME This should be load balanced...
+    send(locate(format("SMP%s", uniform(0, config.smpNum))), uProc);
 }
 
 void schedule(string name, TVMConfig config) {
@@ -89,7 +96,15 @@ void schedule(string name, TVMConfig config) {
                           (TVMContext p) {
                               debug(verbose) {
                                   import std.stdio;
-                                  writeln(currentTime(), " ", name, " spawned a process...");
+                                  import tvm.compiler.printer;
+
+                                  auto time = currentTime();
+
+                                  writeln(time, " ", name, " spawned a process...");
+                                  writeln(time, " code:   ", print(p.code));
+                                  writeln(time, " env:    ", print(p.env));
+                                  writeln(time, " stack:  ", print(p.stack));
+                                  writeln(time, " vstack: ", print(p.vstack));
                               }
 
                               WAITq.enqueue(p);
@@ -130,7 +145,7 @@ void schedule(string name, TVMConfig config) {
                 currTime = currentTime();
 
                 // Execute the uProc.
-                wakeTime = step(currTime, uProc);
+                wakeTime = step(currTime, uProc, config);
                 ++steps;
 
                 // Stop executing the uProc if a sleep has been requested.

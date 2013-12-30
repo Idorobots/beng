@@ -153,7 +153,7 @@ time_t car(time_t time, TVMContext uProc) {
 time_t cdr(time_t time, TVMContext uProc) {
     auto args = take!1(uProc);
 
-    if(!isPointer(args[0]) || !isPair(args[0].ptr)) fail();
+    if(!isPointer(args[0]) || isNil(args[0]) || !isPair(args[0].ptr)) fail();
     auto pair = asPair(args[0].ptr);
 
     if(isNil(pair)) swap!1(uProc, value(nil()));
@@ -171,7 +171,7 @@ time_t thisUProc(time_t time, TVMContext uProc) {
 time_t sendMsg(time_t time, TVMContext uProc) {
     auto args = take!2(uProc);
 
-    if(!isPointer(args[0]) || !isMicroProc(args[0].ptr)) fail();
+    if(!isPointer(args[0]) || isNil(args[0]) || !isMicroProc(args[0].ptr)) fail();
 
     auto otherUProc = asMicroProc(args[0].ptr);
     otherUProc.msgq.enqueue(use(args[1]));
@@ -190,11 +190,9 @@ time_t recvMsg(time_t time, TVMContext uProc) {
         return 0;
     } else {
         swap!1(uProc, value(nil()));
-        return t;
+        return time + t;
     }
 }
-
-// TODO spawn
 
 // Misc:
 time_t typeOf(time_t time, TVMContext uProc) {
@@ -210,7 +208,7 @@ time_t sleep(time_t time, TVMContext uProc) {
     auto args = enforce!isFloating(take!1(uProc));
     auto t = 1000 * cast(long) args[0].floating;
     // NOTE Doesn't pop the vstack on purpose.
-    return t;
+    return time + t;
 }
 
 time_t print(time_t time, TVMContext uProc) {

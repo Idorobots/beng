@@ -39,10 +39,18 @@ void handle(string name, string source, SyntaxError e) {
 
 void handle(string name, string source, SemanticError e) {
     writeln(name, ": Semantic Error: ", e.msg);
+
+    debug(verbose) {
+        writeln(e.info);
+    }
 }
 
 void handle(string name, string source, RuntimeError e) {
     writeln(name, ": Runtime Error: ", e.msg);
+
+    debug(verbose) {
+        writeln(e.info);
+    }
 }
 
 void main(string[] args) {
@@ -322,8 +330,12 @@ void main(string[] args) {
                 uProc.env = env;
                 uProc.stack = list(a, value(cont), value(halt));
 
+                // So we don't run into many problems...
+                config.smpNum = 1;
+                register("SMP0", thisTid);
+
                 for(;;) {
-                    writeln("step: ", step(currentTime(), uProc));
+                    writeln("step: ", step(currentTime(), uProc, config));
                     readln();
                 }
 
@@ -360,7 +372,7 @@ void main(string[] args) {
                 }
 
                 // Execute the process
-                send(thisTid, uProc);
+                send(thisTid, asMicroProc(use(uProc)));
                 schedule("SMP0", config);
                 break;
         }
@@ -370,5 +382,9 @@ void main(string[] args) {
         handle(file, source, e);
     } catch (RuntimeError e) {
         handle(file, source, e);
+    } catch (Exception e) {
+        debug(verbose) {
+            writeln(e.info);
+        }
     }
 }

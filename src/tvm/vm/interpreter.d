@@ -7,6 +7,7 @@ import tvm.vm.objects;
 import tvm.vm.bytecode;
 import tvm.vm.primops;
 import tvm.vm.gc;
+import tvm.vm.scheduler;
 
 class RuntimeError : Exception {
     this(string what) {
@@ -66,7 +67,7 @@ void fail(TVMInstructionPtr instruction) {
     throw new RuntimeError(format("Invalid bytecode instruction: %s.", instruction.opcode));
 }
 
-time_t step(time_t time, TVMContext uProc) {
+time_t step(time_t time, TVMContext uProc, ref TVMConfig config) {
     auto DEFAULT_DELAY = 0;
 
     debug(verbose) {
@@ -218,6 +219,35 @@ time_t step(time_t time, TVMContext uProc) {
 
                 addressing = TVMInstruction.ADDR_CODE;
                 goto case TVMInstruction.ENTER;
+
+            case TVMInstruction.SPAWN:
+                // Create a new uProc...
+                auto up = new shared TVMMicroProc(config.uProcHeapSize,
+                                                  config.uProcMSGqSize,
+                                                  cast(ubyte) config.uProcDefaultPriority,
+                                                  time);
+
+                // ...setup its environment...
+                auto val = peek(uProc.alloc, uProc.vstack);
+
+                auto a = up.alloc;
+                auto cont = closure(a,
+                                    value(list(a, value(tvm.vm.bytecode.push(a, use(val))))),
+                                    value(use(uProc.env)));
+                auto halt = closure(a, value(list(a, value(halt(a)))), value(use(uProc.env)));
+
+                up.code = list(a,value(enter(arg(), a, argument.integer)));
+                up.env = use(uProc.env);
+                up.stack = list(a, value(cont), value(halt));
+
+                // ...and run it...
+                runProc(asMicroProc(use(up)), config);
+                uProc.vstack = pop(uProc.alloc, uProc.vstack);
+                uProc.vstack = push(uProc.alloc, value(use(up)), uProc.vstack);
+
+                // ...lastly, pop the instruction from the code stack.
+                uProc.code = pop(uProc.alloc, uProc.code);
+                return DEFAULT_DELAY;
 
             case TVMInstruction.HALT:
                 // FIXME This should halt immediately.

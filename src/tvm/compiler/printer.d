@@ -70,6 +70,10 @@ string toString(TVMInstructionPtr instr) {
             TVMValue arg = instr.argument;
             return format("PRIMOP %s", primopName(arg.integer));
 
+        case TVMInstruction.SPAWN:
+            TVMValue arg = instr.argument;
+            return format("SPAWN %s", arg.integer);
+
         case TVMInstruction.COND:
             TVMValue arg = instr.argument;
             return format("COND {%s, %s}",
@@ -111,7 +115,7 @@ string toString(TVMClosurePtr closure) {
 }
 
 string toString(TVMMicroProcPtr uProc) {
-    return format("#%d{%d}", uProc.priority, uProc.asleep ? uProc.wakeTime : uProc.vRunTime);
+    return format("#%d{%x}", uProc.priority, uProc);
 }
 
 string print(T)(T thing) {

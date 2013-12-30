@@ -24,7 +24,8 @@ shared struct TVMInstruction {
     enum ENTER  = 0x3;
     enum PRIMOP = 0x4;
     enum COND   = 0x5;
-    enum HALT   = 0x6;
+    enum SPAWN  = 0x6;
+    enum HALT   = 0x7;
 
     TVMObject header;
     uint opcode_, addressing_;
@@ -83,6 +84,7 @@ alias take   = makeSimpleInstr!(TVMInstruction.TAKE);
 alias enter  = makeInstr!(TVMInstruction.ENTER);
 alias primop = makeSimpleInstr!(TVMInstruction.PRIMOP);
 alias cond   = makeSimpleInstr!(TVMInstruction.COND);
+alias spawn  = makeSimpleInstr!(TVMInstruction.SPAWN);
 alias halt   = makeSimpleInstr!(TVMInstruction.HALT);
 
 bool isInstruction(TVMPointer obj) {

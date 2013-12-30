@@ -1,0 +1,8 @@
+(define (loop timeout)
+  (if (print (recv timeout))
+      'done
+      (loop timeout)))
+
+(define (main args)
+  (send (spawn loop 1000)
+  	"Hello world!"))

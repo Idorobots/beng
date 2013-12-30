@@ -146,6 +146,12 @@ TVMValue compileB(Allocator)(Allocator a, Expression e, string[] env, TVMValue c
                 throw new SemanticError("Unknown primitive operation `" ~ name ~ "'.");
             }
         },
+        (Spawn sp) {
+            auto name = sp.name;
+            auto arg = sp.arg;
+            auto s = value(pair(a, value(spawn(a, assoc(sp.name, env))), continuation));
+            return compileB(a, arg, env, s);
+        },
         (Conditional conditional) {
             auto cond_ = conditional.condition;
             auto then_ = conditional.then;

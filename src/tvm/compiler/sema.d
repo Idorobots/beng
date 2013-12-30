@@ -94,6 +94,15 @@ Expression transformCompound(Pair e) {
                 string name = cdr.asPair().car().asSymbol().toString();
                 return new Primop(name, transformExprs(args));
 
+            case "spawn":
+                try {
+                    auto fun = cdr.asPair().car().asSymbol().toString();
+                    auto arg = cdr.asPair().cdr().asPair().car();
+                    return new Spawn(fun, arg);
+                } catch (SemanticError error) {
+                    throw new SemanticError("Can only spawn named functions!");
+                }
+
             default:
                 return transformApplication(e);
         }

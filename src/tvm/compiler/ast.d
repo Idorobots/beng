@@ -26,6 +26,7 @@ class Expression {
     mixin Predicate!(Primop, false, false);
     mixin Predicate!(Conditional, false, false);
     mixin Predicate!(Definition, false, false);
+    mixin Predicate!(Spawn, false, false);
 
     // Type coercion:
     protected mixin template Coercion(T, bool possible = true, bool over = true) {
@@ -47,6 +48,7 @@ class Expression {
     mixin Coercion!(Primop, false, false);
     mixin Coercion!(Conditional, false, false);
     mixin Coercion!(Definition, false, false);
+    mixin Coercion!(Spawn, false, false);
 
     // Factory:
     static Expression build(double n) {
@@ -286,5 +288,22 @@ class Definition : Expression {
         }
 
         return format("#def{%s, [%s], %s}", name, str, body_.toString());
+    }
+}
+
+class Spawn : Expression {
+    string name;
+    Expression arg;
+
+    this(string name, Expression arg) {
+        this.name = name;
+        this.arg = arg;
+    }
+
+    mixin Predicate!Spawn;
+    mixin Coercion!Spawn;
+
+    override string toString() {
+        return format("#spawn{%s, %s}", name, arg.toString());
     }
 }
