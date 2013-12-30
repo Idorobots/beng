@@ -52,7 +52,8 @@
 
 #+LATEX_HEADER: \faculty{Wydział Elektrotechniki, Automatyki,\protect\\[-1mm] Informatyki i Inżynierii Biomedycznej}
 
-#+LATEX_HEADER: \acknowledgements{Serdecznie dziękuję opiekunowi pracy za wsparcie merytoryczne oraz dobre rady edytorskie pomocne w tworzeniu pracy.}
+##+LATEX_HEADER: \acknowledgements{Serdecznie dziękuję opiekunowi pracy za wsparcie merytoryczne oraz dobre rady edytorskie pomocne w tworzeniu pracy.}
+#+LATEX_HEADER: \acknowledgements{Serdecznie dziękuję Lucynie za cierpliwość i wsparcie podczas tworzenia pracy.}
 #+END_OPTIONS
 
 # Title pages & table of contents:
@@ -197,29 +198,27 @@ Na listingu [[ref:code:tvmir]] spisana w formacie BNF została gramatyka języka
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 # TODO Add primop, apply, send, receive and spawn.
 #+begin_src xml
-  <program>           ::= <definitions>
-  <definitions>       ::= <definition> <definitions> | ''
-  <definition>        ::= '(' 'define' <argument-list>
-                                       <function-body> ')'
-  <argument-list>     ::= '(' <function-name> <arguments> ')'
-  <arguments>         ::= <argument-name> <arguments> | ''
-  <argument-name>     ::= <symbol>
-  <function-name>     ::= <symbol>
-  <function-body>     ::= <expression>
-  <expression>        ::= <simple-expression> | <application>
-                        | <conditional> | <quote>
-  <simple-expression> ::= <list> | <symbol> | <number>
-  <application>       ::= '(' <expression> <expressions> ')'
-  <expressions>       ::= <exrpession> <exrpessions> | ''
-  <conditional>       ::= '(' 'if' <expression>
-                                   <expression>
-                                   <expression> ')'
-  <quote>             ::= ''' <expression>
-  <list>              ::= '(' <expression> ')'
-  <symbol>            ::= <literal-string> | <atom>
-  <literal-string>    ::= '"' "Dowolny literał znakowy." '"'
-  <atom>              ::= "Dowolny literał znakowy bez znaków białych."
-  <number>            ::= "Dowolny literał liczbowy."
+  <program>        ::= <definitions>
+  <definitions>    ::= <definition> <definitions> | ''
+  <definition>     ::= '(' 'define' '(' <symbol> <arguments> ')'
+                                    <expression> ')'
+  <arguments>      ::= <symbol> <arguments> | ''
+  <expression>     ::= <value> | <application> | <primop>
+                     | <conditional> | <quote> | <spawn>
+  <value>          ::= <list> | <symbol> | <number>
+  <application>    ::= '(' <expression> <expressions> ')'
+  <expressions>    ::= <exrpession> <exrpessions> | ''
+  <conditional>    ::= '(' 'if' <expression>
+                                <expression>
+                                <expression> ')'
+  <quote>          ::= ''' <expression> | '(' 'quote' <epression> ')'
+  <spawn>          ::= '(' 'spawn' <symbol> <expression> ')'
+  <primop>         ::= '(' 'primop' <symbol> <expressions> ')'
+  <list>           ::= '(' <expressions> ')'
+  <symbol>         ::= <literal-string> | <atom>
+  <literal-string> ::= '"' "Dowolny literał znakowy." '"'
+  <atom>           ::= "Dowolny literał znakowy bez znaków białych."
+  <number>         ::= "Dowolny literał liczbowy."
 #+end_src
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
@@ -320,7 +319,7 @@ Drugą fazą jest faza analizy syntaktycznej, której zadaniem jest przetworzeni
 
 Trzecią fazą jest faza analizy semantycznej, której zadaniem jest przetworzenie /wstępnego drzewa parsowania/ na bardziej abstrakcyjne /drzewo składniowe/ (ang. /Abstract Syntax Tree/, /AST/) składające się semantycznie znaczących węzłów, takich jak aplikacja funkcji, wywołania operatorów wbudowanych, czy odwołania do zmiennych. Faza ta waliduje kod na poziomie semantycznym, sprawdzając poprawność wykorzystania różnych konstrukcji języka TVMIR.
 
-Czwartą fazą jest faza optymalizacji, której zadaniem jest transformacja /drzewa składniowego/ powstałego w poprzedniej fazie do jego ekwiwalentu działającego szybciej po skompilowaniu. Faza ta obecnie nie wykonuje rzadnych interesujących transformacji, jednak istnieje możliwość rozszerzenia jej funkcjonalności w przyszłości (opisane krótko w sekcji [[ref:sec:future-development]]).
+Czwartą fazą jest faza optymalizacji, której zadaniem jest transformacja /drzewa składniowego/ powstałego w poprzedniej fazie do jego ekwiwalentu działającego szybciej po skompilowaniu. Faza ta obecnie nie wykonuje żadnych interesujących transformacji, jednak istnieje możliwość rozszerzenia jej funkcjonalności w przyszłości (opisane krótko w sekcji [[ref:sec:future-development]]).
 
 Ostatnią, piątą fazą kompilacji jest faza generacji kodu bajtowego akceptowanego przez ThesisVM. Zadaniem tej fazy jest przetworzenie /drzewa składniowego/ do /strumienia kodu bajtowego/ za pomocą reguł kompilacji zgodnych z wybranym modelem maszyny wirtualnej (opisane szczegółowo w sekcji [[ref:sec:tvm-codegen]]).
 
@@ -402,53 +401,176 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 * Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
 
-- Opisać wybrany model Three Instruction Machine. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
-- Opisać krótko działanie TIM, zwrócić uwagę na leniwość. [[cite:Fairbairn1987,PeytonJones1992]], [[cite:Kaser1992]]
-- Opisać modyfikacje modelu TIM.
+Niniejsza sekcja opisuje implementację interpretera kodu bajtowego ThesisVM. Jak już wspomniano w poprzedniej sekcji, praca implementuje model /Three Instruction Machine/, opisany szczegółowo w [[cite:Fairbairn1987]]
+ oraz [[cite:PeytonJones1992]], wprowadzając do niego szereg modyfikacji.
+
+Three Instruction Machine (TIM) jest nieskomplikowanym modelem maszyny wirtualnej opartym o trzy rejestry, służące do manipulacji danych:
+
+- *IP* - wskaźnik /kodu/ następnej instrukcji,
+
+- *Stack* - stos /kontynuacji/ skłądających się z wskaźnika do kodu oczekującego na ewaluację oraz kontekstu, w którym należy ów kod ewaluować,
+
+- *Env* - stos będący obecnym /kontekstem/ ewaluacji kodu, który jest analogiczny do leksykalnego zasięgu zmięnnych w kodzie źródłowym programu;
+
+#+latex: \noindent
+oraz trzy bazowe instrukcje przyjmujące od zera do jednego argumentu, które w zupełności wystarczą do implementacji leniwych, funkcyjnych języków programowania:
+
+- *PUSH arg* - tworzy kontynuację argumentu, która umożliwia jej późniejszą ewaluację w odpowiednim kontekście, odkładając ją na stos =Stack=,
+
+- *TAKE* - pobiera kontynuację ze stosu Stack i przenosi ją na stos =Env= rozszerzając obecny kontekst ewaluacji kodu i przygotowując środowisko ewaluacji danej funkcji,
+
+- *ENTER arg* - inicjuje ewaluację kontynuacji wskazywanej przez argument instrukcji odpowiednio modyfikując wartość rejestrów =IP= i =Env=.
+
+#+latex: \noindent
+Dodatkowo, instrukcje TIM posiadają różne typy adresowania argumentów, które wpływają na sposób interpretacji argumentu instrukcji:
+
+- *VAL* - argument jest traktowany jako konkretna wartość,
+
+- *CODE* - argument jest traktowany jako wskaźnik do konkretnej wartości,
+
+- *ARG* - argument jest traktowany jako indeks stosu =Env=,
+
+Ewaluacja kodu bajtowego TIM przebiega w standardowy sposób. Instrukcje pobierane są z adresu wskazywanego przez wskaźnik następnej instrukcji =IP=, po czym są dekodowane i wykonywane. Dekodowanie instrukcji polega na pobraniu kodu instrukcji oraz sposobu odresowania argumentu. Ostatnią fazą jest ustalenie konkretnej wartości argumentu na podstawie wcześniej ustalonego adresowania.
+
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Przykład kodu bajtowego Three Instruction Machine.}}
+#+latex: \label{code:tim-example}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src python
+        PUSH ARG 0  # func
+        ENTER ARG 0 # func
+  func: TAKE
+        PUSH ARG 0  # arg
+        ENTER ARG 1 # func
+#+end_src
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
+Na listingu [[ref:code:tim-example]] zawarto przykład kodu bajtowego definicji funkcji =func=, która przyjmuje jeden argument =arg= oraz wywołuje samą siebie z tym argumentem. Przed definicją funkcji (dwie instrukcji przed etykietą =func:=) zawarto także przykładowe wywołanie tej funkcji.
+
+Warto zauważyć, że argumenty przekazywane do funkcji w modelu TIM są ewaluowane /leniwie/ - w przykładzie widniejącym na listingu [[ref:code:tim-example]] widać, że argument =arg= nigdy nie jest ewaluowany, nawet pomimo faktu, że funkcja =func= przekazuje go do następnego wywołania. Argumenty są ewaluowane dopiero w momencie, gdy maszyna potrzebuje ich konkretnej wartości.
+
+Drugim ważnym spostrzeżeniem jest wsparcie /optymalizacji rekursji ogonowej/ modelu TIM - jeśli ostatnią instrukcją kodu ciała funkcji jest wywołanie innej funkcji, to wynikowy kod bajtowy zakończony będzie instrukcją ENTER, która nie wymaga zapisywania adresu powrotnego i tym samym gwarantuje stałą wielkość stosu programu.
+
+Model Three Instruction Machine został wybrany jako podstawa implementacji ThesisVM ze względu na swoją prostotę i niewątpliwe zalety jakie posiada w kontekście implementacji funkcyjnych języków programowania. Istnieje wiele alternatywnych modeli działania maszyn wirtualnych, jak na przykład model /SECD/ [[cite:VanHorn2010]] oraz jego rekursywny ogonowo wariant /TR-SECD/ [[cite:Ramsdell1999]], czy bardziej adekwatne dla języków z rodziny Lisp modele opisane w [[cite:Abelson1996]] oraz [[cite:Steele1978]].
+
+** Modyfikacje i implementacja modelu TIM
+Zaprezentowany powyżej model jest bardzo prosty i pomimo swojej niewątpliwej ekspresywności, maszyna wirtualna go implementująca nie byłaby w stanie uruchamiać programów o praktycznym zastosowaniu. W związku z tym, model został rozszerzony o dodatkowy rejestr wskazujący na stos danych "prostych", nie będących kontynuacjami, a takżge szereg instrukcji implementujących podstawowe instrukcje arytmetyczne, logiczne i związane z implementacją Modelu Aktorowego.
 
 #+begin_center
-#+label: ref:tvm-regs
+#+label: fig:tvm-regs
 #+caption: Schemat stanu maszyny wirtualnej.
 #+attr_latex: scale=1.5
 [[file:./img/uProc.pdf]]
 #+end_center
 
-- Opisać wykorzystywane rejestry.
-- Opisać krótko alternatywne rozwiązania (SECD, TRSECD, SICP machine). [[cite:VanHorn2010,Ramsdell1999,Abelson1996,Steele1978]], [[cite:Kaser1992]]
+Na rysunku [[ref:fig:tvm-regs]] widnieje schemat rejestrów wykorzystywanych przez interpreter kodu bajtowego. Wymienione rejestry wraz z pozostałymi, opisanymi w następnych sekcjach pracy, składają się na kontekst mikroprocesów ThesisVM.
+
+Rejestr *Header* zawiera informacje o typie procesu oraz metadane kolektora obiektów nieosiągalnych. Konteksty mikroprocesów maszyny ThesisVM są dostępne z poziomu kodu źródłowego, ponieważ są obiektami pierwszej klasy (ang. /first-class object/). Więcej informacji na temat zastosowania tego rejestru zostało zawarte w sekcji [[ref:sec:compound-objects]] opisującej implementację obiektów złożonych ThesisVM.
+
+Rejestr *IP* służy do przechowywania wskaźnika następnej instrukcji kodu bajtowego. Jest wykorzystywany w dokładnie taki sam sposób, jak analogiczny rejestr modelu TIM. Rejestry *Env* oraz *Stack* podobnie jak rejestr =IP= również wykorzystywane są zgodnie z opisem modelu TIM.
+
+Ostatni rejestr, *VStack* wskazuje na stos przechowujący dane "proste", czyli obiekty, które nie wymagają ewaluacji przez interpreter i mogą być wykorzystywane przez operacje prymitywne. Funkcjonalność tego stosu nie mogła zostać połączona z funkcjonalnością stosu =Stack=, ponieważ część instrukcji polega na homogeniczności danych znajdujących się na stosie =Stack= - jeśli istnienie na tym stosie danych innych niż kontynuacje zostałoby dozwolone, to część instrukcji wymagałaby kosztownego przeszukiwania i modyfikacji stosu.
+
+Implementacja ThesisVM modyfikuje semantykę trzech bazowych instrukcji TIM:
+
+- *NEXT addr arg* - jest to bardziej adekwatnie nazwany analog instrukcji =PUSH= podstawowego modelu TIM, w zależności od typu adresowania argument instrukcja ta tworzy i umieszcza na stosie =Stack= samo-ewaluującą do wartości argumentu kontynuację (=addr= równe =VAL=), kontynuację składającą się z obecnego kontekstu i wartości wskazywanej przez argument (=addr= równe =CODE=) lub wartść kontynuacji znajdującej się na stosie =Env= (wartość =addr= równa =ARG=);
+
+- *TAKE* - podobnie jak w przypadku modelu bazowego, pobiera jedną kontynuację ze stosu kontynuacji =Stack= i umieszcza ją w obecnym kontekście ewaluacji =Env=;
+
+- *ENTER addr arg* - w zależności od typu adresacji argumentu odpowiednio modyfikuje wartości rejestrów =Env= oraz =IP= podstawiając wartość =IP= na wartość argumentu (=addr= równe =CODE=), lub ewaluując kontynuację znajdującą się na stosie =Env= (wartość =addr= równa =ARG=);
+
+#+latex: \noindent
+oraz wprowadza kilka nowych instrukcji służących do obsługi dodatkowego rejestru i operacji prymitywnych z nim związanych:
+
+- *PUSH arg* - jest to prosta instrukcja, której jedynym zadaniem jest umieszczenie argumentu na stosie =VStack=;
+
+- *PRIMOP arg* - wykonuje operację prymitywną o identyfikatorze równym wartości argumentu. Więcej informacji o implementacji operacji prymitywnych zawarto w sekcji [[ref:sec:tvm-primops-impl]];
+
+- *COND arg* - jest to instrukcja warunkowa, która sprawdza wartość znajdującą się na wierzchu stosu =VStack= i w zależności od jej wartości wybiera jedną z dwóch gałęzi kodu wskazywanych przez argument i ustawia jej wartość jako nową wartość rejestru =IP=;
+
+- *SPAWN arg* - jest to instrukcja związana z implementacją Modelu Aktorowego, tworzy ona nowy kontekst mikroprocesu ThesisVM i aranżuje ewaluację kontynuacji znajdującej się na stosie =Env= pod indeksem równym wartości argumentu instrukcji (=arg=) przekazując jej jako parametr wartość znajdującą się na szczycie stosu =VStack=. Tak zaaranżowany kontekst mikroprocesu jest następnie dodawany do kolejki uruchomieniowej jednego z symetrycznych multiprocesorów wybranego zgodnie z zasadami równoważenia obciążenia (opisanymi w sekcji [[ref:sec:tvm-scheduling]]);
+
+- *HALT* - instrukcja ta usypia proces na czas nieokreślony efektywnie kończąc jego działanie. Tak zatrzymany proces następnie podlega kolekcji przez kolektor obiektów nieosiągalnych, ponieważ mogą istnieć referencje nań wskazujące, które są wykorzystywane przez inne procesy.
 
 ** Implementacja obiektów prostych
-- Opisać implementację atomów ($\leq$ 8 bajtów).
-- Opisać metodę tagowania atomów (dolne trzy bity) [[cite:Gudeman1993]], [[cite:Cook2013]]
-- Opisąć optymalizacje/trejdofy wybranego sposobu tagowania. [[cite:Gudeman1993]], [[cite:Cook2013]]
+Dane programów w maszynie ThesisVM reprezentowane są za pomocą dwóch rodzajów obiektów - obiektów "prostych" oraz obiektów złożonych. Rysunek [[ref:fig:tvmvalue-impl]] zawiera schemat reprezentacji obiektów prostych, które należą do jednego z trzech wspieranych typów podstawowych: =POINTER=, =FLOATING= lub =INTEGER=.
+
+#+begin_center
+#+label: fig:tvmvalue-impl
+#+caption: Schemat reprezentacji obiektów prostych ThesisVM.
+#+attr_latex: scale=0.8
+[[file:./img/tvmvalue.pdf]]
+#+end_center
+
+Implementacja przechowuje dane obiektów prostych w strukturze o wielkości jednego słowa procesora (*64* bity w obecnej implementacji maszyny wirtualej przystosowanej do architektury *x86_64*), która zapewnia dostęp do dwóch pól identyfikujących odpowiednio 61-bitową wartość przechowywaną w strukturze oraz 3-bitowy typ, do którego owa wartość należy.
+
+Wartość przechowywane są wraz z informacją o ich typie, w celu umożliwienia implementacji języków dynamicznie typowanych oraz ułatwienia pracy kolektora obiektów nieosiągalnych - dzięki informacji o typie może on precyzyjnie określić, czy dany obiekt jest referencją, czy też nie.
+
+Typy obiektow prostych przechowywane są w trzech najmniej znaczących bitach (ang. /least significant bits/, /LSB/) reprezentacji, umożliwiając implementację ośmiu różnych typów podstawowych, zgodnie ze szczegółowym opisem zawartym w [[cite:Gudeman1993]]. Reprezentacja taka posiada szereg zalet począwszy od kompaktowości, przez brak konieczności alokacji pamięci dla typów podstawowych, kończąc na wielu ciekawych optymalizacjach, które umożliwia.
+
+Na przykład, jeśli alokator maszyny wirtualnej wymusi /wyrównywanie pamięci/ (ang. /alignment/) do wielkości słowa procesora, to trzy najmniej znaczące bity (na architekturze 64-bitowej) reprezentacji wskaźników zawsze będą zerowe. W związku z tym, zerem można reprezentować typ wskaźnikowy obiektow prostych ThesisVM (typ =POINTER=), co umożliwia wykorzystywanie ich reprezentacji bezpośrednio, bez konieczności przeprowadzenia operacji bitowego maskowania.
+
+Podobne optymalizacje mogą zostać zastosowane w przypadku reprezentacji obiektów numerycznych. Na przykład, w celu dodania dwóch liczb całkowitych (o typie =INTEGER=) można posłużyć się ostatnią zależnością zaprezentowaną na listingu [[ref:code:integer-optimization]] zamiast wielokrotnie wykorzystywać kosztowne operacje =tag= i =untag=, które realizują przejścia pomiędzy reprezentacją wewnętrzną obiektów maszyny wirtualnej a reprezentacją języka jej implementacji.
+
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Optymalizacja dodawania liczb całkowitych.}}
+#+latex: \label{code:integer-optimization}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src d
+result = tag(Types.Integer, (untag(a) + untag(b)));
+result = a.rawValue + b.rawValue - Types.INTEGER;
+#+end_src
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
+Wiele ciekawych optymalizacji związanych ze sposobem reprezentacji typów obiektów zostało zawarte w [[cite:Gudeman1993]].
 
 ** Implementacja obiektów złożonych
+#+latex: \label{sec:compound-objects}
+
+#+begin_center
+#+label: fig:tvmobject-impl
+#+caption: Schemat reprezentacji obiektów złożonych ThesisVM.
+#+attr_latex: scale=0.8
+[[file:./img/tvmobject.pdf]]
+#+end_center
+
 - Opisać implementację obiektów złożonych ($\geq$ 8 bajtów - pary, funkcje/domknięcia, procesy).
-- Opisać metodę tagowania (dolne dwa bajty + górne 48 bitów zarezerwowane dla GC). [[cite:Gudeman1993]], [[cite:Cook2013]]
+- Opisać metodę tagowania (dolny bajt + reszta zarezerwowana dla GC). [[cite:Gudeman1993]], [[cite:Cook2013]]
+
 - Opisać komponenty par.
+
 - Opisać poszczególne komponenty obiektów funkcyjnych.
+
 - Opisać reprezentację obiektów procesów (gołe rejestry).
 - Opisać relację pomiędzy zbiorem rejestrów a reprezentacją procesu.
 
-** Implementacja wbudowanych operatorów
+** Implementacja instrukcji kodu bajtowego
+- Opisać reprezentację kodu bajtowego (listy opkodów).
+- Opisać dostępne opkody kodu bajtowego. [[cite:Fairbairn1987,PeytonJones1992]]
+- Opisać możliwe optymalizacje (wykorzystanie górnych dwóch bajtów słowa, 0 = pushc, threading, itd).
+
+** Implementacja operacji prymitywnych
+#+latex: \label{sec:tvm-primops-impl}
+
 - Opisać wykorzystanie VStack.
 - Opisać dostępne operacje prymitywne (LispKit). [[cite:Abelson1996]]
 - Skonfrontować dostępne operacje prymitywne z =Core Erlang=. [[cite:Carlsson2004]]
-- Opisać optymalizacje operacji arytmetycznych. [[cite:Gudeman1993]]
+- Opisać możliwe optymalizacje operacji arytmetycznych. [[cite:Gudeman1993]]
 
 ** Ewaluacja argumentów i aplikacja funkcji
+- Opisać implementację stosów.
+- Opisać dekodowanie instrukcji.
 - Opisać działanie interpretera kodu bajtowego ThesisVM. [[cite:Fairbairn1987,PeytonJones1992]]
-- Opisać leniwą ewaluację argumentów.
-- Opisać aplikację funkcji.
 - Opisać aplikację operacji prymitywnych.
-
-** Reprezentacja kodu bajtowego ThesisVM
-- Opisać reprezentację kodu bajtowego (listy opkodów).
-- Opisać optymalizacje TVMBC (wykorzystanie górnych dwóch bajtów słowa, 0 = pushc, threading, itd).
-- Opisać dostępne opkody kodu bajtowego. [[cite:Fairbairn1987,PeytonJones1992]]
+- Opisać brak apdejtowania już obliczonych wartości i dać link do sec:future-development.
+- Opisać możliwość zastosowania bytecode threading.
 
 ** Generacja kodu bajtowego ThesisVM
 #+latex: \label{sec:tvm-codegen}
 
+- Zrobić listingi 
 - Opisać szczegółowo generację kodu bajtowego. [[cite:PeytonJones1992]]
 
 * Model zarządzania pamięcią
@@ -572,6 +694,8 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 - Zwrócić uwagę na fakt, że problem kopiowania został zniwelowany kosztem lekkich barier pamięci.
 
 ** Harmonogramowanie procesów
+#+latex: \label{sec:tvm-scheduling}
+
 - Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn). [[cite:Pabla2009]]
 - Opisać implementację prymitywu =sleep= oraz sleep-table.
 - Opisać wiadomości kontrolne.
@@ -591,10 +715,13 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 - Opisać co udało się zrobić.
 - Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
 
-** Leniwe zliczanie referencji
+** Interpreter kodu bajtowego
+- Opisać dlaczego TIM się nie nadaje i trzeba to wymienić na coś innego.
+
+** Kolektor obiektów nieosiągalnych
 - Przeanalizować szybkość, pauzy, zużycie pamięci.
 
-** Przesyłanie wiadomości
+** Przetwarzanie współbieżne
 - Przeanalizować szybkość przesyłania wiadomości/konieczność czekania procesów, wielkość kolejek wiadomości.
 
 ** Kierunki przyszłego rozwoju
@@ -615,11 +742,12 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 ** Interfejs i użytkowanie ThesisVM
 - Opisać sposób uruchamiania maszyny wirtualnej.
 
-** Hello world
+** "Hello world!"
+** Funkcje i operacje prymitywne
 ** Factorial
 ** Fibonacci
-** Concurrent Hello world
-** Map-reduce
+** Współbieżne "Hello world!"
+** Współbieżne obliczanie silni
 
 * Spisy wbudowanych funkcji i operatorów
 #+latex: \label{sec:tvm-primops}
