@@ -176,7 +176,7 @@ Mikroprocesy są przypisane do symetrycznych multiprocesorów w stosunku wiele-d
 #+begin_center
 #+label: fig:tvm-arch
 #+caption: Architektura maszyny wirtualnej ThesisVM.
-#+attr_latex: scale=1.0
+#+attr_latex: scale=0.8
 [[file:./img/arch.pdf]]
 #+end_center
 
@@ -503,7 +503,7 @@ Dane programów w maszynie ThesisVM reprezentowane są za pomocą dwóch rodzaj�
 #+begin_center
 #+label: fig:tvmvalue-impl
 #+caption: Schemat reprezentacji obiektów prostych ThesisVM.
-#+attr_latex: scale=0.8
+#+attr_latex: scale=0.6
 [[file:./img/tvmvalue.pdf]]
 #+end_center
 
@@ -522,7 +522,7 @@ Podobne optymalizacje mogą zostać zastosowane w przypadku reprezentacji obiekt
 #+latex: \label{code:integer-optimization}
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src d
-result = tag(TVMValue.INTEGER, (untag(a) + untag(b)));
+result = tag(TVMValue.INTEGER, untag(a) + untag(b));
 result = a.rawValue + b.rawValue - TVMValue.INTEGER;
 #+end_src
 #+bind: org-export-latex-minted-options ()
@@ -537,7 +537,7 @@ Ważnym elementem każdego języka programowania są złożone struktury danych 
 #+begin_center
 #+label: fig:tvmobject-impl
 #+caption: Schemat reprezentacji obiektów złożonych ThesisVM.
-#+attr_latex: scale=0.8
+#+attr_latex: scale=0.6
 [[file:./img/tvmobject.pdf]]
 #+end_center
 
