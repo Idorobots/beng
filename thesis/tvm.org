@@ -1,7 +1,7 @@
 ################################################################################
 #+TITLE: ThesisVM BEng
 #+AUTHOR: Kajetan Rzepecki
-#+DATE: 2013
+#+DATE: 2014
 #
 #+BEGIN_OPTIONS
 #+BIND: org-export-latex-title-command ""
@@ -376,7 +376,7 @@ Ostatnim aspektem zarządzania pamięci maszyny wirtualnej jest kolekcja pamięc
 
 Kolektory różnych typów mają bardzo różne charakterystyki wydajnościowe w zależności od architektury wykorzystania sterty zastosowanej w maszynie wirtualnej. Kolektory śledzące przeważnie generują długie pauzy w architekturach współdzielonych, natomiast kolektory zliczające prezentują stały narzut obliczeniowy związany z ciągłą modifykacją liczników referencji. Oczywiście istnieją dobrze poznane metody optymalizacji obu typu algorytmów [[cite:Shahriyar2012,Bacon2004]], które zacierają wszelkie różnice w ich charakterystykach wydajnościowych.
 
-W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci", oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje.
+W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci", oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje. Do alternatywnych rozwiązań należą te zaprezentowane w [[cite:Armstrong1995]] oraz [[cite:Huelsbergen1998]].
 
 ** Przetwarzanie współbieżne
 Systemy współbieżne często realizują model symetrycznego multiprocessingu (/SMP/), którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych wykonujących jednakowe operacje na różnych zbiorach danych (=SMPn= na rysunku [[ref:fig:amp-vs-smp]]).
@@ -640,13 +640,13 @@ Obecnie, implementacja ThesisVM wykorzystuje dwu-poziomowy alokator składający
 #+begin_center
 #+label: fig:tvm-alloc
 #+caption: Schemat kaskadowych alokatorów wykorzystanych w ThesisVM.
-#+attr_latex: scale=0.8
+#+attr_latex: scale=0.7
 [[file:./img/allocator.pdf]]
 #+end_center
 
 *D Alloc* jest standardowym interfejsem alokatora języka =D=, który wykorzystuje metadane kolektora obiektów nieosiągalnych języka =D= i udostępnia wyrównaną do słowa procesora (8 bajtów na architekturze x86\_64) pamięć przezeń zarządzaną. Wybór tego algorytmu zostanie umotywowany w sekcji [[ref:sec:tvm-cycles]].
 
- Alternatywnym rozwiązaniem dla =D Alloc= byłoby wykorzystanie interfejsu manualnego zarządzania pamięci poprzez wykorzystanie funkcji =malloc= i =free= ze standardowej biblioteki języka =C=, która wchodzi w skład standardowej biblioteki języka =D=.
+ Alternatywnym rozwiązaniem dla =D Alloc= byłoby wykorzystanie interfejsu manualnego zarządzania pamięcią poprzez wykorzystanie funkcji =malloc= i =free= ze standardowej biblioteki języka =C=, która wchodzi w skład standardowej biblioteki języka =D=.
 
 *TVM Alloc* jest dodatkowym algorytmem alokacji zbudowanym w oparciu o interfejs =D Alloc=, który dodatkowo zapewnia buforowanie (ang. /caching/) pamięci za pomocą *listy niedawno zwolnionych obiektów*, która jest przeszukiwana w pierwszej kolejności podczas żądania alokacji.
 
@@ -664,28 +664,45 @@ Wykorzystanie listy niedawno zwolnionych obiektów do buforowania alokacji umoż
 Zagadnienie alokacji pamięci jest bardzo rozległe i w kontekście języków programowania zależy od wielu różnych czynników, takich jak charakterystyki zużycia pamięci konkretnych programów, wielkości alokowanych obiektów, czy czasy ich życia. Przegląd [[cite:Wilson1995]] zawiera szczegółową analizę wydajności wielu różnych algorytmów alokacji pamięci w warunkach symulowanych oraz dla rzeczywistych programów, co było niezastąpionym źródłem wiedzy pomocnym przy wyborze i implementacji algorytmu alokacji obiektów maszyny wirtualnej ThesisVM.
 
 ** Kolekcja obiektów nieosiągalnych
+Różne podejścia do problemu automatycznego zwalniania nieużywanej pamięci zostały już opisane w sekcji [[ref:sec:tvm-heap-archs]], której konkluzją był wybór algorytmu *zliczania referencji* jako głównego algorytmu kolekcji obiektów nieosiągalnych.
 
-- Opisać leniwe zliczanie referencji. [[cite:Boehm2004]]
+Algorytm zliczania referencji polega na przechowywaniu i modyfikacji liczników aktywnych referencji wskazujących na dany obiekt w pamięci. Liczniki te przechowywane są w nagłówkach obiektów, dzięki czemu algorytm jest w stanie zdecydować, czy konkretny obiekt jest w dalszym ciągu w użyciu jedynie na podstawie wkaźnika na jego nagłówek.
+
+Liczniki modyfikowane są podczas tworzenia nowych i usuwania istniejących referencji - stworzenie nowej referencji do konkretnego obiektu powoduje inkrementację jego licznika referencji, natomiast usunięcie istniejącej referencji powoduje jego dekrementację. W momencie, gdy wartość licznika osiągnie zero obiekt jest uznawany za /nieosiągalny/ i następuje zwolnienie jego pamięci ora usunięcie wszystkich referencji wchodzących w jego skład.
+
+Wariant algorytmu zaimplementowany w maszynie wirtualnej ThesisVM to tak zwane *leniwe zliczanie referencji*, którego implementacja jest możliwa dzięki zastosowaniu alokatora buforującego zwalniane obiekty. Algorytm ten polega na opóźnieniu usuwania referencji wchodzących w skład usuwanego obiektu do czasu aż jego pamięć zostanie powtórnie wykorzystana.
+
+Modyfikacja ta jest bardzo prosta i pozwala osiągnąć dużo lepsze charakterystyki czasowe kolekcji obiektów nieosiągalnych kosztem zwiększenia ogólnego zużycia pamięci - obiekty nie są zwalniane natychmiastowo, a dopiero przy następnej alokacji. Dokładne badanie wpływu opisanej modyfikacji algorytmu zliczania referencji na zużycie pamięci zostało przedstawione w [[cite:Boehm2004]].
+
+Rysunek [[ref:fig:tvm-lazy-refcount-free]] zawiera schemat dealokacji obiektu z wykorzystaniem opisanego powyżej algorytmu.
 
 #+begin_center
-#+label: ref:tvm-lazy-refcount-free
+#+label: fig:tvm-lazy-refcount-free
 #+caption: Schemat działania zwalniania pamięci obiektów.
-#+attr_latex: scale=0.8
+#+attr_latex: scale=0.7
 [[file:./img/lazyrefcountfree.pdf]]
 #+end_center
 
+Obiekt =old=, którego licznik referencji osiągnął wartość 0 w wyniku usunięcia ostatniej aktywnej referencji zostaje przeniesiony do listy niedawno zwolnionych obiektów =free=. Lista ta wykorzystuje ów licznik do przechowywania wskaźnika na następny element listy, dzięki czemu możliwe jest zachowanie danych obiektu bez zmian w celu późniejszego, leniwego ich usunięcia podczas następnej alokacji (rysunek [[ref:fig:tvm-lazy-refcount-alloc]]).
+
+Alokacja nowego obiektu =new= polega na pobraniu pierwszego elementu listy niedawno zwolnionych obiektów =free= oraz usunięciu wszystkich referencji wchodzących w jego skład. Pociąga to za sobą dekrementację liczników referencji obiektów, na które owe referencje wskazują i ewentualną dealokację tych obiektów, jeśli ich liczniki osiągnęły wartość 0. W przypadku, gdy lista =free= jest pusta tworzony jest zupełnie nowy obiekt, który jest dodawany do wspólnej puli pamięci.
+
+W przypadku języków programowania wspierających przetwarzanie współbieżne algorytm dodatkowo komplikuje konieczność wykorzystywania /operacji atomowych/ na licznikach referencji obiektów, które mogą być modyfikowane jednocześnie przez wiele wątków sprzętowego procesora. Dodatkowo ważne jest wykorzystanie /barier pamięci/, które uniemożliwiają zmiany kolejności wykonywania operacji na pamięci, co jest częstym zabiegiem optymalizacyjnym w nowoczesnych procesorach.
+
 #+begin_center
-#+label: ref:tvm-lazy-refcount-alloc
+#+label: fig:tvm-lazy-refcount-alloc
 #+caption: Schemat działania alokacji pamięci nowych obiektów.
-#+attr_latex: scale=0.8
+#+attr_latex: scale=0.7
 [[file:./img/lazyrefcountalloc.pdf]]
 #+end_center
 
-- Opisać implementację algorytmu leniwego zliczania referencji. [[cite:Bacon2004]]
-- Opisać konieczność wykorzystania operacji atomowych i barier pamięci (liczniki referencji).
+Konieczność stosowania operacji atomowych i barier pamięci powoduje nieznaczny spadek wydajności maszyny wirtualnej, który jednak jest wart odnotowania. Implementacja kolektora "śmieci" ThesisVM wykorzystuje wbudowane w język =D= kwalifikatory typów =shared=, które gwarantują stosowanie operacji atomowych i barier pamięci w stategicznych miejscach.
 
-- Opisać narzut pamięci związany z licznikiem referencji i leniwością algorytmu. cite:Boehm2004,Bacon2004
-- Opisać krótko wady, możliwe usprawnienia i alternatywne rozwiązania (zaproponowane przez Joe'go oraz VCGC) [[cite:Armstrong1995,Huelsbergen1998]]
+Implementacja optymalizuje także modyfikacje liczników referencji przez ich opóźnienie lub całkowite wyeliminowanie (arg. /deferred reference counting/), jeśli nie są konieczne - na przykład w przypadku transferu referencji pomiędzy dwoma obiektami.
+
+Jest to potencjalnie niebezpieczna technika wymagająca manualnego dekrementowania i inkrementowania liczników referencji za pomocą funkcji =use= oraz =free=. Alternatywnym rozwiązaniem jest wykorzystanie inteligentnych wskaźników (ang /smart pointers/), które gwarantują deterministyczną inkrementację i dekrementację liczników.
+
+Więcej możliwych usprawnień algorytmu kolekcji obiektow nieosiągalnych za pomocą zliczania referencji zostało przedstawionych w [[cite:Bacon2004]] oraz [[cite:Shahriyar2012]].
 
 ** Kolekcja obiektów cyklicznych
 #+latex: \label{sec:tvm-cycles}
@@ -811,49 +828,52 @@ Zagadnienie alokacji pamięci jest bardzo rozległe i w kontekście języków pr
 {\Large\noindent\textbf{Spis operatorów wbudowanych}}
 #+end_latex
 
-- *+* - pobiera dwa parametry typu numerycznego i zwraca wynik ich dodawania.
-- *-* - pobiera dwa parametry typu numerycznego i zwraca wynik ich odejmowania.
-- *** - pobiera dwa parametry typu numerycznego i zwraca wynik ich mnożenia.
-- */* - pobiera dwa parametry typu numerycznego i zwraca wynik ich dzielenia.
-- *mod* - pobiera dwa parametry typu numerycznego i zwraca wynik przeprowadzenia na nich operacji modulo.
-- *pow* - pobiera dwa parametry typu numerycznego i zwraca wynik przeprowadzenia na nich operacji potęgowania.
-- *inc* - pobiera jeden parametr typu numerycznego i zwraca jego wartość inkrementowaną o 1.
-- *dec* - pobiera jeden parametr typu numerycznego i zwraca jego wartość dekrementowaną o 1.
-- *=* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy są równe, lub pustą listę w przeciwnym przypadku.
-- *<* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma mniejszą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
-- *>* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma większą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
-- *<=* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma mniejszą bądź równą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
-- *>=* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma większą bądź równą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
-- *null?* - pobiera jeden parametr dowolnego typu i zwraca 1 w przypadku, gdy jest on pustą listą, lub pustą listę w przeciwnym przypadku.
-- *null* - nie pobiera żadnych parametrów, zwraca pustą listę.
-- *cons* - pobiera dwa parametry dowolnych typów i zwraca parę składającą się z obu pobranych wartości.
-- *car* - pobiera jeden parametr, który musi być parą i zwraca pierwszy jej element.
-- *cdr* - pobiera jeden parametr, który musi być parą i zwraca drugi jej element.
-- *typeof* - pobiera jeden parametr dowolnego typu i zwraca wartość liczbową identyfikującą jego typ.
-- *sleep* - pobiera jeden parametr typu numerycznego i usypia mikroproces na taką ilość milisekund, zwraca ilość milisekund, na które mikroproces został uśpiony.
-- *print* - pobiera jeden parametr dowolnego typu i wyświetla jego tekstową reprezentację, zwraca parametr.
-- *self* - nie pobiera parametrów, zwraca deskryptor obecnie działającego mikroprocesu.
-- *send* - pobiera dwa parametry, z których pierwszy musi być deskryptorem mikroprocesu, wysyła drugi parametr jako wiadomość do mikroprocesu z pierwszego parametru.
-- *recv* - pobiera jeden parametr typu numerycznego, sprawdza, czy w kolejce wiadomości mikroprocesu znajduje się wiadomość i ją zwraca; jeśli w kolejce wiadomości mikroprocesu nie znajdują się żadne wiadomości zwraca pustą listę i usypia mikroproces na czas przekazany w parametrze.
+- =+= - pobiera dwa parametry typu numerycznego i zwraca wynik ich dodawania.
+- =-= - pobiera dwa parametry typu numerycznego i zwraca wynik ich odejmowania.
+- =*= - pobiera dwa parametry typu numerycznego i zwraca wynik ich mnożenia.
+- =/= - pobiera dwa parametry typu numerycznego i zwraca wynik ich dzielenia.
+- =mod= - pobiera dwa parametry typu numerycznego i zwraca wynik przeprowadzenia na nich operacji modulo.
+- =pow= - pobiera dwa parametry typu numerycznego i zwraca wynik przeprowadzenia na nich operacji potęgowania.
+- =inc= - pobiera jeden parametr typu numerycznego i zwraca jego wartość inkrementowaną o 1.
+- =dec= - pobiera jeden parametr typu numerycznego i zwraca jego wartość dekrementowaną o 1.
+- $=$ - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy są równe, lub pustą listę w przeciwnym przypadku.
+- =<= - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma mniejszą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- =>= - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma większą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- =<== - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma mniejszą bądź równą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- =>== - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma większą bądź równą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- =null?= - pobiera jeden parametr dowolnego typu i zwraca 1 w przypadku, gdy jest on pustą listą, lub pustą listę w przeciwnym przypadku.
+- =null= - nie pobiera żadnych parametrów, zwraca pustą listę.
+- =cons= - pobiera dwa parametry dowolnych typów i zwraca parę składającą się z obu pobranych wartości.
+- =car= - pobiera jeden parametr, który musi być parą i zwraca pierwszy jej element.
+- =cdr= - pobiera jeden parametr, który musi być parą i zwraca drugi jej element.
+- =typeof= - pobiera jeden parametr dowolnego typu i zwraca wartość liczbową identyfikującą jego typ.
+- =sleep= - pobiera jeden parametr typu numerycznego i usypia mikroproces na taką ilość milisekund, zwraca ilość milisekund, na które mikroproces został uśpiony.
+- =print= - pobiera jeden parametr dowolnego typu i wyświetla jego tekstową reprezentację, zwraca parametr.
+- =self= - nie pobiera parametrów, zwraca deskryptor obecnie działającego mikroprocesu.
+- =send= - pobiera dwa parametry, z których pierwszy musi być deskryptorem mikroprocesu, wysyła drugi parametr jako wiadomość do mikroprocesu z pierwszego parametru.
+- =recv= - pobiera jeden parametr typu numerycznego, sprawdza, czy w kolejce wiadomości mikroprocesu znajduje się wiadomość i ją zwraca; jeśli w kolejce wiadomości mikroprocesu nie znajdują się żadne wiadomości zwraca pustą listę i usypia mikroproces na czas przekazany w parametrze.
 
 #+begin_latex
-\vspace{2cm}
+\pagebreak
+\vspace*{2cm}
 {\Large\noindent\textbf{Spis funkcji wbudowanych}}
 #+end_latex
 
-- *not* - przyjmuje jeden parametr i zwraca jego logiczną negację (1 w przypadku logicznej prawdy i pustą listę w przypadku logicznego fałszu).
-- *and* - przyjmuje dwa parametry i zwraca ich logiczną koniunkcję; funkcja ta mogła zostać zaimplementowana dzięki leniwej naturze maszyny wirtualnej ThesisVM.
-- *or* - przyjmuje dwa parametry i zwraca ich logiczną alternatywę; funkcja ta mogła zostać zaimplementowana dzięki leniwej naturze maszyny wirtualnej ThesisVM.
+- =not= - przyjmuje jeden parametr i zwraca jego logiczną negację (1 w przypadku logicznej prawdy i pustą listę w przypadku logicznego fałszu).
+- =and= - przyjmuje dwa parametry i zwraca ich logiczną koniunkcję; funkcja ta mogła zostać zaimplementowana dzięki leniwej naturze maszyny wirtualnej ThesisVM.
+- =or= - przyjmuje dwa parametry i zwraca ich logiczną alternatywę; funkcja ta mogła zostać zaimplementowana dzięki leniwej naturze maszyny wirtualnej ThesisVM.
 
+#+latex: \noindent
 Dodatkowo wszystkie prymitywne operatory wymienione w powyższej liście mają swoje odpowiedniki funkcyjne o takiej samej nazwie i semantyce.
 
-* Spisy rysunków, fragmentów kodu i tablic
+* Spisy rysunków i fragmentów kodu
 #+latex: \label{sec:misc}
 
 #+begin_latex
 \begingroup
   \renewcommand*{\addvspace}[1]{}
   \listoffigures
+  \pagebreak
   \listofmylisting
 %  \listoftables
 \endgroup
