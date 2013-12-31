@@ -455,6 +455,8 @@ Drugim ważnym spostrzeżeniem jest wsparcie /optymalizacji rekursji ogonowej/ m
 Model Three Instruction Machine został wybrany jako podstawa implementacji ThesisVM ze względu na swoją prostotę i niewątpliwe zalety jakie posiada w kontekście implementacji funkcyjnych języków programowania. Istnieje wiele alternatywnych modeli działania maszyn wirtualnych, jak na przykład model /SECD/ [[cite:VanHorn2010]] oraz jego rekursywny ogonowo wariant /TR-SECD/ [[cite:Ramsdell1999]], czy bardziej adekwatne dla języków z rodziny Lisp modele opisane w [[cite:Abelson1996]] oraz [[cite:Steele1978]].
 
 ** Modyfikacje i implementacja modelu TIM
+#+latex: \label{sec:tim-impl}
+
 Zaprezentowany powyżej model jest bardzo prosty i pomimo swojej niewątpliwej ekspresywności, maszyna wirtualna go implementująca nie byłaby w stanie uruchamiać programów o praktycznym zastosowaniu. W związku z tym, model został rozszerzony o dodatkowy rejestr wskazujący na stos danych "prostych", nie będących kontynuacjami, a takżge szereg instrukcji implementujących podstawowe instrukcje arytmetyczne, logiczne i związane z implementacją Modelu Aktorowego.
 
 #+begin_center
@@ -528,6 +530,7 @@ Wiele ciekawych optymalizacji związanych ze sposobem reprezentacji typów obiek
 
 ** Implementacja obiektów złożonych
 #+latex: \label{sec:compound-objects}
+Ważnym elementem każdego języka programowania są złożone struktury danych takie jak listy lub drzewa. Rysunek [[ref:fig:tvmobject-impl]] prezentuje schemat reprezentacji obiektów złożonych ThesisVM, które służą do budowy takich struktur danych.
 
 #+begin_center
 #+label: fig:tvmobject-impl
@@ -536,41 +539,76 @@ Wiele ciekawych optymalizacji związanych ze sposobem reprezentacji typów obiek
 [[file:./img/tvmobject.pdf]]
 #+end_center
 
-- Opisać implementację obiektów złożonych ($\geq$ 8 bajtów - pary, funkcje/domknięcia, procesy).
-- Opisać metodę tagowania (dolny bajt + reszta zarezerwowana dla GC). [[cite:Gudeman1993]], [[cite:Cook2013]]
+Obiekty te składają się z wielu słów procesora ułożonych kolejno w pamięci. Pierwszym słowem składającym się na obiekt złożony jest jego *nagłówek*, który zawiera między innymi ośmio-bitowy identyfikator typu obiektu oraz metadane kolektora obiektów nieosiągalnych.
 
-- Opisać komponenty par.
+Podobnie jak w przypadku obiektów prostych, informacja o typie jest wykorzystywana do implementacji języków dynamicznie typowanych oraz w celu ułatwienia pracy kolektora "śmieci". Identyfikator typu obiektu jest jednak znacznie większy pozwalając na reprezentację 256 różnych wartości, a co za tym idzie 256 różnych typów. Obecna implementacja nie wykorzystuje potencjału dłuższego identyfikatora typu w pełni, ale w przyszłości może zostać rozwinięta, na przykład w celu umożliwienia definiowania nowych typów danych.
 
-- Opisać poszczególne komponenty obiektów funkcyjnych.
+Dodatkowym atutem stosowania nagłówka jest fakt, że wszystkie obiekty złożone ThesisVM mogą być traktowane w jednolity sposób za pośrednictwem wskaźników do owego nagłówka. Informacja o typie obiektu w nim zawarta może zostać wykorzystana do łatwego określenia faktycznej struktury obiektu znajdującego się w pamięci. Metoda ta została szeroko opisana w [[cite:Gudeman1993]] i jest standardowym rozwiązaniem wielu maszyn wirtualnych.
 
-- Opisać reprezentację obiektów procesów (gołe rejestry).
-- Opisać relację pomiędzy zbiorem rejestrów a reprezentacją procesu.
+Po nagłówku występują właściwe dane w postaci =n= obiektów prostych, gdzie =n= jest dowolną liczbą naturalną. Ich zawartość =Wn= oraz typy =Tn= zależą w dużej mierze od typu całego obiektu złożonego, ale w ogólności podlegają wszystkim zasadom, którym podlegają obiekty proste.
+
+Obecna implementacja definiuje 4 typy obiektów złożonych: =PAIR=, =CLOSURE=, =SYMBOL= oraz =UPROC=.
+
+*Pary* składają się z nagłówka oraz dwóch obiektów prostych odpowiadających odpowiednio pierwszemu i drugiemu elementowi pary. Pary są wykorzysytwane do implementacji list, które z kolei są podstawowymi strukturami danych języka TVMIR, podobnie jak w innych językach z rodziny Lisp.
+
+*Obiekty funkcyjne*, zwane czasami domknięciami leksykalnymi (ang. /closures/), służą do reprezentowania skompilowanych funkcji TVMIR oraz *kontynuacji* będących podstawą działania modelu TIM. W obu przypadkach obiekty funkcyjne składają się z dwóch obiektów prostych odpowiadających kolejno rejestrowi =IP= oraz stosowi =Env=.
+
+Różnica pomiędzy skompilowanymi funkcjami oraz kontynuacjami sprowadza się do zestawu instrukcji zawartego w komponencie =IP= obiektu funkcyjnego - funkcje przyjmujące parametry wymagają pobrania ich wartości za pomocą instrukcji =TAKE=.
+
+*Symbole* również składają się z nagłówka oraz dwóch obiektów prostych, które oznaczają odpowiednio wskaźnik na zewnętrzny fragment pamięci zawierający tekstową reprezentację symbolu i długość owej reprezentacji. Reprezentacja symboli została pomyślana w taki sposób, by umożliwiała bezpośrednie mapowania reprezentacji tekstowej na dostępny w języku D typ danych =string=, co znacząco ułatwia obsługę symboli w implementacji maszyny wirtualnej.
+
+Ostatnim dostępnym typem danych ThesisVM jest *deskryptor mikroprocesu*. Deskryptory te są obiektami pierwszej klasy, co oznacza, że są w pełni dostępne dla użytkownika ThesisVM. Konteksty mikroprocesów składają się z nagłówka oraz ośmiu obiektów prostych, z których cztery pierwsze odpowiadają opisanym w poprzedniej sekcji rejestrom maszyny wirtualnej, a cztery następne zawierają dane wykorzystywane przez pozostałe moduły maszyny wirtualnej. Obiekty te zostały opisane w sekcjach [[ref:sec:tvm-gc]] oraz [[ref:sec:tvm-smp]].
 
 ** Implementacja instrukcji kodu bajtowego
-- Opisać reprezentację kodu bajtowego (listy opkodów).
-- Opisać dostępne opkody kodu bajtowego. [[cite:Fairbairn1987,PeytonJones1992]]
-- Opisać możliwe optymalizacje (wykorzystanie górnych dwóch bajtów słowa, 0 = pushc, threading, itd).
+Instrukcje kodu bajtowego ThesisVM dzielą reprezentację z obiektami złożonymi. Podobnie jak pary składają się z nagłówka obiektu oraz dwóch obiektów prostych, z których pierwszy określa identyfikator instrukcji oraz sposób adresowania argumentu, a drugi przechowuje wartość argumentu instrukcji. Dostępne instrukcje kodu bajtowego zostały już opisane w sekcji [[ref:sec:tim-impl]].
+
+Reprezentacja kodu bajtowego wykorzystywana obecnie w maszynie wirtualnej niestety jest sub-optymalna. Alternatywnym rozwiązaniem mogło by być zastosowanie reprezentacji opartej o obiekty proste polegającej na przechowywaniu identyfikatorów instrukcji w najbardziej znaczącym bajcie obiektu.
+
+Dekodowanie argumentu instrukcji wymagałoby wówczas jedynie przeskalowania pozostałych bajtów obiektu prostego celem odtworzenia rzeczywistej jego wartości, lub w przypadku niewielkich liczb całkowitych i typu wskaźnikowego, jedynie zastosowania masek bitowych.
 
 ** Implementacja operacji prymitywnych
 #+latex: \label{sec:tvm-primops-impl}
 
-- Opisać wykorzystanie VStack.
-- Opisać dostępne operacje prymitywne (LispKit). [[cite:Abelson1996]]
-- Skonfrontować dostępne operacje prymitywne z =Core Erlang=. [[cite:Carlsson2004]]
-- Opisać możliwe optymalizacje operacji arytmetycznych. [[cite:Gudeman1993]]
+Operacje wbudowane, takie jak arytmetyka, czy funkcje związane z implementacją Modelu Aktorowego zostały zrealizowane w oparciu o rejestr =VStack= - argumenty operacji prymitywnych są pobierane ze stosu a wartości przez nie zwracane są nań odkładane. Listing [[ref:code:primops-algorithm]] zawiera ogólny algorytm implementacji operacji prymitywnych ThesisVM.
 
-** Ewaluacja argumentów i aplikacja funkcji
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Ogólny algorytm implementacji operacji prymitywnych ThesisVM.}}
+#+latex: \label{code:primops-algorithm}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src d
+  arg0 = typecheck(t0, pop(uProc.vstack));
+  // ...
+  argN = typecheck(tN, pop(uProc.vstack));
+  
+  // Obliczenia charakterystyczne dla danej operacji.
+  result = compute(arg0, ..., argN);
+  
+  push(uProc.vstack, result);
+#+end_src
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
+
+Instrukcja wykonujące operacje primitywne, =PRIMOP id=, wykorzystuje metodę LUT (ang. /look-up table/) w celu skorelowania identyfikatora operacji prymitywnej i fragmentu kodu odpowiedzialnego za jej wykonanie - wykonanie tej instrukcji polega na przekazaniu przepływu sterowania do odpowiedniej funkcji znajdującej się w /tablicy operacji prymitywnych/.
+
+Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczno-logiczne oraz funkcje typowe dla języków z rodziny Lisp, takie jak =cons=, =car=, czy =cdr= (więcej informacji można znaleźć w [[cite:Abelson1996]]). Lista wszystkich dostępnych operacji prymitywnych została zawarta w dodatku [[ref:sec:tvm-primops]].
+
+Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywnych do języka =Core Erlang= [[cite:Carlsson2004]]. Podobieństwo to nie jest przypadkowe, a wybrany sposób reprezentacji i działania operacji prymitywnych został zaimplementowany w taki sposób, by w przyszłości umożliwić łatwe rozszerzenie implementacji maszyny wirtualnej ThesisVM oraz wsparcie pełni języka =Core Erlang=.
+
+** Dekodowanie i interpretacja kodu bajtowego
+
 - Opisać implementację stosów.
 - Opisać dekodowanie instrukcji.
+
 - Opisać działanie interpretera kodu bajtowego ThesisVM. [[cite:Fairbairn1987,PeytonJones1992]]
-- Opisać aplikację operacji prymitywnych.
+
 - Opisać brak apdejtowania już obliczonych wartości i dać link do sec:future-development.
 - Opisać możliwość zastosowania bytecode threading.
 
 ** Generacja kodu bajtowego ThesisVM
 #+latex: \label{sec:tvm-codegen}
 
-- Zrobić listingi 
+
+- Zrobić listingi compileV, A, R i B.
 - Opisać szczegółowo generację kodu bajtowego. [[cite:PeytonJones1992]]
 
 * Model zarządzania pamięcią
@@ -749,21 +787,48 @@ Wiele ciekawych optymalizacji związanych ze sposobem reprezentacji typów obiek
 ** Współbieżne "Hello world!"
 ** Współbieżne obliczanie silni
 
-* Spisy wbudowanych funkcji i operatorów
+* Spisy wbudowanych operatorów i funkcji
 #+latex: \label{sec:tvm-primops}
 
 #+begin_latex
-{\Large\noindent\textbf{Spis funkcji wbudowanych}}
-#+end_latex
-
-- Wylistować funkcje wbudowane.
-
-#+begin_latex
-\vspace{2cm}
 {\Large\noindent\textbf{Spis operatorów wbudowanych}}
 #+end_latex
 
-- Wylistować operacje prymitywne.
+- *+* - pobiera dwa parametry typu numerycznego i zwraca wynik ich dodawania.
+- *-* - pobiera dwa parametry typu numerycznego i zwraca wynik ich odejmowania.
+- *** - pobiera dwa parametry typu numerycznego i zwraca wynik ich mnożenia.
+- */* - pobiera dwa parametry typu numerycznego i zwraca wynik ich dzielenia.
+- *mod* - pobiera dwa parametry typu numerycznego i zwraca wynik przeprowadzenia na nich operacji modulo.
+- *pow* - pobiera dwa parametry typu numerycznego i zwraca wynik przeprowadzenia na nich operacji potęgowania.
+- *inc* - pobiera jeden parametr typu numerycznego i zwraca jego wartość inkrementowaną o 1.
+- *dec* - pobiera jeden parametr typu numerycznego i zwraca jego wartość dekrementowaną o 1.
+- *=* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy są równe, lub pustą listę w przeciwnym przypadku.
+- *<* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma mniejszą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- *>* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma większą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- *<=* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma mniejszą bądź równą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- *>=* - pobiera dwa parametry typu numerycznego i zwraca 1 w przypadku, gdy pierwszy z nich ma większą bądź równą wartość od drugiego, lub pustą listę w przeciwnym przypadku.
+- *null?* - pobiera jeden parametr dowolnego typu i zwraca 1 w przypadku, gdy jest on pustą listą, lub pustą listę w przeciwnym przypadku.
+- *null* - nie pobiera żadnych parametrów, zwraca pustą listę.
+- *cons* - pobiera dwa parametry dowolnych typów i zwraca parę składającą się z obu pobranych wartości.
+- *car* - pobiera jeden parametr, który musi być parą i zwraca pierwszy jej element.
+- *cdr* - pobiera jeden parametr, który musi być parą i zwraca drugi jej element.
+- *typeof* - pobiera jeden parametr dowolnego typu i zwraca wartość liczbową identyfikującą jego typ.
+- *sleep* - pobiera jeden parametr typu numerycznego i usypia mikroproces na taką ilość milisekund, zwraca ilość milisekund, na które mikroproces został uśpiony.
+- *print* - pobiera jeden parametr dowolnego typu i wyświetla jego tekstową reprezentację, zwraca parametr.
+- *self* - nie pobiera parametrów, zwraca deskryptor obecnie działającego mikroprocesu.
+- *send* - pobiera dwa parametry, z których pierwszy musi być deskryptorem mikroprocesu, wysyła drugi parametr jako wiadomość do mikroprocesu z pierwszego parametru.
+- *recv* - pobiera jeden parametr typu numerycznego, sprawdza, czy w kolejce wiadomości mikroprocesu znajduje się wiadomość i ją zwraca; jeśli w kolejce wiadomości mikroprocesu nie znajdują się żadne wiadomości zwraca pustą listę i usypia mikroproces na czas przekazany w parametrze.
+
+#+begin_latex
+\vspace{2cm}
+{\Large\noindent\textbf{Spis funkcji wbudowanych}}
+#+end_latex
+
+- *not* - przyjmuje jeden parametr i zwraca jego logiczną negację (1 w przypadku logicznej prawdy i pustą listę w przypadku logicznego fałszu).
+- *and* - przyjmuje dwa parametry i zwraca ich logiczną koniunkcję; funkcja ta mogła zostać zaimplementowana dzięki leniwej naturze maszyny wirtualnej ThesisVM.
+- *or* - przyjmuje dwa parametry i zwraca ich logiczną alternatywę; funkcja ta mogła zostać zaimplementowana dzięki leniwej naturze maszyny wirtualnej ThesisVM.
+
+Dodatkowo wszystkie prymitywne operatory wymienione w powyższej liście mają swoje odpowiedniki funkcyjne o takiej samej nazwie i semantyce.
 
 * Spisy rysunków, fragmentów kodu i tablic
 #+latex: \label{sec:misc}
@@ -773,7 +838,6 @@ Wiele ciekawych optymalizacji związanych ze sposobem reprezentacji typów obiek
   \renewcommand*{\addvspace}[1]{}
   \listoffigures
   \listofmylisting
-  \listoftables
+%  \listoftables
 \endgroup
 #+end_latex
-
