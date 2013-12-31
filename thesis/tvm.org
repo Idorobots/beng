@@ -321,7 +321,7 @@ Trzecią fazą jest faza analizy semantycznej, której zadaniem jest przetworzen
 
 Czwartą fazą jest faza optymalizacji, której zadaniem jest transformacja /drzewa składniowego/ powstałego w poprzedniej fazie do jego ekwiwalentu działającego szybciej po skompilowaniu. Faza ta obecnie nie wykonuje żadnych interesujących transformacji, jednak istnieje możliwość rozszerzenia jej funkcjonalności w przyszłości (opisane krótko w sekcji [[ref:sec:future-development]]).
 
-Ostatnią, piątą fazą kompilacji jest faza generacji kodu bajtowego akceptowanego przez ThesisVM. Zadaniem tej fazy jest przetworzenie /drzewa składniowego/ do /strumienia kodu bajtowego/ za pomocą reguł kompilacji zgodnych z wybranym modelem maszyny wirtualnej (opisane szczegółowo w sekcji [[ref:sec:tvm-codegen]]).
+Ostatnią, piątą fazą kompilacji jest faza generacji kodu bajtowego akceptowanego przez ThesisVM. Zadaniem tej fazy jest przetworzenie /drzewa składniowego/ do /strumienia kodu bajtowego/ za pomocą reguł kompilacji zgodnych z wybranym modelem maszyny wirtualnej.
 
 ** Interpretacja kodu bajtowego
 Istnieje wiele różnych modeli maszyn wirtualnych cechujących się różnymi architekturami interpreterów kodu bajtowego, czy nawet stopniem abstrakcyjności (tak zwane maszyny abstrakcyjne).
@@ -394,7 +394,7 @@ Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy 
 
 Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP, który w kontekście maszyny wirtualnej ThesisVM polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu.
 
-Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[cite:Hewitt1973]], którego głównym założeniem jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO (ang. /First In Last Out/).
+Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[cite:Hewitt1973]], którego głównym założeniem jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO (ang. /First In First Out/).
 
 Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
@@ -559,12 +559,19 @@ Różnica pomiędzy skompilowanymi funkcjami oraz kontynuacjami sprowadza się d
 
 Ostatnim dostępnym typem danych ThesisVM jest *deskryptor mikroprocesu*. Deskryptory te są obiektami pierwszej klasy, co oznacza, że są w pełni dostępne dla użytkownika ThesisVM. Konteksty mikroprocesów składają się z nagłówka oraz ośmiu obiektów prostych, z których cztery pierwsze odpowiadają opisanym w poprzedniej sekcji rejestrom maszyny wirtualnej, a cztery następne zawierają dane wykorzystywane przez pozostałe moduły maszyny wirtualnej. Obiekty te zostały opisane w sekcjach [[ref:sec:tvm-gc]] oraz [[ref:sec:tvm-smp]].
 
-** Implementacja instrukcji kodu bajtowego
+** Implementacja i obsługa kodu bajtowego
 Instrukcje kodu bajtowego ThesisVM dzielą reprezentację z obiektami złożonymi. Podobnie jak pary składają się z nagłówka obiektu oraz dwóch obiektów prostych, z których pierwszy określa identyfikator instrukcji oraz sposób adresowania argumentu, a drugi przechowuje wartość argumentu instrukcji. Dostępne instrukcje kodu bajtowego zostały już opisane w sekcji [[ref:sec:tim-impl]].
 
 Reprezentacja kodu bajtowego wykorzystywana obecnie w maszynie wirtualnej niestety jest sub-optymalna. Alternatywnym rozwiązaniem mogło by być zastosowanie reprezentacji opartej o obiekty proste polegającej na przechowywaniu identyfikatorów instrukcji w najbardziej znaczącym bajcie obiektu.
 
 Dekodowanie argumentu instrukcji wymagałoby wówczas jedynie przeskalowania pozostałych bajtów obiektu prostego celem odtworzenia rzeczywistej jego wartości, lub w przypadku niewielkich liczb całkowitych i typu wskaźnikowego, jedynie zastosowania masek bitowych.
+
+Instrukcje pobierane są ze /strumienia kodu bajtowego/ wskazywanego przez rejestr =IP=. W obecnej implementacji strumień kodu bajtowego zrealizowany jest jako lista pojedynczo wiązana zbudowana z obiektów złożonych ThesisVM - par.
+
+Reprezentacja ta została wybrana ze względu na charakter języka TVMIR (jest to język z rodziny Lisp) oraz przez wzgląd na podobieństwo to obsługi stosów =Stack=, =Env= oraz =VStack=, które również zostały zrealizowane w oparciu o listy pojedynczo wiązane. W przyszłości implementacja ta może zostać zastąpiona rozwiązaniem szybszym, niekoniecznie opartym o listy (więcej informacji na ten temat zawarto w sekcji [[ref:sec:future-development]]).
+
+Po przechwyceniu pierwszego elementu listy wskazywanej przez rejestr =IP= następuje ustalenie identyfikatora instrukcji, sposobu adresowania argumentu oraz samej wartości argumentu instrukcji.
+Następnie interpreter ewaluuje instrukcję zgodnie z regułami opisanymi w sekcji [[ref:sec:tim-impl]].
 
 ** Implementacja operacji prymitywnych
 #+latex: \label{sec:tvm-primops-impl}
@@ -593,23 +600,6 @@ Instrukcja wykonujące operacje primitywne, =PRIMOP id=, wykorzystuje metodę LU
 Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczno-logiczne oraz funkcje typowe dla języków z rodziny Lisp, takie jak =cons=, =car=, czy =cdr= (więcej informacji można znaleźć w [[cite:Abelson1996]]). Lista wszystkich dostępnych operacji prymitywnych została zawarta w dodatku [[ref:sec:tvm-primops]].
 
 Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywnych do języka =Core Erlang= [[cite:Carlsson2004]]. Podobieństwo to nie jest przypadkowe, a wybrany sposób reprezentacji i działania operacji prymitywnych został zaimplementowany w taki sposób, by w przyszłości umożliwić łatwe rozszerzenie implementacji maszyny wirtualnej ThesisVM oraz wsparcie pełni języka =Core Erlang=.
-
-** Dekodowanie i interpretacja kodu bajtowego
-
-- Opisać implementację stosów.
-- Opisać dekodowanie instrukcji.
-
-- Opisać działanie interpretera kodu bajtowego ThesisVM. [[cite:Fairbairn1987,PeytonJones1992]]
-
-- Opisać brak apdejtowania już obliczonych wartości i dać link do sec:future-development.
-- Opisać możliwość zastosowania bytecode threading.
-
-** Generacja kodu bajtowego ThesisVM
-#+latex: \label{sec:tvm-codegen}
-
-
-- Zrobić listingi compileV, A, R i B.
-- Opisać szczegółowo generację kodu bajtowego. [[cite:PeytonJones1992]]
 
 * Model zarządzania pamięcią
 #+latex: \label{sec:tvm-gc}
@@ -754,7 +744,8 @@ Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywn
 - Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
 
 ** Interpreter kodu bajtowego
-- Opisać dlaczego TIM się nie nadaje i trzeba to wymienić na coś innego.
+- Opisać brak apdejtowania już obliczonych wartości i dać link do sec:future-development.
+- Opisać możliwość zastosowania lepszej reprezentacji bytecodu i bytecode threading.
 
 ** Kolektor obiektów nieosiągalnych
 - Przeanalizować szybkość, pauzy, zużycie pamięci.
