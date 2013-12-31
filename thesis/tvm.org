@@ -707,9 +707,13 @@ Więcej możliwych usprawnień algorytmu kolekcji obiektow nieosiągalnych za po
 ** Kolekcja obiektów cyklicznych
 #+latex: \label{sec:tvm-cycles}
 
-- Opisać, że obiekty cykliczne występują rzadka (tylko procesy przez (self)).
-- Wspomnieć o możliwości zaimplementowania zapasowego stop-the-world GC.
-- Wspomnieć o możliwości cyklicznego uruchamiania D'owego GC.
+Dużą wadą kolektorów zliczających referencje jest ich słabe wsparcie dla zwalniania pamięci struktur cyklicznych, które nie są dłużej użytkowane w programie. Sytuacja ta ma miejsce, gdy pewna struktura danych zawiera referencje do siebie samej, co w efekcie uniemożliwia jej dealokację, ponieważ jej licznik referencji nigdy nie osiąga wartości zerowej.
+
+W maszynie wirtualnej ThesisVM problem ten objawia się przy wykorzystywaniu wbudowanego operatora =self=, który zwraca referencję na obecnie działający mikroproces. Referencja ta może zostać zapisana w stanie procesu efektywnie tworząc cykl i uniemożliwiając kolekcję danych procesu po zakończeniu jego działania.
+
+Aby temu zaradzić implementacja alokatora wykorzystuje wbudowany w język =D= kolektor śledzący, który jest uruchamiany co pewien interwał w celu dealokacji struktur cyklicznych, takich jak mikroprocesy referujące same siebie.
+
+Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przyszłości zaimplementowanie alternatywnego, zapasowego kolektora śledzącego, który w przeciwieństwie do kolektora języka =D= mógłby wykorzystywać dane o typach obiektów ThesisVM w celu prowadzenia precyzyjniejszych i szybszych kolekcji.
 
 * Model przetwarzania współbieżnego
 #+latex: \label{sec:tvm-smp}
