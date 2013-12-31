@@ -345,6 +345,8 @@ Od wyboru architektury interpretera kodu bajtowego bardzo często zależą dost�
 Interpreter kodu bajtowego zaimplementowany w ramach pracy wykorzystuje niskopoziomową architekturę stosową wykorzystującą wiele stosów oraz niewielki zbiór rejestrów i jest zmodyfikowaną wersją interpretera opisanego w $\cite[\text{rozdział 4}]{PeytonJones1992}$. Szczegółowy opis implementacji został zawarty w dedykowanej mu sekcji [[ref:sec:tvm-vm]] pracy.
 
 ** Zarządzanie pamięcią
+#+latex: \label{sec:tvm-heap-archs}
+
 Ważnym aspektem architektury maszyny wirtualnej jest sposób w jaki wykorzystuje ona pamięć operacyjną i rozdziela ją pomiędzy procesy w niej działające, czyli architektura wykorzystania sterty (ang. /heap architecture/).
 
 Rysunek [[ref:fig:mem-archs]] przedstawia trzy główne architektury wykorzystania sterty w środowisku wielo-procesowym, gdzie wiele autonomicznych procesów konkuruje o zasób jakim jest pamięć:
@@ -401,7 +403,7 @@ Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Model
 * Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
 
-Niniejsza sekcja opisuje implementację interpretera kodu bajtowego ThesisVM. Jak już wspomniano w poprzedniej sekcji, praca implementuje model /Three Instruction Machine/, opisany szczegółowo w [[cite:Fairbairn1987]]
+Niniejszy rozdział opisuje implementację interpretera kodu bajtowego ThesisVM. Jak już wspomniano w poprzedniej sekcji, praca implementuje model /Three Instruction Machine/, opisany szczegółowo w [[cite:Fairbairn1987]]
  oraz [[cite:PeytonJones1992]], wprowadzając do niego szereg modyfikacji.
 
 Three Instruction Machine (TIM) jest nieskomplikowanym modelem maszyny wirtualnej opartym o trzy rejestry, służące do manipulacji danych:
@@ -520,8 +522,8 @@ Podobne optymalizacje mogą zostać zastosowane w przypadku reprezentacji obiekt
 #+latex: \label{code:integer-optimization}
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src d
-result = tag(Types.Integer, (untag(a) + untag(b)));
-result = a.rawValue + b.rawValue - Types.INTEGER;
+result = tag(TVMValue.INTEGER, (untag(a) + untag(b)));
+result = a.rawValue + b.rawValue - TVMValue.INTEGER;
 #+end_src
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
@@ -604,27 +606,32 @@ Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywn
 * Model zarządzania pamięcią
 #+latex: \label{sec:tvm-gc}
 
-- Opisać krótko architekturę wspólnej sterty. [[cite:Wilhelmsson2005]]
+Niniejsza sekcja opisuje implementację modelu zarządzania pamięcią zastosowanego w maszynie wirtualnej ThesisVM, na który składa się architektura wykorzystania pamięci, algorytm alokacji obiektów oraz algorytm kolekcji obiektów nieosiągalnych. Wstępny opis wybranego modelu pamięci oraz motywacja tego wyboru zostały zawarte w sekcji [[ref:sec:tvm-heap-archs]].
+
+** Architektura współdzielonej sterty
+Na rysunku [[ref:fig:tvm-shared-mem]] zawarto schemat architektury sterty wykorzystanej w ThesisVM. Jest to architektura współdzielonej sterty, w której każdy z mikroprocesów alokuje obiekty na własny użytek. Obiekty te lub ich części mogą być następnie współdzielone pomiędzy mikroprocesami w wyniku przesyłania wiadomości.
 
 #+begin_center
-#+label: ref:tvm-shared-mem
-#+caption: Model wspólnej pamięci ThesisVM.
+#+label: fig:tvm-shared-mem
+#+caption: Model współdzielonej pamięci ThesisVM.
 #+attr_latex: scale=1.5
 [[file:./img/sharedmem.pdf]]
 #+end_center
 
-- Opisać strategie zarządzania pamięcią (alokator i GC). [[cite:Bacon2004]]
+Kluczową zaletą wybranej architektury wykorzystania pamięci jest brak konieczności kopiowania danych przesyłanych pomiędzy mikroprocesami. Ponieważ wszystkie dane są zaalokowane w jednej puli pamięci, przesyłanie wiadomości sprowadza się jedynie do przekazania wkaźników do owych wiadomości pomiędzy mikroprocesami, co jest operacją o złożoności czasowej i pamięciowej rzędu /O(1)/.
 
-** Architektura wspólnej sterty
-- Opisać szczegółowo wybraną architekturę.
-- Wspomnieć o problemach wybranej architektury (duży root-set, długie kolekcje). [[cite:Wilhelmsson2005]]
-- Skonfrontować publiczną stertę z architekturą prywatnej sterty. [[cite:Wilhelmsson2005]]
-- Wspomnieć o problemach prywatnej sterty (powolne przekazywanie wiadomości przez kopiowanie). cite:Wilhelmsson2005
-- Wspomnieć o istnieniu rozwiązań hybrydowych. [[cite:Wilhelmsson2005]]
-- Wspomnięć o problemach rozwiązań hybrydowych (usunięte z =Erlang/OTP= R15B02).
+Alternatywne rozwiązania polegające na separacji danych mikroprocesów poprzez wykorzystanie osobnych puli pamięci dla każdego mikroprocesu nie posiadają tej zalety i wymagają kosztownego kopiowania wszystkich przesyłanych wiadomości, co w przypadku wzmożonej komunikacji pomiędzy mikroprocesami powoduje znaczną degradację wydajności.
+
+Kolejną ważną zaletą wybranej architektury jest łatwość jej implementacji z wykorzystaniem sterty procesu maszyny wirtualej, zarządzanej przez system operacyjny, na którym jest ona uruchomiona. Pozwala to na wykorzystanie gotowego, standardowego interfejsu alokacji udostępnianego przez system operacyjny.
+
+Do niewątpliwych wad zastosowanej architektury należą wyzwania, jakie stawia ona algorytmom kolekcji obiektów nieosiągalnych. Zadaniem tych algorytmów jest automatyczne zwolnienie nieużywanej pamięci mikroprocesów, co w wyniku współdzielenia danych jest znacznie utrudnione i może prowadzić do długich przerw w działaniu maszyny wirtualnej przeznaczonych na cykle kolekcji "śmieci".
+
+Kolejną wadą architektury współdzielonej sterty jest fakt, że pamięć mikroprocesu nie może zostać od razu i w całość zwolniona po zakończeniu jego działania. Ponieważ dane mogą być wciąż wykorzystywane przez inne mikroprocesy, po zakończeniu działania jednego z nich musi zostać wykonany pełen cykl kolekcji obiektów nieosiągalnych.
+
+Szczegółowa analiza zalet i wad architektury współdzielonej sterty w kontekście implementacji języka =Erlang= została zawarta w [[cite:Wilhelmsson2005]].
 
 ** Implementacja alokatora obiektów
-- Opisać działanie kaskadowego alokatora. [[cite:Wilson1995]]
+- Opisać działanie kaskadowego alokatora.
 
 #+begin_center
 #+label: ref:tvm-alloc
@@ -634,11 +641,12 @@ Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywn
 #+end_center
 
 - Opisać implementację wykorzystanego alokatora.
-- Opisać optymalizacje alokatora (wykorzystanie free listy).
+- Opisać optymalizacje alokatora (wykorzystanie per-uProc free listy, celem polepszenia lokalności referencji).
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
 - Opisać krótko alternatywne rozwiązania (mallocator, etc). [[cite:Wilson1995]]
 
-** Kolekcja nieosiągalnych obiektów
+** Kolekcja obiektów nieosiągalnych
+
 - Opisać leniwe zliczanie referencji. [[cite:Boehm2004]]
 
 #+begin_center
@@ -670,14 +678,14 @@ Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywn
 - Opisać krótko wady, możliwe usprawnienia i alternatywne rozwiązania (zaproponowane przez Joe'go oraz VCGC) [[cite:Armstrong1995,Huelsbergen1998]]
 
 ** Kolekcja obiektów cyklicznych
-- Opisać, że obiekty cykliczne nie występują.
+- Opisać, że obiekty cykliczne występują rzadka (tylko procesy przez (self)).
 - Wspomnieć o możliwości zaimplementowania zapasowego stop-the-world GC.
 - Wspomnieć o możliwości cyklicznego uruchamiania D'owego GC.
 
 * Model przetwarzania współbieżnego
 #+latex: \label{sec:tvm-smp}
 
-- Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
+- Opisać bardziej szczegółowo model SMP.
 
 #+begin_center
 #+label: ref:tvm-smp
@@ -686,7 +694,29 @@ Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywn
 [[file:./img/SMP.pdf]]
 #+end_center
 
-- Opisać bardziej szczegółowo działanie SMP - wiadomości kontrolne oraz RQue.
+- Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
+
+** Implementacja symetrycznego multiprocessingu
+- Opisać bardziej szczegółowo implementację SMP
+- Opisać spawnowanie procesów.
+- Co SMP robi podczas interpretacji kodu.
+
+** Harmonogramowanie procesów
+#+latex: \label{sec:tvm-scheduling}
+
+- Opisać Completely Fair Scheduler. [[cite:Pabla2009]]
+- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn).
+- Opisać implementację prymitywu =sleep= oraz sleep-table.
+- Opisać wiadomości kontrolne.
+
+#+begin_center
+#+label: ref:tvm-scheduler-regs
+#+caption: Schemat rejestrów wymaganych przez usprawnienia hanmonogramowania SMP.
+#+attr_latex: scale=1.5
+[[file:./img/Scheduler.pdf]]
+#+end_center
+
+- Opisać możliwe usprawnienia (load-balancing i dzielenie zużycia).
 
 ** Implementacja Modelu Aktorowego
 - Opisać powstawanie procesów i prymityw =spawn=.
@@ -720,22 +750,6 @@ Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywn
 - Opisać co dzieje się podczas wysyłania wiadomości.
 - Opisać sposób pobierania wiadomości z kolejki.
 - Zwrócić uwagę na fakt, że problem kopiowania został zniwelowany kosztem lekkich barier pamięci.
-
-** Harmonogramowanie procesów
-#+latex: \label{sec:tvm-scheduling}
-
-- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn). [[cite:Pabla2009]]
-- Opisać implementację prymitywu =sleep= oraz sleep-table.
-- Opisać wiadomości kontrolne.
-
-#+begin_center
-#+label: ref:tvm-scheduler-regs
-#+caption: Schemat rejestrów wymaganych przez usprawnienia hanmonogramowania SMP.
-#+attr_latex: scale=1.5
-[[file:./img/Scheduler.pdf]]
-#+end_center
-
-- Opisać możliwe usprawnienia (load-balancing i dzielenie zużycia).
 
 * Podsumowanie
 #+latex: \label{sec:conclusion}
