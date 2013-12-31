@@ -631,19 +631,37 @@ Kolejną wadą architektury współdzielonej sterty jest fakt, że pamięć mikr
 Szczegółowa analiza zalet i wad architektury współdzielonej sterty w kontekście implementacji języka =Erlang= została zawarta w [[cite:Wilhelmsson2005]].
 
 ** Implementacja alokatora obiektów
-- Opisać działanie kaskadowego alokatora.
+Maszyna wirtualna ThesisVM wykorzystuje algorytm kaskadowych alokatorów polegający na kompozycji wielu algorytmów alokacji obiektów wraz z wykorzystywanymi przez nie metadanymi w taki sposób, by umożliwić algorytmowi na danym poziomie odwoływanie się do algorytmu na niższym poziomie. Schematyczna reprezentacja takiego rozwiązania została zawarta na rysunku [[ref:fig:tvm-alloc]].
+
+W momencie, gdy algorytm na danym poziomie ustali, że nie jest w stanie obsłużyć żądania użytkownika przepływ sterowania zostanie przekazany do algorytmu leżącego poziom niżej, gdzie obsługa żądania będzie kontynuowana. Dzięki takiemu rozwiązaniu możliwe jest zaimplementowanie szeregu ciekawych algorytmów alokacji i dowolne ich komponowanie.
+
+Obecnie, implementacja ThesisVM wykorzystuje dwu-poziomowy alokator składający się z algorytmów *TVM Alloc* oraz *D Alloc*, który został zaprezentowany ra rysunku [[ref:fig:tvm-alloc]].
 
 #+begin_center
-#+label: ref:tvm-alloc
+#+label: fig:tvm-alloc
 #+caption: Schemat kaskadowych alokatorów wykorzystanych w ThesisVM.
 #+attr_latex: scale=0.8
 [[file:./img/allocator.pdf]]
 #+end_center
 
-- Opisać implementację wykorzystanego alokatora.
-- Opisać optymalizacje alokatora (wykorzystanie per-uProc free listy, celem polepszenia lokalności referencji).
-- Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
-- Opisać krótko alternatywne rozwiązania (mallocator, etc). [[cite:Wilson1995]]
+*D Alloc* jest standardowym interfejsem alokatora języka =D=, który wykorzystuje metadane kolektora obiektów nieosiągalnych języka =D= i udostępnia wyrównaną do słowa procesora (8 bajtów na architekturze x86\_64) pamięć przezeń zarządzaną. Wybór tego algorytmu zostanie umotywowany w sekcji [[ref:sec:tvm-cycles]].
+
+ Alternatywnym rozwiązaniem dla =D Alloc= byłoby wykorzystanie interfejsu manualnego zarządzania pamięci poprzez wykorzystanie funkcji =malloc= i =free= ze standardowej biblioteki języka =C=, która wchodzi w skład standardowej biblioteki języka =D=.
+
+*TVM Alloc* jest dodatkowym algorytmem alokacji zbudowanym w oparciu o interfejs =D Alloc=, który dodatkowo zapewnia buforowanie (ang. /caching/) pamięci za pomocą *listy niedawno zwolnionych obiektów*, która jest przeszukiwana w pierwszej kolejności podczas żądania alokacji.
+
+#+begin_center
+#+label: fig:tvm-gc-regs
+#+caption: Schemat rejestrów wymaganych przez implementację alokatora obiektów.
+#+attr_latex: scale=1.5
+[[file:./img/GC.pdf]]
+#+end_center
+
+Każdy mikroproces posiada własną listę niedawno zwolnionych obiektów (rysunek [[ref:fig:tvm-gc-regs]]), co zapewnia lepsze wykorzystanie pamięci przez /zwiększenie lokalności referencji/ - obiekty zwalniane podczas działania mikroprocesu trafiają na listę niedawno zwolnionych obiektów i bardzo szybko są wykorzystywane powtórnie bez konieczności odwoływania się do alokatorów z niższych poziomów.
+
+Wykorzystanie listy niedawno zwolnionych obiektów do buforowania alokacji umożliwia także  zaimplementowanie zupełnie nowej klasy algorytmów kolekcji obiektów nieosiągalnych w oparciu o /leniwe cykle kolekcji/. Algorytm taki został opisany w następnej sekcji.
+
+Zagadnienie alokacji pamięci jest bardzo rozległe i w kontekście języków programowania zależy od wielu różnych czynników, takich jak charakterystyki zużycia pamięci konkretnych programów, wielkości alokowanych obiektów, czy czasy ich życia. Przegląd [[cite:Wilson1995]] zawiera szczegółową analizę wydajności wielu różnych algorytmów alokacji pamięci w warunkach symulowanych oraz dla rzeczywistych programów, co było niezastąpionym źródłem wiedzy pomocnym przy wyborze i implementacji algorytmu alokacji obiektów maszyny wirtualnej ThesisVM.
 
 ** Kolekcja obiektów nieosiągalnych
 
@@ -666,18 +684,12 @@ Szczegółowa analiza zalet i wad architektury współdzielonej sterty w kontek�
 - Opisać implementację algorytmu leniwego zliczania referencji. [[cite:Bacon2004]]
 - Opisać konieczność wykorzystania operacji atomowych i barier pamięci (liczniki referencji).
 
-#+begin_center
-#+label: ref:tvm-gc-regs
-#+caption: Schemat rejestrów wymaganych przez implementację kolektora obiektów nieosiągalnych.
-#+attr_latex: scale=1.5
-[[file:./img/GC.pdf]]
-#+end_center
-
-- Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
 - Opisać narzut pamięci związany z licznikiem referencji i leniwością algorytmu. cite:Boehm2004,Bacon2004
 - Opisać krótko wady, możliwe usprawnienia i alternatywne rozwiązania (zaproponowane przez Joe'go oraz VCGC) [[cite:Armstrong1995,Huelsbergen1998]]
 
 ** Kolekcja obiektów cyklicznych
+#+latex: \label{sec:tvm-cycles}
+
 - Opisać, że obiekty cykliczne występują rzadka (tylko procesy przez (self)).
 - Wspomnieć o możliwości zaimplementowania zapasowego stop-the-world GC.
 - Wspomnieć o możliwości cyklicznego uruchamiania D'owego GC.
