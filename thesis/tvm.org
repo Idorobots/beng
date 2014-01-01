@@ -76,7 +76,7 @@
 \renewcommand{\cftaftermloltitleskip}{5mm}
 #+end_latex
 
-* Wstęp
+* COMMENT Wstęp
 #+latex: \label{sec:intro}
 
 Tematem pracy jest implementacja /maszyny wirtualnej/ dla funkcyjnych języków programowania wspierających /przetwarzanie współbieżne/.
@@ -164,7 +164,7 @@ Sekcja [[ref:sec:conclusion]] zawiera podsumowanie pracy oraz zarys możliwych k
 
 Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio wskazówki użytkowania ThesisVM i przykładowe programy gotowe do uruchomienia na maszynie wirtualnej, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
 
-* Architektura ThesisVM
+* COMMENT Architektura ThesisVM
 #+latex: \label{sec:tvm-arch}
 
 Ninejsza sekcja opisuje architekturę maszyny wirtualnej ThesisVM powstałej na potrzeby pracy oraz języka przez nią akceptowanego.
@@ -400,7 +400,7 @@ Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[c
 
 Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
-* Interpreter kodu bajtowego
+* COMMENT Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
 
 Niniejszy rozdział opisuje implementację interpretera kodu bajtowego ThesisVM. Jak już wspomniano w poprzedniej sekcji, praca implementuje model /Three Instruction Machine/, opisany szczegółowo w [[cite:Fairbairn1987]]
@@ -603,7 +603,7 @@ Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczn
 
 Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywnych do języka =Core Erlang= [[cite:Carlsson2004]]. Podobieństwo to nie jest przypadkowe, a wybrany sposób reprezentacji i działania operacji prymitywnych został zaimplementowany w taki sposób, by w przyszłości umożliwić łatwe rozszerzenie implementacji maszyny wirtualnej ThesisVM oraz wsparcie pełni języka =Core Erlang=.
 
-* Model zarządzania pamięcią
+* COMMENT Model zarządzania pamięcią
 #+latex: \label{sec:tvm-gc}
 
 Niniejsza sekcja opisuje implementację modelu zarządzania pamięcią zastosowanego w maszynie wirtualnej ThesisVM, na który składa się architektura wykorzystania pamięci, algorytm alokacji obiektów oraz algorytm kolekcji obiektów nieosiągalnych. Wstępny opis wybranego modelu pamięci oraz motywacja tego wyboru zostały zawarte w sekcji [[ref:sec:tvm-heap-archs]].
@@ -720,6 +720,11 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 
 - Opisać bardziej szczegółowo model SMP.
 
+- Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
+
+** Implementacja symetrycznego multiprocessingu
+- Opisać bardziej szczegółowo implementację SMP
+
 #+begin_center
 #+label: ref:tvm-smp
 #+caption: Schemat symetrycznego multiprocesora ThesisVM.
@@ -727,20 +732,13 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 [[file:./img/SMP.pdf]]
 #+end_center
 
-- Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
-
-** Implementacja symetrycznego multiprocessingu
-- Opisać bardziej szczegółowo implementację SMP
-- Opisać spawnowanie procesów.
 - Co SMP robi podczas interpretacji kodu.
+- Opisać wiadomości kontrolne.
 
 ** Harmonogramowanie procesów
 #+latex: \label{sec:tvm-scheduling}
 
-- Opisać Completely Fair Scheduler. [[cite:Pabla2009]]
-- Opisać sposób harmonogramowania procesów (brak load-balancingu, losowy spawn).
-- Opisać implementację prymitywu =sleep= oraz sleep-table.
-- Opisać wiadomości kontrolne.
+- Opisać algorytm Completely Fair Scheduler. [[cite:Pabla2009]]
 
 #+begin_center
 #+label: ref:tvm-scheduler-regs
@@ -749,13 +747,20 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 [[file:./img/Scheduler.pdf]]
 #+end_center
 
-- Opisać możliwe usprawnienia (load-balancing i dzielenie zużycia).
+- Opisać implementację i wykorzystanie RUNq.
+
+- Opisać implementację prymitywu =sleep= oraz WAITq.
+
+- Opisać wady możliwe usprawnienia (load-balancing i dzielenie zużycia).
 
 ** Implementacja Modelu Aktorowego
 - Opisać powstawanie procesów i prymityw =spawn=.
+
+- Opisać implementację prymitywów =send= oraz =recv=.
+
 - Opisać logiczną autonomiczność procesów (brak mutacji = inne procesy nie mogą ingerować).
+
 - Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
-- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,Groves2008]]- Opisać wykorzystanie CAS i problem ABA.
 
 #+begin_center
 #+label: ref:tvm-actor-regs
@@ -765,13 +770,11 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 #+end_center
 
 - Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
-- Opisać krótko wady i możliwe usprawnienia zastosowanego rozwiązania (dynamic size, wait-free, optimistic FIFO). [[cite:Herlihy2002,Kogan2011,Ladan-Mozes2004]]
-- Opisać krótko alternatywne podejścia (synchroniczne przekazywanie wiadomości - kanały, locki/mutexy/semafory).
 
 ** Implementacja przesyłania wiadomości
-- Opisać implementację prymitywów =send= oraz =receive=.
-- Zwrócić uwagę na konieczność wykorzystania operacji atomowych oraz barier pamięci.
-- Snippet kodu przesyłającego wiadomość.
+
+- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,Groves2008]]
+- Opisać wykorzystanie CAS i problem ABA.
 
 #+begin_center
 #+label: ref:tvm-msgs
@@ -780,11 +783,13 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 [[file:./img/messagepassing.pdf]]
 #+end_center
 
-- Opisać co dzieje się podczas wysyłania wiadomości.
-- Opisać sposób pobierania wiadomości z kolejki.
-- Zwrócić uwagę na fakt, że problem kopiowania został zniwelowany kosztem lekkich barier pamięci.
+- Opisać krótko wady i możliwe usprawnienia zastosowanego rozwiązania (dynamic size, wait-free, optimistic FIFO). [[cite:Herlihy2002,Kogan2011,Ladan-Mozes2004]]
 
-* Podsumowanie
+- Opisać krótko alternatywne podejścia (synchroniczne przekazywanie wiadomości - kanały, locki/mutexy/semafory).
+
+- Opisać sposób pobierania wiadomości z kolejki i jego możliwe usprawnienia (pattern-matching).
+
+* COMMENT Podsumowanie
 #+latex: \label{sec:conclusion}
 
 - Opisać co udało się zrobić.
@@ -812,7 +817,7 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 #+end_latex
 
 #+latex: \appendix
-* Przykładowe programy
+* COMMENT Przykładowe programy
 #+latex: \label{sec:tvm-samples}
 
 ** Interfejs i użytkowanie ThesisVM
@@ -825,7 +830,7 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 ** Współbieżne "Hello world!"
 ** Współbieżne obliczanie silni
 
-* Spisy wbudowanych operatorów i funkcji
+* COMMENT Spisy wbudowanych operatorów i funkcji
 #+latex: \label{sec:tvm-primops}
 
 #+begin_latex
@@ -870,7 +875,7 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 #+latex: \noindent
 Dodatkowo wszystkie prymitywne operatory wymienione w powyższej liście mają swoje odpowiedniki funkcyjne o takiej samej nazwie i semantyce.
 
-* Spisy rysunków i fragmentów kodu
+* COMMENT Spisy rysunków i fragmentów kodu
 #+latex: \label{sec:misc}
 
 #+begin_latex
