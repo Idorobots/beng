@@ -76,7 +76,7 @@
 \renewcommand{\cftaftermloltitleskip}{5mm}
 #+end_latex
 
-* Wstęp
+* COMMENT Wstęp
 #+latex: \label{sec:intro}
 
 Tematem pracy jest implementacja /maszyny wirtualnej/ dla funkcyjnych języków programowania wspierających /przetwarzanie współbieżne/.
@@ -164,7 +164,7 @@ Sekcja [[ref:sec:conclusion]] zawiera podsumowanie pracy oraz zarys możliwych k
 
 Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio wskazówki użytkowania ThesisVM i przykładowe programy gotowe do uruchomienia na maszynie wirtualnej, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
 
-* Architektura ThesisVM
+* COMMENT Architektura ThesisVM
 #+latex: \label{sec:tvm-arch}
 
 Ninejsza sekcja opisuje architekturę maszyny wirtualnej ThesisVM powstałej na potrzeby pracy oraz języka przez nią akceptowanego.
@@ -379,7 +379,8 @@ Kolektory różnych typów mają bardzo różne charakterystyki wydajnościowe w
 W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci", oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje. Do alternatywnych rozwiązań należą te zaprezentowane w [[cite:Armstrong1995]] oraz [[cite:Huelsbergen1998]].
 
 ** Przetwarzanie współbieżne
-Systemy współbieżne często realizują model symetrycznego multiprocessingu (/SMP/), którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych wykonujących jednakowe operacje na różnych zbiorach danych (=SMPn= na rysunku [[ref:fig:amp-vs-smp]]).
+#+latex: \label{sec:tvm-smp-vs-amp}
+Systemy współbieżne często realizują model symetrycznego multiprocessingu (/SMP/), którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych wykonujących jednakowe zadania na różnych zbiorach danych (=SMPn= na rysunku [[ref:fig:amp-vs-smp]]).
 
 #+begin_center
 #+label: fig:amp-vs-smp
@@ -392,15 +393,13 @@ Alternatywnym rozwiązaniem jest model asymetrycznego multiprocessingu (/AMP/) (
 
 Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy algorytmów, których implementację umożliwiają (na przykład algorytm zarządzania pamięcią VCGC [[cite:Huelsbergen1998]] wykorzystujący trzy asymetryczne wątki), jednak charakteryzują się skomplikowaniem interakcji poszczególnych jednostek operacyjnych a niejednokrotnie także słabą skalowalnością całego rozwiązania.
 
-# TODO Rewrite the preceeding sentence.
-
-Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP, który w kontekście maszyny wirtualnej ThesisVM polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu.
+Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP, który w kontekście maszyny wirtualnej polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu.
 
 Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[cite:Hewitt1973]], którego głównym założeniem jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO (ang. /First In First Out/).
 
 Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
-* Interpreter kodu bajtowego
+* COMMENT Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
 
 Niniejszy rozdział opisuje implementację interpretera kodu bajtowego ThesisVM. Jak już wspomniano w poprzedniej sekcji, praca implementuje model /Three Instruction Machine/, opisany szczegółowo w [[cite:Fairbairn1987]]
@@ -603,7 +602,7 @@ Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczn
 
 Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywnych do języka =Core Erlang= [[cite:Carlsson2004]]. Podobieństwo to nie jest przypadkowe, a wybrany sposób reprezentacji i działania operacji prymitywnych został zaimplementowany w taki sposób, by w przyszłości umożliwić łatwe rozszerzenie implementacji maszyny wirtualnej ThesisVM oraz wsparcie pełni języka =Core Erlang=.
 
-* Model zarządzania pamięcią
+* COMMENT Model zarządzania pamięcią
 #+latex: \label{sec:tvm-gc}
 
 Niniejsza sekcja opisuje implementację modelu zarządzania pamięcią zastosowanego w maszynie wirtualnej ThesisVM, na który składa się architektura wykorzystania pamięci, algorytm alokacji obiektów oraz algorytm kolekcji obiektów nieosiągalnych. Wstępny opis wybranego modelu pamięci oraz motywacja tego wyboru zostały zawarte w sekcji [[ref:sec:tvm-heap-archs]].
@@ -718,25 +717,55 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 * Model przetwarzania współbieżnego
 #+latex: \label{sec:tvm-smp}
 
-- Opisać bardziej szczegółowo model SMP.
+Niniejsza sekcja opisuje implementację modelu przetwarzania współbieżnego zastosowanego w maszynie wirtualej ThesisVM. Model ten przewiduje wykorzystanie symetrycznego multiprocessingu oraz implementację Modelu Aktorowego interakcji mikroprocesów. Wstępny opis wybranego modelu zawarto w sekcji [[ref:sec:amp-vs-smp]].
 
-- Opisać bardziej szczegółowo Model Aktorowy i asynchroniczne przekazywanie wiadomości. [[cite:Hewitt1973,Clinger1981]]
+Model Aktorowy [[cite:Hewitt1973]] został wybrany przez wzgląd na jego relatywne nieskomplikowanie i wielką ekspresywność, zwłaszcza w kontekście funkcyjnych języków programowania. Model ten zakłada istnienie autonomicznych /aktorów/, którzy porozumiewają się za pomocą przekazywanych asynchronicznie /wiadomości/, co bardzo łatwo można przetłumaczyć na istnienie wielu działających konkurencyjnie mikroprocesów.
+
+Każdy mikroproces po otrzymaniu wiadomości może na nie reagować poprzez zmianę swojego wewnętrznego /zachowania/, wygenerowanie skończonej liczby /nowych wiadomości/, wysyłanych konkurencyjnie do innych mikroprocesów, lub poprzez stworzenie skończonej liczby /nowych aktorów/ - uruchomienie dodatkowych mikroprocesów ThesisVM. Dokładny opis założeń Modelu Aktorowego został zawarty w [[cite:Clinger1981]].
 
 ** Implementacja symetrycznego multiprocessingu
-- Opisać bardziej szczegółowo implementację SMP
+Implementacja wykorzystuje wątki systemu operacyjnego, na którym uruchomiona jest maszyna wirtualna ThesisVM w celu zrównoleglenia działania wielu interpreterów kodu bajtowego. Rysunek [[ref:fig:tvm-smp]] zawiera schematyczną reprezentację struktury symetrycznych multiprocesorów (SMP).
+
+SMP komunikują się ze sobą poprzez wiadomości kontrolne przekazywane za pośrednictwem kolejki wiadomości =MSGq=, efektywnie wykorzystując Model Aktorowy. Implementacja taka jest więc bardzo skalowalna i umożliwia dowolną zmianę ilość uruchomionych jednostek także podczas działania maszyny wirtualnej.
+
+Obecnie wiadomości kontrolne wykorzystywane są przy tworzeniu nowych mikroprocesów, ale implementacja może zostać w przyszłości rozszerzona w celu umożliwienia stosowania zaawansowanych algorytmów równoważenia obciążenia, strategii uruchomieniowych mikroprocesów a także propagacji i kolekcji danych diagnostycznych działania symetrycznych multiprocesorów. Więcej informacji o przyszłych kierunkach rozwoju projektu zostało zawarte w sekcji [[ref:sec:future-development]].
 
 #+begin_center
-#+label: ref:tvm-smp
-#+caption: Schemat symetrycznego multiprocesora ThesisVM.
+#+label: fig:tvm-smp
+#+caption: Schemat symetrycznego multiprocesingu ThesisVM.
 #+attr_latex: scale=1.0
 [[file:./img/SMP.pdf]]
 #+end_center
 
-- Co SMP robi podczas interpretacji kodu.
-- Opisać wiadomości kontrolne.
+Każdy z symetrycznych multiprocesorów (SMP) zarządza szeregiem struktur danych wykorzystywanych do przechowywania kontekstów mikroprocesów oraz harmonogramowania (ang. /scheduling/) ich interpretacji (rysunek [[ref:]]fig:tvm-smp).
+
+Struktury te to kolejki priorytetowe zaimplementowane w oparciu o, gwarantujące logarytmiczną złożoność wszystkich operacji, *drzewa czerwono-czarne*:
+
+- =RUNq= - kolejka ustalającą kolejność uruchamiania aktywnych mikroprocesów,
+
+- =WAITq= - kolejka przechowująca mikroprocesy będące w uśpieniu, ułatwiająca ustalenie kolejności ich powrotu do działania.
+
+SMP działają według uproszczonego algorytmu zaprezentowanego na diagramie [[ref:fig:smp-operation]]. Po starcie maszyny wirtualnej wszystkie SMP przechodzą do fazy obsługiwania wiadomości kontrolnych, =dispatch=. Podczas tej fazy wiadomości otrzymane asynchronicznie przez SMP są analizowane i obsługiwane tak szybko, jak to tylko możliwe.
+
+Następną fazą jest faza =wake=, której zadaniem jest przywrócenie uśpionych mikroprocesów do ponownego działania. Wykorzystuje ona kolejkę =WAITq=, dzięki czemu ustalenie, czy istnieją mikroprocesy gotowe do przebudzenia mogło zostać zrealizowane w czasie logarytmicznym poprzez analizę wartości skrajnie lewego poddrzewa reprezentacji kolejki, gdzie znajduje się element najmniejszy.
+
+Jeśli jakiekolwiek mikroprocesy zostały przebudzone i tym samym przeniesione do kolejki =RUNq=, następuje faza ich harmonogramowania - =schedule=. Faza ta ustala kolejność uruchamiania i interpretacji kodu poszczególnych mikroprocesów i została szczegółowo opisana w następnej sekcji. Jeśli żaden mikroproces nie oczekuje na uruchomienie SMP wraca do pierwszej fazy oczekując na nowe wiadomości kontrolne.
+
+#+begin_center
+#+label: fig:smp-operation
+#+caption: Algorytm postępowania symetrycznych multiprocesorów ThesisVM.
+#+attr_latex: scale=0.8
+[[file:./img/SMPalgo.pdf]]
+#+end_center
+
+Po ustaleniu mikroprocesu gotowego do uruchomienia następuje faza interpretacji jego kodu - =interpret=. Faza ta jest ograniczona czasowo (ang. /time-based scheduling/) a czas jej trwania zależy od obecnego obciążenia SMP. Alternatywnym rozwiązaniem jest ograniczenie maksymalnej ilości kroków interpretera kodu bajtowego (ang. /work-based scheduling/).
+
+Ostatnia faza, =reschedule= polega na wywłaszczeniu mikroprocesu i przeniesieniu go do jednej z kolejek =RUNq= lub =WAITq= w zależności od efektów jego działania. Po tej fazie następuje koniec cyklu i symetryczny multiprocesor ponownie przechodzi do fazy obsługiwania wiadomości kontrolnych.
 
 ** Harmonogramowanie procesów
 #+latex: \label{sec:tvm-scheduling}
+
+Najważniejszą fazą opisanego w poprzedniej sekcji algorytmu jest faza harmonogramowania procesów. W celu ustalenia kolejności mikroprocesów wykorzystanie został algorytm *Completely Fair Scheduling*, który jest stosowany między innymi w jądrze systemu Linux od wersji 2.6.23.
 
 - Opisać algorytm Completely Fair Scheduler. [[cite:Pabla2009]]
 
@@ -789,7 +818,7 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 
 - Opisać sposób pobierania wiadomości z kolejki i jego możliwe usprawnienia (pattern-matching).
 
-* Podsumowanie
+* COMMENT Podsumowanie
 #+latex: \label{sec:conclusion}
 
 - Opisać co udało się zrobić.
@@ -817,7 +846,7 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 #+end_latex
 
 #+latex: \appendix
-* Przykładowe programy
+* COMMENT Przykładowe programy
 #+latex: \label{sec:tvm-samples}
 
 Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM oraz kilka przykładowych programów w języku TVMIR, które można na niej uruchomić.
@@ -895,7 +924,7 @@ Program prezentuje wykorzystanie kilku funkcji wbudowanych, takich jak =cons=, =
 #+end_src
 #+bind: org-export-latex-minted-options ()
 
-** Factorial
+** Silnia
 Program implementuje funkcję obliczającą wartości silni.
 
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
@@ -910,7 +939,7 @@ Program implementuje funkcję obliczającą wartości silni.
 #+end_src
 #+bind: org-export-latex-minted-options ()
 
-** Fibonacci
+** Funkcja Fibonacciego
 Program implementuje funkcję obliczającą wartości funkcji Fibonacciego.
 
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
@@ -965,7 +994,7 @@ Program tworzy trzy nowe procesy, które współbieżnie obliczają wartości fu
 #+end_src
 #+bind: org-export-latex-minted-options ()
 
-* Spisy wbudowanych operatorów i funkcji
+* COMMENT Spisy wbudowanych operatorów i funkcji
 #+latex: \label{sec:tvm-primops}
 
 #+begin_latex
@@ -1010,7 +1039,7 @@ Program tworzy trzy nowe procesy, które współbieżnie obliczają wartości fu
 #+latex: \noindent
 Dodatkowo wszystkie prymitywne operatory wymienione w powyższej liście mają swoje odpowiedniki funkcyjne o takiej samej nazwie i semantyce.
 
-* Spisy rysunków i fragmentów kodu
+* COMMENT Spisy rysunków i fragmentów kodu
 #+latex: \label{sec:misc}
 
 #+begin_latex
