@@ -76,7 +76,7 @@ struct TVMValue {
 
     @property TVMPointer ptr() {
         // FIXME Instructions dun goofed.
-        return cast(TVMPointer) (rawValue & POINTER_MASK);
+        return cast(TVMPointer) rawValue;
     }
 
     @property void ptr(TVMPointer newPtr) {
@@ -285,7 +285,6 @@ shared struct TVMMicroProc {
     LockFreeQueue!TVMValue msgq = null;
 
     // Scheduler registers:
-    // FIXME Create some custom methods for this.
     mixin(bitfields!(
         ubyte, "priority", PRIORITY_BITS,
         bool, "asleep", 1,

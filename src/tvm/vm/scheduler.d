@@ -92,7 +92,6 @@ void schedule(string name, TVMConfig config) {
         auto finishTime = startTime + dt;
 
         if(receiveTimeout(dur!"usecs"(dt),
-                          // FIXME Actually implement these.
                           (TVMContext p) {
                               debug(verbose) {
                                   import std.stdio;
