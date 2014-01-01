@@ -1,5 +1,0 @@
-(define (compose f g x)
-   (f (g x)))
-
-(define (main args)
-   (compose main main args))
