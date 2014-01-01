@@ -11,6 +11,7 @@ import std.random : uniform;
 import std.traits : EnumMembers;
 import std.typecons : Tuple;
 import std.typetuple : TypeTuple;
+import core.memory;
 
 import tvm.tvm;
 
@@ -22,10 +23,12 @@ void handle(string name, string source, SyntaxError e) {
 
     foreach(i; 0 .. preamble.length) write(" ");
     foreach(i; 0 .. source.length - token.offset - token.column) {
+        if((token.offset - token.column + i) >= source.length) break;
         auto c = source[token.offset - token.column + i];
-        write(c);
         if(c == '\n') break;
+        write(c);
     }
+    write("\n");
 
     foreach(i; 0 .. preamble.length + token.column)
         write(" ");
@@ -65,7 +68,7 @@ void main(string[] args) {
     config.smpPreemptionTime = 100_000;    // 100 ms
     config.smpSpinTime = 10_000;           // 10 ms
     config.smpSleepTime = 1_000_000_000;   // 1000 seconds
-    config.uProcHeapSize = 256;
+    config.uProcHeapSize = 0;              // FIXME Currently a bug prevents non-zero values.
     config.uProcMSGqSize = 8;
     config.uProcDefaultPriority = (TVMMicroProc.PRIORITY_MASK + 1) / 2;
 
@@ -97,7 +100,7 @@ void main(string[] args) {
               &config.uProcMSGqSize),
         tuple("-H --uproc-heap-chunk=SIZE",
               "The size in words of a heap chunk pre-allocated for a uProc.",
-              tuple(1UL, 262144UL, config.uProcHeapSize),
+              tuple(0UL, 262144UL, config.uProcHeapSize),
               &config.uProcHeapSize),
         tuple("-P --uproc-default-priority=LEVEL",
               "The default priority level of a spawned user uProc.",
@@ -383,7 +386,9 @@ void main(string[] args) {
     } catch (RuntimeError e) {
         handle(file, source, e);
     } catch (Exception e) {
-        debug(verbose) {
+        writeln(e.msg);
+
+       debug(verbose) {
             writeln(e.info);
         }
     }

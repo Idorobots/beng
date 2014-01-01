@@ -13,7 +13,9 @@ shared struct GCAllocator {
     }
 
     void deallocate(T)(T* ptr) {
-        GC.free(cast(void*) ptr);
+        // NOTE GC.free could be used explicitly here
+        // NOTE so memory is returned ASAP.
+        // GC.free(cast(void*) ptr);
     }
 
     static shared GCAllocator it;
@@ -28,6 +30,7 @@ shared struct TVMAllocator(Allocator) {
     private TVMPointer freeList = null;
 
     this(size_t size) {
+        // FIXME Currently a bug prevents preallocation of the free list.
         preallocate(size);
     }
 
@@ -39,6 +42,9 @@ shared struct TVMAllocator(Allocator) {
 
             *ptr = shared TVMPair(value(nil()), value(nil()));
             ptr.header.refCount = cast(size_t) last;
+
+            // NOTE We need to remove the pointer from the D GC.
+            GC.removeRoot(cast(void*) last);
 
             last = asObject(ptr);
             size -= 3;
@@ -52,6 +58,10 @@ shared struct TVMAllocator(Allocator) {
             if(!isNil(this.freeList)) {
                 auto object = this.freeList;
                 this.freeList = cast(TVMPointer) object.refCount;
+
+                // NOTE We need to return the pointer to the D GC.
+                GC.addRoot(cast(void*) this.freeList);
+
                 return cast(shared(T)*) object;
             } else {
                 return parent.allocate!T();
@@ -64,6 +74,10 @@ shared struct TVMAllocator(Allocator) {
     void deallocate(T)(T* object) {
         static if(T.sizeof == TVMPair.sizeof) {
             auto ptr = asObject(object);
+
+            // NOTE We need to remove the pointer from the D GC.
+            GC.removeRoot(cast(void*) this.freeList);
+
             ptr.refCount = cast(size_t) freeList;
             freeList = ptr;
         } else {

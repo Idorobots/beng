@@ -3,8 +3,8 @@ AR = ar rcu
 DC = dmd
 DFLAGS = -w -Isrc
 DLDLIBS = -L-Llib -L-llfds611
-GDB = -debug=verbose -unittest -g
-#GDB = -O -release
+#DEBUG = -debug=verbose
+GDB = $(DEBUG) -unittest -g
 
 VPATH = src:src/tvm:src/tvm/vm:src/tvm/compiler
 

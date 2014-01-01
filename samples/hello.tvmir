@@ -1,0 +1,5 @@
+(define (hello-world str)
+  (print str))
+
+(define (main args)
+  (hello-world "Hello world!"))

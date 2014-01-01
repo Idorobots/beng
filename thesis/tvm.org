@@ -817,18 +817,98 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 #+end_latex
 
 #+latex: \appendix
-* COMMENT Przykładowe programy
+* Przykładowe programy
 #+latex: \label{sec:tvm-samples}
+
+Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM oraz kilka przykładowych programów w języku TVMIR, które można na niej uruchomić.
 
 ** Interfejs i użytkowanie ThesisVM
 - Opisać sposób uruchamiania maszyny wirtualnej.
 
+
 ** "Hello world!"
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src scheme
+  (define (hello-world str)
+    (print str))
+  
+  (define (main args)
+    (hello-world "Hello world!"))
+#+end_src
+#+bind: org-export-latex-minted-options ()
+
 ** Funkcje i operacje prymitywne
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src scheme
+  (define (main args)
+    (print (cons (+ (- (* 42 23)
+                       (/ 13 7))
+                    5)
+                 args)))
+#+end_src
+#+bind: org-export-latex-minted-options ()
+
 ** Factorial
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src scheme
+  (define (fact n)
+    (if (< n 2)
+        n
+        (* n (fact (- n 1)))))
+  
+  (define (main args)
+    (print (fact 100)))
+#+end_src
+#+bind: org-export-latex-minted-options ()
+
 ** Fibonacci
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src scheme
+(define (fib n)
+  (if (< n 2)
+      1
+      (+ (fib (- n 2)) (fib (- n 1)))))
+
+(define (main args)
+  (print (fib 30)))
+#+end_src
+#+bind: org-export-latex-minted-options ()
+
 ** Współbieżne "Hello world!"
-** Współbieżne obliczanie silni
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src scheme
+  (define (loop timeout)
+    (if (print (recv timeout))
+        'done
+        (loop timeout)))
+  
+  (define (main args)
+    (send (spawn loop 1000)
+          "Hello world!"))
+#+end_src
+#+bind: org-export-latex-minted-options ()
+
+** Współbieżne obliczanie funkcji Fibonacciego
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src scheme
+  (define (fib n)
+    (if (< n 2)
+        1
+        (+ (fib (- n 2)) (fib (- n 1)))))
+  
+  (define (proc n)
+    (print (fib n)))
+  
+  (define (main args)
+    (if (spawn proc 40)
+        (if (spawn proc 40)
+            (if (spawn proc 40)
+                (proc 40)
+                'failed)
+            'failed)
+        'failed))
+#+end_src
+#+bind: org-export-latex-minted-options ()
 
 * COMMENT Spisy wbudowanych operatorów i funkcji
 #+latex: \label{sec:tvm-primops}

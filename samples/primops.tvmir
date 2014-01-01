@@ -1,0 +1,5 @@
+(define (main args)
+  (print (cons (+ (- (* 42 23)
+                     (/ 13 7))
+                  5)
+               args)))
