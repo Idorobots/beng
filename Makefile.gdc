@@ -3,7 +3,7 @@ AR = ar rcu
 DC = gdc
 DFLAGS = -Wall -Wextra -pedantic -Isrc
 DLDLIBS = -Llib -llfds611
-DEBUG = -fdebug=verbose
+#DEBUG = -fdebug=verbose
 GDB = $(DEBUG) -funittest -ggdb3
 
 VPATH = src:src/tvm:src/tvm/vm:src/tvm/compiler

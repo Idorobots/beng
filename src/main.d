@@ -58,7 +58,7 @@ void handle(string name, string source, RuntimeError e) {
 
 void main(string[] args) {
     enum VM_VERSION = "v.0.1.0";
-    enum Debug {scan, filter, parse, transform, optimize, objects, compile, interpret, run,}
+    enum Debug {scan, filter, parse, transform, optimize, compile, interpret, run,}
     Debug debugVM = Debug.run;
 
     // Default VM configuration:
@@ -83,7 +83,7 @@ void main(string[] args) {
               tuple(1UL, 65535UL, config.smpMSGqSize),
               &config.smpMSGqSize),
         tuple("   --smp-max-preeption-time=TIME",
-              "The maximal uProc preeption time in microseconds. This will be normalized by the number of uProcs ready to run.",
+              "The maximal uProc preemption time in microseconds. This will be normalized by the number of uProcs ready to run.",
               tuple(10_000UL, 1_000_000UL, config.smpPreemptionTime),
               &config.smpPreemptionTime),
         tuple("   --smp-spin-time=TIME",
@@ -107,7 +107,7 @@ void main(string[] args) {
               tuple(0UL, cast(size_t) TVMMicroProc.PRIORITY_MASK, config.uProcDefaultPriority),
               &config.uProcDefaultPriority),
         tuple("   --debug=OPTION",
-              "Toggles various debuging options. Available options: [scan, filter, parse, transform, optimize, objects, compile, interpret, run], default value: run.",
+              "Toggles various debuging options. Available options: [scan, filter, parse, transform, optimize, compile, interpret, run], default value: run.",
               tuple(0UL, 0UL, 0UL),
               cast(time_t*) null),
         tuple("-v --version",
@@ -141,7 +141,7 @@ void main(string[] args) {
 
     void usage(string help) {
         writeln("ThesisVM (TVM) ", VM_VERSION);
-        writeln("Licensed under the MIT license. See LICENSE for details.");
+        writeln("Consult LICENSE file for licensing info.");
         writeln("Copyright (C) 2013 Kajetan Rzepecki <kajtek@idorobots.org>");
         writeln();
 
@@ -276,22 +276,6 @@ void main(string[] args) {
                 foreach(expr; optimize(transform(parse(filter(scan(source)))))) {
                     writeln(expr);
                 }
-                break;
-
-            case Debug.objects:
-                /*static*/ foreach(T; TypeTuple!(void*, TVMValue, TVMObject, TVMSymbol,
-                                                 TVMPair, TVMClosure, TVMMicroProc))
-                {
-                    writeln(T.stringof, ".sizeof = ", T.sizeof, ",");
-                }
-                writeln();
-
-                auto lst = list(GCAllocator.it, value(1), value(2), value(3));
-                auto pr = pair(GCAllocator.it, value(use(lst)), value(use(lst)));
-                auto lambda = closure(GCAllocator.it, value(pr), value(lst));
-                free(GCAllocator.it, lst);
-
-                writeln(print(lambda));
                 break;
 
             case Debug.compile:

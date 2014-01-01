@@ -4,4 +4,4 @@
       (+ (fib (- n 2)) (fib (- n 1)))))
 
 (define (main args)
-  (print (fib 30)))
+  (print (fib 23)))

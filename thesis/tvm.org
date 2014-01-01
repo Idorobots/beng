@@ -76,7 +76,7 @@
 \renewcommand{\cftaftermloltitleskip}{5mm}
 #+end_latex
 
-* COMMENT Wstęp
+* Wstęp
 #+latex: \label{sec:intro}
 
 Tematem pracy jest implementacja /maszyny wirtualnej/ dla funkcyjnych języków programowania wspierających /przetwarzanie współbieżne/.
@@ -164,7 +164,7 @@ Sekcja [[ref:sec:conclusion]] zawiera podsumowanie pracy oraz zarys możliwych k
 
 Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio wskazówki użytkowania ThesisVM i przykładowe programy gotowe do uruchomienia na maszynie wirtualnej, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
 
-* COMMENT Architektura ThesisVM
+* Architektura ThesisVM
 #+latex: \label{sec:tvm-arch}
 
 Ninejsza sekcja opisuje architekturę maszyny wirtualnej ThesisVM powstałej na potrzeby pracy oraz języka przez nią akceptowanego.
@@ -400,7 +400,7 @@ Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[c
 
 Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
-* COMMENT Interpreter kodu bajtowego
+* Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
 
 Niniejszy rozdział opisuje implementację interpretera kodu bajtowego ThesisVM. Jak już wspomniano w poprzedniej sekcji, praca implementuje model /Three Instruction Machine/, opisany szczegółowo w [[cite:Fairbairn1987]]
@@ -603,7 +603,7 @@ Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczn
 
 Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywnych do języka =Core Erlang= [[cite:Carlsson2004]]. Podobieństwo to nie jest przypadkowe, a wybrany sposób reprezentacji i działania operacji prymitywnych został zaimplementowany w taki sposób, by w przyszłości umożliwić łatwe rozszerzenie implementacji maszyny wirtualnej ThesisVM oraz wsparcie pełni języka =Core Erlang=.
 
-* COMMENT Model zarządzania pamięcią
+* Model zarządzania pamięcią
 #+latex: \label{sec:tvm-gc}
 
 Niniejsza sekcja opisuje implementację modelu zarządzania pamięcią zastosowanego w maszynie wirtualnej ThesisVM, na który składa się architektura wykorzystania pamięci, algorytm alokacji obiektów oraz algorytm kolekcji obiektów nieosiągalnych. Wstępny opis wybranego modelu pamięci oraz motywacja tego wyboru zostały zawarte w sekcji [[ref:sec:tvm-heap-archs]].
@@ -789,7 +789,7 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 
 - Opisać sposób pobierania wiadomości z kolejki i jego możliwe usprawnienia (pattern-matching).
 
-* COMMENT Podsumowanie
+* Podsumowanie
 #+latex: \label{sec:conclusion}
 
 - Opisać co udało się zrobić.
@@ -822,11 +822,56 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 
 Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM oraz kilka przykładowych programów w języku TVMIR, które można na niej uruchomić.
 
-** Interfejs i użytkowanie ThesisVM
-- Opisać sposób uruchamiania maszyny wirtualnej.
+** Kompilacja maszyny wirtualnej ThesisVM
+Do skompilowania projektu wymagana jest jedna z dwóch wspieranych implementacji języka =D=:
 
+- =DMD 2.063.2= - referencyjna implementacja języka.
+- =GDC 4.8.2= - implementacja oparta o GNU Compiler Collection.
+
+W celu skompilowania projektu wystarczy uruchomić polecenie =make= w głównym jego katalogu, co zakończy się zbudowaniem wykonywalnego programu =tvm= z wykorzystaniem kompilatora =DMD=. W celu zbudowania projektu za pomocą kompilatora =GDC= należy wykonać polecenie =make -f Makefile.gdc=.
+
+** Interfejs i użytkowanie ThesisVM
+Do projektu dołączony został wygodny w użyciu program =tvm=, którego zadaniem jest uruchomienie maszyny wirtualnej i interakcja z użytkownikiem. Uruchamianie programu odbywa się zgodnie z poniższą instrukcją:
+
+#+begin_example
+./tvm [OPCJE] program.tvmir
+#+end_example
+
+Dodatkowo, możliwe jest wykorzystanie wielu opcji odpowiedzialnych za parametry maszyny wirtualnej i sposób traktowania danych wejściowych:
+
+- =-n --smp-num=NUM= - określa ilość równocześnie działających symetrycznych multiprocesorów (SMP); akceptowane wartości: [1, 256], domyślna wartość: 4.
+
+- =-m --smp-msgq-size=SIZE= - określa rozmiar kolejki wiadomości SMP; akceptowane wartości: [1, 65535], domyślna wartość: 16.
+
+- =--smp-max-preeption-time=TIME= - określa maksymalny czas uruchamiania pojedynczego mikroprocesu w mikrosekundach; akceptowane wartości: [10000, 1000000], domyślna wartość: 100000.
+
+- =--smp-spin-time=TIME= - określa czas aktywnego oczekiwania SMP w mikrosekundach; akceptowane wartości: [1000, 1000000], domyślna wartość: 10000.
+
+- =--smp-sleep-time=TIME= - określa czas "spoczynku" SMP w mikrosekundach, który nie ma aktywnych mikroprocesów; akceptowane wartości: [1000, 1000000000], domyślna wartość: 1000000000.
+
+- =-M --uproc-msgq-size=SIZE= - określa domyślny rozmiar kolejki wiadomości mikroprocesów; akceptowane wartości: [1, 65535], domyślna wartość: 8.
+
+- =-H --uproc-heap-chunk=SIZE= - określa domyślny rozmiar pre-alokowanej pamięci procesu; akceptowane wartości: [0, 262144], domyślna wartość: 0.
+
+- =-P --uproc-default-priority=LEVEL= - określa domyślny priorytet mikroprocesów; akceptowane wartości: [0, 63], domyślna wartość: 32.
+
+- =--debug=OPTION= - przełącza program =tvm= w jeden z poniższych trybów działania, domyślna wartość to =run=:
+  + =scan= - przerywa przetwarzanie kodu źródłowego po fazie analizy leksykalnej,
+  + =filter= - przerywa przetwarzanie kodu źródłowego po fazie filtracji (ostatnia faza analizy leksykalnej),
+  + =parse= - przerywa przetwarzanie kodu źródłowego po fazie analizy syntaktycznej,
+  + =transform= - przerywa przetwarzanie kodu źródłowego po fazie analizy semantycznej,
+  + =optimize= - przerywa przetwarzanie kodu źródłowego po fazie optymalizacji,
+  + =compile= - przerywa przetwarzanie kodu źródłowego po fazie generacji kodu,
+  + =interpret= - interpretuje kod źródłowy krok po kroku wykorzystując jeden SMP,
+  + =run= - uruchamia kod źródłowy na pełnej maszynie ThesisVM.
+
+- =-v --version= - wypisuje wersję programu =tvm=.
+
+- =-h --help= - wypisuje informacje o użytkowaniu maszyny wirtualnej ThesisVM.
 
 ** "Hello world!"
+Program wypisuje wiadomość "Hello world!" na ekranie.
+
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src scheme
   (define (hello-world str)
@@ -838,6 +883,8 @@ Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM or
 #+bind: org-export-latex-minted-options ()
 
 ** Funkcje i operacje prymitywne
+Program prezentuje wykorzystanie kilku funkcji wbudowanych, takich jak =cons=, =+= i =print=.
+
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src scheme
   (define (main args)
@@ -849,6 +896,8 @@ Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM or
 #+bind: org-export-latex-minted-options ()
 
 ** Factorial
+Program implementuje funkcję obliczającą wartości silni.
+
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src scheme
   (define (fact n)
@@ -862,6 +911,8 @@ Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM or
 #+bind: org-export-latex-minted-options ()
 
 ** Fibonacci
+Program implementuje funkcję obliczającą wartości funkcji Fibonacciego.
+
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src scheme
 (define (fib n)
@@ -870,11 +921,13 @@ Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM or
       (+ (fib (- n 2)) (fib (- n 1)))))
 
 (define (main args)
-  (print (fib 30)))
+  (print (fib 20)))
 #+end_src
 #+bind: org-export-latex-minted-options ()
 
 ** Współbieżne "Hello world!"
+Program tworzy nowy proces i wysyła do niego wiadomość "Hello world!", która następnie jest wypisywana na ekranie.
+
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src scheme
   (define (loop timeout)
@@ -889,6 +942,8 @@ Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM or
 #+bind: org-export-latex-minted-options ()
 
 ** Współbieżne obliczanie funkcji Fibonacciego
+Program tworzy trzy nowe procesy, które współbieżnie obliczają wartości funkcji Fibonacciego.
+
 #+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
 #+begin_src scheme
   (define (fib n)
@@ -900,17 +955,17 @@ Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM or
     (print (fib n)))
   
   (define (main args)
-    (if (spawn proc 40)
-        (if (spawn proc 40)
-            (if (spawn proc 40)
-                (proc 40)
+    (if (spawn proc 23)
+        (if (spawn proc 23)
+            (if (spawn proc 23)
+                (proc 23)
                 'failed)
             'failed)
         'failed))
 #+end_src
 #+bind: org-export-latex-minted-options ()
 
-* COMMENT Spisy wbudowanych operatorów i funkcji
+* Spisy wbudowanych operatorów i funkcji
 #+latex: \label{sec:tvm-primops}
 
 #+begin_latex
@@ -955,7 +1010,7 @@ Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM or
 #+latex: \noindent
 Dodatkowo wszystkie prymitywne operatory wymienione w powyższej liście mają swoje odpowiedniki funkcyjne o takiej samej nazwie i semantyce.
 
-* COMMENT Spisy rysunków i fragmentów kodu
+* Spisy rysunków i fragmentów kodu
 #+latex: \label{sec:misc}
 
 #+begin_latex
