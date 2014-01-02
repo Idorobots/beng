@@ -54,7 +54,7 @@
 #+LATEX_HEADER: \faculty{Wydział Elektrotechniki, Automatyki,\protect\\[-1mm] Informatyki i Inżynierii Biomedycznej}
 
 ##+LATEX_HEADER: \acknowledgements{Serdecznie dziękuję opiekunowi pracy za wsparcie merytoryczne oraz dobre rady edytorskie pomocne w tworzeniu pracy.}
-#+LATEX_HEADER: \acknowledgements{Serdecznie dziękuję Lucynie za cierpliwość i wsparcie podczas tworzenia pracy.}
+#+LATEX_HEADER: \acknowledgements{Serdecznie dziękuję Lucynie oraz siostrze Alicji za cierpliwość i wsparcie podczas tworzenia pracy dyplomowej.}
 #+END_OPTIONS
 
 # Title pages & table of contents:
@@ -715,7 +715,7 @@ Aby temu zaradzić implementacja alokatora wykorzystuje wbudowany w język =D= k
 
 Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przyszłości zaimplementowanie alternatywnego, zapasowego kolektora śledzącego, który w przeciwieństwie do kolektora języka =D= mógłby wykorzystywać dane o typach obiektów ThesisVM w celu prowadzenia precyzyjniejszych i szybszych kolekcji.
 
-* Model przetwarzania współbieżnego                                                         :export:
+* Model przetwarzania współbieżnego
 #+latex: \label{sec:tvm-smp}
 
 Niniejsza sekcja opisuje implementację modelu przetwarzania współbieżnego zastosowanego w maszynie wirtualej ThesisVM. Model ten przewiduje wykorzystanie symetrycznego multiprocessingu oraz implementację Modelu Aktorowego interakcji mikroprocesów. Wstępny opis wybranego modelu zawarto w sekcji [[ref:sec:amp-vs-smp]].
@@ -803,30 +803,45 @@ Działające współbieżnie mikroprocesy mogą komunikować się za pośrednict
 [[file:./img/Actor.pdf]]
 #+end_center
 
-Implementacja zapewnia /logiczną separację/ pamięci procesów, ponieważ /nie wspiera mutacji/ danych, co gwarantuje, iż jedynym sposobem ich współdzielenia między aktorami jest przekazywanie wiadomości. Należy zwrócić uwagę na fakt, że nie jest to /separacja fizyczna/. Dane przesyłane pomiędzy mikroprocesami egzystują w jednej puli pamięci i nie są w żaden sposób kopiowane.
+Implementacja zapewnia /logiczną separację/ pamięci procesów, ponieważ /nie wspiera mutacji/ danych, co gwarantuje, iż jedynym sposobem ich współdzielenia między aktorami jest przekazywanie wiadomości. Należy zwrócić uwagę na fakt, że nie jest to /separacja fizyczna/. Dane przesyłane pomiędzy mikroprocesami egzystują w jednej puli pamięci i nie są w żaden sposób kopiowane (rysunek [[ref:fig:tvm-msgs]]).
 
-** Implementacja przesyłania wiadomości
-Asynchroniczne przesyłanie wiadomości zostało zrealizowane z wykorzystaniem kolejek nieblokujących (ang. /non-blocking queue/) zaimplementowanych zgodnie z algorytmem *Michael'a i Scott'a* [[cite:MichaelScott1996]].
 #+begin_center
-#+label: ref:tvm-msgs
+#+label: fig:tvm-msgs
 #+caption: Schemat działania przesyłania wiadomości.
 #+attr_latex: scale=1.2
 [[file:./img/messagepassing.pdf]]
 #+end_center
 
+Komunikujące się mikroprocesy zwyczajnie przesyłają referencje na interesujące je fragmenty pamięci, co jest operacją o złożoności czasowej /O(1)/.
 
-- Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
+** Implementacja przesyłania wiadomości
+Asynchroniczne przesyłanie wiadomości zostało zrealizowane z wykorzystaniem kolejek nieblokujących (ang. /non-blocking queue/) zaimplementowanych zgodnie z algorytmem *Michael'a i Scott'a* [[cite:MichaelScott1996]]. Algorytm ten wykorzystuje podstawową atomową operację *Compare And Swap* (CAS), której pseudo-implementacja w języku =D= została zaprezentowana na listingu [[ref:code:cas-impl]].
 
-- Wspomnieć o gwarancjach jakie daje algorytm. [[cite:MichaelScott1996,Groves2008]]
+#+latex: \begin{listing}[ht]
+#+latex: \caption{\mylisting{Fragment kodu obrazujący operację Compare And Swap.}}
+#+latex: \label{code:cas-impl}
+#+bind: org-export-latex-minted-options (("frame" "leftline") ("linenos" "true") ("mathescape" "true"))
+#+begin_src d
+  bool CAS(T)(shared(T)* address, shared T oldValue, shared T newValue) {
+      if(*address == oldValue) {
+          *address = newValue;
+          return true;
+      }
+      return false;
+  }
+#+end_src
+#+bind: org-export-latex-minted-options ()
+#+latex: \end{listing}
 
-- Opisać wykorzystanie CAS i problem ABA.
+Operacja ta polega na atomowym sprawdzeniu czy pod adresem pamięci =address= w dalszym ciągu znajduje się jej stara wartość =oldValue=, załadowana wcześniej przez program. Jeśli taka sytuacja ma miejsce pod adresem =address= zostaje zapisana nowa wartość =newValue= i zwrócona zostaje wartość logicznej prawdy pozwalająca określić, czy przypisanie miało miejsce. W przeciwnym wypadku zwrócona zostaje wartość logicznego fałszu.
 
+Z operacją CAS wiąże się zjawisko *ABA*, które polega na podwójnej zmianie wartości pod danym adresem pamięci (z =A= na =B= i ponownie na =A=), co może spowodować, że operacja CAS się powiedzie, mimo że nie powinna. Jest to sytuacja niepożądana i znane są sposoby jej przeciwdziałania, na przykład przez wykorzystanie liczników modyfikacji.
 
-- Opisać krótko wady i możliwe usprawnienia zastosowanego rozwiązania (dynamic size, wait-free, optimistic FIFO). [[cite:Herlihy2002,Kogan2011,Ladan-Mozes2004]]
+Algorytm Michael'a i Scott'a daje wiele gwarancji, z których najważniejszą jest skończony czas wykonywaniaoperacji dodawania i pobierania wartości z kolejki [[cite:MichaelScott1996,Groves2008]]. Oznacza to, że algorytm ten jest nieblokujący i może być wykorzystany w systemach wymagających gwarancji *soft real-time*.
 
-- Opisać krótko alternatywne podejścia (synchroniczne przekazywanie wiadomości - kanały, locki/mutexy/semafory).
+Istnieje wiele usprawnień algorytmu Michael'a i Scott'a zapewniających dodatkowe gwarancje, takie jak brak oczekiwania (ang. /wait-freedom/) i cechy, jak dynamiczne dostosowywanie rozmiaru. Optymalizacje te zostały opisane między innymi w [[cite:Herlihy2002,Kogan2011,Ladan-Mozes2004]].
 
-- Opisać sposób pobierania wiadomości z kolejki i jego możliwe usprawnienia (pattern-matching).
+Asynchroniczne przekazywanie wiadomości nie jest jedyną metodą komunikacji procesów znaną w literaturze. Alternatywne rozwiązania obejmują między innymi wykorzystanie synchronicznego przesyłania wiadomości poprzez kanały wiadomości (ang. /message channels/) oraz wykorzystanie pamięci współdzielonej i niskopoziomowych prymitywów synchronizacji, takich jak mutex'y, czy semafory.
 
 * Podsumowanie
 #+latex: \label{sec:conclusion}
@@ -975,8 +990,7 @@ Program tworzy nowy proces i wysyła do niego wiadomość "Hello world!", która
         (loop timeout)))
   
   (define (main args)
-    (send (spawn loop 1000)
-          "Hello world!"))
+    (send (spawn loop 1000) "Hello world!"))
 #+end_src
 #+bind: org-export-latex-minted-options ()
 
