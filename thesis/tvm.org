@@ -82,7 +82,7 @@
 
 Tematem pracy jest implementacja /maszyny wirtualnej/ dla funkcyjnych języków programowania wspierających /przetwarzanie współbieżne/.
 
-Maszyna wirtualna jest warstwą abstrakcji leżącą pomiędzy programem a rzeczywistym sprzętem, która pozwala uniezależnić ów program od rozbieżności w działaniu różnych architektur komputerów. Wystarczy zaimplementować maszynę wirtualną dla danej architektury rzeczywistego sprzętu by umożliwić uruchamianie na niej wszystkich kompatybilnych z programów. Rysunek [[ref:fig:vm-arch]] prezentuje uproszczony schemat takiego rozwiązania - programy docelowe zostają skompilowane do /kodu bajtowego/ akceptowanego przez maszynę wirtualną a dopiero ów kod bajtowy jest przez nią uruchamiany.
+Maszyna wirtualna jest warstwą abstrakcji leżącą pomiędzy programem a rzeczywistym sprzętem, która pozwala uniezależnić ów program od rozbieżności w działaniu różnych architektur komputerów. Wystarczy zaimplementować maszynę wirtualną dla danej architektury rzeczywistego sprzętu by umożliwić uruchamianie na niej wszystkich kompatybilnych z nią programów. Rysunek [[ref:fig:vm-arch]] prezentuje uproszczony schemat takiego rozwiązania - programy zostają skompilowane do /kodu bajtowego/ akceptowanego przez maszynę wirtualną a dopiero ów kod bajtowy jest przez nią uruchamiany.
 
 #+begin_center
 #+label: fig:vm-arch
@@ -91,9 +91,9 @@ Maszyna wirtualna jest warstwą abstrakcji leżącą pomiędzy programem a rzecz
 [[file:./img/fullarch.pdf]]
 #+end_center
 
-Przetwarzanie współbieżne opiera się o współistnienie wielu procesów, które konkurują o dostęp do współdzielonych zasobów. W kontekście pracy, przetwarzanie współbieżne jest rozumiane jako asynchroniczne przekazywanie wiadomości pomiędzy działającymi, autonomicznymi procesami, czyli jako Model Aktorowy [[cite:Hewitt1973,Clinger1981]].
+Przetwarzanie współbieżne opiera się o współistnienie wielu procesów, które konkurują o dostęp do współdzielonych zasobów. W kontekście pracy, przetwarzanie współbieżne jest rozumiane jako asynchroniczne przekazywanie wiadomości pomiędzy działającymi równolegle, autonomicznymi procesami, czyli jako implementacja Modelu Aktorowego [[cite:Hewitt1973,Clinger1981]].
 
-Celem pracy jest stworzenie interpretera kodu bajtowego zdolnego uruchamiać kod skompilowanych programów, kolektora obiektów nieosiągalnych umożliwiającego automatyczne zarządzanie pamięcią oraz architektury symetrycznego multiprocesora (SMP) zapewniającego rzeczywistą współbieżność uruchamianych programów w oparciu o Model Aktorowy.
+Celem pracy jest stworzenie interpretera kodu bajtowego zdolnego uruchamiać kod skompilowanych programów, kolektora obiektów nieosiągalnych umożliwiającego automatyczne zarządzanie pamięcią oraz architektury symetrycznego multiprocesora (SMP) zapewniającego rzeczywistą współbieżność uruchamianych programów.
 Językiem implementacji projektu jest język =D= (w wersji 2.0 opisanej w [[cite:Alexandrescu2010]]), stosunkowo nowoczesny, kompilowany do kodu maszynowego następca języka =C++=.
 
 ** Motywacja pracy
@@ -153,22 +153,22 @@ W skład pracy wchodzi implementacja interpretera kodu bajtowego, kolektora obie
 
 Sekcja [[ref:sec:intro]] opisuje cele, motywację, zakres oraz zawartość pracy.
 
-Sekcja [[ref:sec:tvm-arch]] przybliża architekturę maszyny wirtualnej ThesisVM zaimplementowanej w ramach pracy, zaczynając od reprezentacji pośredniej programów (TVMIR) i jej kompilacji do kodu bajtowego, przez interpretację kodu bajtowego i zarządzanie pamięcią do projektu przetwarzania współbieżnego.
+Sekcja [[ref:sec:tvm-arch]] przybliża architekturę maszyny wirtualnej ThesisVM zaimplementowanej w ramach pracy, zaczynając od reprezentacji pośredniej programów (TVMIR) i jej kompilacji do kodu bajtowego, przez interpretację kodu bajtowego i zarządzanie pamięcią, do modelu przetwarzania współbieżnego.
 
-Sekcja [[ref:sec:tvm-vm]] szczegółowo opisuje implementację interpretera kodu bajtowego maszyny wirtualnej ThesisVM. Zaprezentowane zostają reprezentacje różnych obiektów, na których operuje maszyna, implementacja wbudowanych operatorów i funkcji prymitywnych oraz reprezentacja i generowanie kodu bajtowego akceptowanego przez interpreter.
+Sekcja [[ref:sec:tvm-vm]] szczegółowo opisuje implementację interpretera kodu bajtowego maszyny wirtualnej ThesisVM. Zaprezentowane zostają: model ewaluacji maszyny wirtualnej, implementacje różnych obiektów, na których operuje maszyna, implementacja wbudowanych operatorów i funkcji prymitywnych oraz format kodu bajtowego akceptowanego przez interpreter.
 
-Sekcja [[ref:sec:tvm-gc]] szczegółowo prezentuje implementację wybranego modelu pamięci, alokatora nowych obiektów oraz kolektora obiektów nieosiągalnych.
+Sekcja [[ref:sec:tvm-gc]] prezentuje implementację wybranego modelu pamięci, alokatora nowych obiektów oraz kolektora obiektów nieosiągalnych.
 
-Sekcja [[ref:sec:tvm-smp]] szczegółowo opisuje implementację asynchronicznego przekazywania wiadomości i symetrycznego multiprocesora w maszynie ThesisVM. Zaprezentowana zostaje implementacja Modelu Aktorowego i harmonogramowania procesów.
+Sekcja [[ref:sec:tvm-smp]] przybliża implementację asynchronicznego przekazywania wiadomości i symetrycznego multiprocesora w maszynie ThesisVM. Zaprezentowana zostaje implementacja Modelu Aktorowego i harmonogramowania procesów.
 
 Sekcja [[ref:sec:conclusion]] zawiera podsumowanie pracy oraz zarys możliwych kierunków dalszego rozwoju projektu.
 
-Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio wskazówki użytkowania ThesisVM i przykładowe programy gotowe do uruchomienia na maszynie wirtualnej, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
+Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio: wskazówki użytkowania ThesisVM i przykładowe programy gotowe do uruchomienia na maszynie wirtualnej, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków i fragmentów kodu znajdujących się w tekście pracy.
 
 * Architektura ThesisVM
 #+latex: \label{sec:tvm-arch}
 
-Niniejsza sekcja opisuje architekturę maszyny wirtualnej ThesisVM powstałej na potrzeby pracy oraz języka przez nią akceptowanego.
+Niniejsza sekcja opisuje architekturę maszyny wirtualnej ThesisVM powstałej na potrzeby pracy oraz formatu języka pośredniej reprezentacji programów przez nią akceptowanego.
 
 Rysunek [[ref:fig:tvm-arch]] zawiera schematyczną reprezentację maszyny wirtualnej ThesisVM uwzględniającą architekturę procesora sprzętu, na którym działa system operacyjny oraz sama maszyna wirtualna. Na schemacie widać poszczególne podsystemy ThesisVM, takie jak autonomiczne procesy (zwane dalej /mikroprocesami/, =µProcN=), czy symetryczne multiprocesory (zwane dalej =SMPn=).
 
@@ -184,12 +184,12 @@ Mikroprocesy są przypisane do symetrycznych multiprocesorów w stosunku wiele-d
 Każdy symetryczny multiprocesor działa w osobnym wątku procesora sprzętowego, zapewniając rzeczywistą współbieżność. Wszystkie =SMPn= są takie same i wykonują takie same zadania, czyli harmonogramowanie i wywłaszczanie mikroprocesów, a różni je jedynie stan, w którym się znajdują oraz zbiór procesów, którymi zarządzają.
 Na schemacie widnieje mapowanie jeden-do-jednego pomiędzy rdzeniami procesora (=CPUn=) a poszczególnymi =SMPn=, nie jest to jednak wymóg konieczny i zależy od konfiguracji maszyny wirtualnej. Konfigurowalna ilość równocześnie działających SMP pomaga osiągnąć lepszą skalowalność maszyny wirtualnej i może być zmieniana dynamicznie wedle potrzeb.
 
-Pozostając w zgodzie ze schematem przedstawionym na rysunku [[ref:fig:vm-arch]], interakcja z maszyną ThesisVM przebiega w analogiczny sposób. Kod programów w reprezentacji pośredniej (TVMIR) jest kompilowany do kodu bajtowego akceptowanego przez maszynę wirtualną, która następnie go ładuje i wykonuje umożliwiając zrównoleglenie obliczeń poprzez tworzenie nowych procesów i przesyłanie pomiędzy nimi wiadomości.
+Pozostając w zgodzie ze schematem przedstawionym na rysunku [[ref:fig:vm-arch]], interakcja z maszyną ThesisVM przebiega w analogiczny sposób. Kod programów w reprezentacji pośredniej (TVMIR) jest kompilowany do kodu bajtowego akceptowanego przez maszynę wirtualną, która następnie go ładuje i wykonuje umożliwiając zrównoleglenie obliczeń poprzez tworzenie nowych mikroprocesów i przesyłanie pomiędzy nimi wiadomości.
 
 ** Reprezentacja pośrednia programów
 ThesisVM wykorzystuje prostą reprezentację pośrednią programów w postaci TVMIR - języka Lisp'owego z rodziny =Scheme= [[cite:Abelson1996]], który jest dostatecznie ekspresywny, by można w nim było zapisać nietrywialne algorytmy, a jednocześnie na tyle prosty, by ułatwić jego późniejszą kompilację do kodu bajtowego akceptowanego przez maszynę wirtualną.
 
-Języki pośrednie reprezentacji programów są często stosowane w implementacjach wielu maszyn wirtualnych, takich jak ParrotVM, czy CoreVM [[cite:PeytonJones1992]], a także w implementacjach kompilatorów kodu maszynowego wielu języków programowania (na przykład GCC, LLVM). Reprezentacje pośrednie mają wiele zalet, począwszy od ułatwienia wsparcia dla szerszej gamy języków wysokiego poziomu, na możliwości tworzenia wygodnych założeń dodatkowych kończąc.
+Języki pośredniej reprezentacji programów są często stosowane w implementacjach wielu maszyn wirtualnych, takich jak ParrotVM, czy CoreVM [[cite:PeytonJones1992]], a także w implementacjach kompilatorów kodu maszynowego wielu języków programowania (na przykład GCC, LLVM). Reprezentacje pośrednie mają wiele zalet, począwszy od ułatwienia wsparcia dla szerszej gamy języków wysokiego poziomu, na możliwości tworzenia wygodnych założeń dodatkowych kończąc.
 
 Na listingu [[ref:code:tvmir]] spisana w formacie BNF została gramatyka języka reprezentacji pośredniej wykorzystanego w maszynie wirtualnej ThesisVM. Gramatyka ta jest nieskomplikowana i w dużej mierze przypomina gramatyki różnych dialektów języka =Lisp=.
 
@@ -226,7 +226,7 @@ Na listingu [[ref:code:tvmir]] spisana w formacie BNF została gramatyka języka
 
 Języki z rodziny =Lisp= są bardzo wygodnym medium dla pośredniej reprezentacji programów ponieważ przedstawiają one drzewo syntaktyczne analizowanego kodu programu i nie wymagają skomplikowanego algorytmu parsowania. Dodatkowo, homoikoniczność tych języków może pomóc w tworzeniu narzędzi służących do przetwarzania kodu rozpatrywanego języka (w szczególności kompilatorów) bezpośrednio w rozpatrywanym języku. Temat ten został dogłębnie zbadany w [[cite:Abelson1996]]. Dodatek [[ref:sec:tvm-samples]] zawiera przykłady kodu w języku pośredniej reprezentacji programów TVMIR.
 
-Język reprezentacji pośredniej przedstawiony w pracy wymaga stworzenia kilku założeń dodatkowych dotyczących transformacji kodu. Najważniejszym z nich jest konieczność przeprowadzenia operacji lambda-unoszenia (ang. /lambda lifting/), opisanej bardzo dokładnie w [[cite:PeytonJones1992]], której efekt zaprezentowano na listingu [[ref:code:lambda-lifting]].
+Przedstawiony w pracy język TVMIR wymaga stworzenia kilku założeń dodatkowych dotyczących transformacji kodu. Najważniejszym z nich jest konieczność przeprowadzenia operacji lambda-unoszenia (ang. /lambda lifting/), opisanej bardzo dokładnie w [[cite:PeytonJones1992]], której efekt zaprezentowano na listingu [[ref:code:lambda-lifting]].
 
 #+latex: \begin{listing}[ht]
 #+latex: \caption{\mylisting{Fragmenty kodu prezentujące operację lambda-unoszenia.}}
@@ -255,11 +255,11 @@ Język reprezentacji pośredniej przedstawiony w pracy wymaga stworzenia kilku z
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
 
-Lambda-unoszenie polega na transformacji ciał funkcji w taki sposób, by tworzone w nich funkcje anonimowe zostały przeniesione na poziom główny zasięgu nazw (ang. /top-level scope/) dzięki czemu do ich implementacji wystarczy jedynie częściowa aplikacja funkcji. Na drugiej części listingu [[ref:code:lambda-lifting]] funkcja =make-adder= zwracająca anonimową funkcję została transformowana na dwie funkcje, z których =make-adder= pozostaje funkcją unarną, która korzysta z częściowej aplikacji funkcji binarnej =__make-adder_lambda0= wykonującej operację dodawania.
+Lambda-unoszenie polega na transformacji ciał funkcji w taki sposób, by tworzone w nich funkcje anonimowe zostały przeniesione do głównej przestrzeni nazw (ang. /top-level scope/), dzięki czemu do ich implementacji wystarczy jedynie częściowa aplikacja funkcji. Na drugiej części listingu [[ref:code:lambda-lifting]] funkcja =make-adder= zwracająca anonimową, unarną funkcję została transformowana na dwie funkcje, z których =make-adder= pozostaje funkcją unarną, a jej ciało korzysta z częściowej aplikacji funkcji binarnej =__make-adder_lambda0= wykonującej operację dodawania.
 
 Pełna i poprawna implementacja operacji lambda-unoszenia jest skomplikowana, toteż nie została zawarta w dołączonym do projektu kompilatorze kodu bajtowego i musi zostać wykonana ręcznie.
 
-Język pośredniej reprezentacji programów zastosowany w maszynie wirtualnej ThesisVM jest bardzo podobny do języka =Core Lang= wykorzystywanego w [[cite:PeytonJones1992]], jednak nie wspiera on niektórych jego konstrukcji, takich jak =let(rec)=, czy definicje dowolnych obiektów złożonych. Z drugiej strony wspiera on konstrukcje związane z Modelem Aktorowym (=recv=, =send= oraz =spawn=) oraz jest w stanie emulować brakujące konstrukcje odpowiednio przez wykorzystanie transformacji kodu połączonej z lambda-unoszeniem (listing [[ref:code:poor-mans-let]]) oraz "tagowania" list (przechowywania informacji o typie obiektu w pierwszym elemencie listy reprezentującej ten obiekt).
+Język pośredniej reprezentacji programów zastosowany w maszynie wirtualnej ThesisVM jest bardzo podobny do języka =Core Lang= wykorzystywanego w [[cite:PeytonJones1992]], jednak nie wspiera on niektórych jego konstrukcji, takich jak =let(rec)=, czy definicji dowolnych obiektów złożonych. Z drugiej strony wspiera on konstrukcje związane z Modelem Aktorowym (=recv=, =send= oraz =spawn=) oraz jest w stanie emulować brakujące konstrukcje odpowiednio przez wykorzystanie transformacji kodu połączonej z lambda-unoszeniem (listing [[ref:code:poor-mans-let]]) oraz "tagowania" list (przechowywania informacji o typie obiektu w pierwszym elemencie listy reprezentującej ten obiekt).
 
 #+latex: \begin{listing}[ht]
 #+latex: \caption{\mylisting{Ograniczona implementacja konstrukcji \texttt{let}.}}
@@ -294,15 +294,15 @@ Język pośredniej reprezentacji programów zastosowany w maszynie wirtualnej Th
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
 
-Kolejnym podobnym językiem reprezentacji pośredniej jest =Core Erlang= [[cite:Carlsson2001]] wykorzystywany w standardowej implementacji języka =Erlang=. TVMIR jest bardzo okrojoną wersją języka =Core Erlang=, pozbawioną elementów dopasowywania wzorców, która jednak wspiera pozostałe ważne jego elementy, takie jak konstrukcje odpowiedzialne za tworzenie procesów oraz przesyłanie i odbieranie wiadomości.
+Kolejnym podobnym językiem reprezentacji pośredniej jest =Core Erlang= [[cite:Carlsson2001]] wykorzystywany w standardowej implementacji języka =Erlang=. TVMIR jest bardzo okrojoną wersją języka =Core Erlang=, pozbawioną elementów dopasowywania wzorców. Wspiera ona jednak pozostałe, ważne jego elementy, takie jak konstrukcje odpowiedzialne za tworzenie procesów oraz przesyłanie i odbieranie wiadomości.
 Istnieje możliwość rozszerzenia funkcjonalności TVMIR celem wsparcia pełnej specyfikacji =Core Erlang= [[cite:Carlsson2004]], jednak jest to poza zakresem pracy. Więcej informacji o przyszłych kierunkach rozwoju projektu zostało zawarte w sekcji [[ref:sec:future-development]].
 
 ** Kompilacja kodu bajtowego
 Język pośredniej reprezentacji programów jest wygodnym medium do zapisu algorytmów, jednak wymaga on uprzedniego skompilowania do kodu bajtowego, który jest akceptowany przez maszynę wirtualną ThesisVM.
 
-Ponieważ kompilacja kodu nie jest /stricte/ tematem pracy, mniej ważne szczegóły implementacji zostały pominięte, a niniejsza sekcja zarysowuje poszczególne fazy kompilacji kodu bajtowego ThesisVM.
+Ponieważ kompilacja kodu nie jest /stricte/ tematem pracy, mniej ważne szczegóły implementacji zostały pominięte, a niniejsza sekcja zarysowuje jedynie poszczególne fazy kompilacji kodu bajtowego.
 
-Rysunek [[ref:fig:tvm-compiler-pipeline]] zawiera schemat działania kompilatora kodu bajtowego ThesisVM wraz z przykładami pośrednich reprezentacji kompilowanego kodu w poszczególnych fazach kompilacji.
+Rysunek [[ref:fig:tvm-compiler-pipeline]] zawiera schemat działania dołączonego do projektu kompilatora kodu bajtowego wraz ze schematami struktur danych używanymi do reprezentacji kodu w poszczególnych fazach kompilacji.
 
 #+begin_center
 #+label: fig:tvm-compiler-pipeline
@@ -311,13 +311,13 @@ Rysunek [[ref:fig:tvm-compiler-pipeline]] zawiera schemat działania kompilatora
 [[file:./img/pipeline.pdf]]
 #+end_center
 
-Kompilator został zaimplementowany w sposób /potokowy/, to znaczy poszczególne fazy są logicznie odseparowane od siebie i wykonywane jedna po drugiej. Dzięki zastosowaniu leniwych konstrukcji języka =D= [[cite:Alexandrescu2010]] wszystkie te fazy odbywają się /jednocześnie/ i /na żądanie/ a w przypadku wykrycia błędu w danej fazie poprzednie fazy natychmiastowo się kończą, bez konieczności przetworzenia całego zestawu danych, które otrzymały na wejściu.
+Kompilator został zaimplementowany w sposób /potokowy/, to znaczy poszczególne fazy są logicznie odseparowane od siebie i wykonywane jedna po drugiej. Dzięki zastosowaniu leniwych konstrukcji języka =D= [[cite:Alexandrescu2010]] wszystkie te fazy odbywają się /jednocześnie/ i /na żądanie/, a w przypadku wykrycia błędu w danej fazie poprzednie fazy natychmiastowo się kończą, bez konieczności przetworzenia całego zestawu danych, które otrzymały na wejściu.
 
-Pierwszą fazą jest faza analizy leksykalnej, której zadaniem jest przetworzenie /strumienia znaków/ kodu źródłowego programu w pośredniej reprezentacji TVMIR do /strumienia tokenów/, czyli elementarnych ciągów znaków będących leksemami języka. Faza ta przeprowadza także walidację składni na poziomie tokenów oraz filtrację niepotrzebnych tokenów (takich jak znaki białe, które nie mają znaczenia w TVMIR).
+Pierwszą fazą jest faza analizy leksykalnej, której zadaniem jest przetworzenie /strumienia znaków/ kodu źródłowego programu w pośredniej reprezentacji TVMIR do /strumienia tokenów/, czyli elementarnych ciągów znaków będących leksemami analizowanego języka. Faza ta przeprowadza także walidację składni na poziomie tokenów oraz filtrację niepotrzebnych tokenów (takich jak znaki białe, które nie mają znaczenia w TVMIR).
 
-Drugą fazą jest faza analizy syntaktycznej, której zadaniem jest przetworzenie powstającego leniwie /strumienia tokenów/ na /wstępne drzewo parsowania/ składające się z prymitywnych konstrukcji języka TVMIR, takich jak listy, symbole i liczby. Faza ta przeprowadza walidację składni na poziomie zaawansowanych konstrukcji języka, które dzięki jego homoikoniczności zbudowane są z prymitywniejszych jego konstrukcji.
+Drugą fazą jest faza analizy syntaktycznej, której zadaniem jest przetworzenie powstającego leniwie /strumienia tokenów/ na /wstępne drzewo parsowania/ składające się z prymitywnych konstrukcji języka TVMIR, takich jak listy, symbole i liczby. Faza ta przeprowadza walidację składni na poziomie zaawansowanych konstrukcji języka.
 
-Trzecią fazą jest faza analizy semantycznej, której zadaniem jest przetworzenie /wstępnego drzewa parsowania/ na bardziej abstrakcyjne /drzewo składniowe/ (ang. /Abstract Syntax Tree/, /AST/) składające się semantycznie znaczących węzłów, takich jak aplikacja funkcji, wywołania operatorów wbudowanych, czy odwołania do zmiennych. Faza ta przeprowadza walidację kodu na poziomie semantycznym, sprawdzając poprawność wykorzystania różnych konstrukcji języka TVMIR.
+Trzecią fazą jest faza analizy semantycznej, której zadaniem jest przetworzenie /wstępnego drzewa parsowania/ na bardziej abstrakcyjne /drzewo składniowe/ (ang. /Abstract Syntax Tree/, /AST/) składające się z semantycznie znaczących węzłów, takich jak aplikacja funkcji, wywołania operatorów wbudowanych, czy odwołania do zmiennych. Faza ta przeprowadza walidację kodu na poziomie semantycznym, sprawdzając poprawność wykorzystania różnych konstrukcji języka TVMIR.
 
 Czwartą fazą jest faza optymalizacji, której zadaniem jest transformacja /drzewa składniowego/ powstałego w poprzedniej fazie do jego ekwiwalentu działającego szybciej po skompilowaniu. Faza ta obecnie nie wykonuje żadnych interesujących transformacji, jednak istnieje możliwość rozszerzenia jej funkcjonalności w przyszłości (opisane krótko w sekcji [[ref:sec:future-development]]).
 
@@ -326,13 +326,13 @@ Ostatnią, piątą fazą kompilacji jest faza generacji kodu bajtowego akceptowa
 ** Interpretacja kodu bajtowego
 Istnieje wiele różnych modeli maszyn wirtualnych cechujących się różnymi architekturami interpreterów kodu bajtowego, czy nawet stopniem abstrakcyjności (tak zwane maszyny abstrakcyjne).
 
-Pod względem architektury interpretera kodu bajtowego można wyróżnić trzy główne architektury maszyn wirtualnych:
+Pod względem architektury interpretera kodu bajtowego można wyróżnić trzy główne rodzaje maszyn wirtualnych:
 
-- architekturę *stosową*, korzystającą ekskluzywnie z jednego lub wielu stosów podczas przetwarzania danych, która charakteryzuje się krótkimi, pod względem zajmowanej pamięci, instrukcjami;
+- maszyny *stosowe*, korzystające ekskluzywnie z jednego lub wielu stosów podczas przetwarzania danych, które charakteryzują się krótkimi, pod względem zajmowanej pamięci, instrukcjami;
 
-- architekturę *rejestrową*, korzystającą ekskluzywnie z wielu rejestrów podczas przetwarzania danych, która charakteryzuje się instrukcjami przyjmującymi wiele argumentów określających adresy rejestrów maszyny;
+- maszyny *rejestrowe*, korzystające ekskluzywnie z wielu rejestrów podczas przetwarzania danych, które charakteryzuje się instrukcjami przyjmującymi wiele argumentów określających adresy rejestrów maszyny;
 
-- architektury *hybrydowe*, łączące dwa powyższe rozwiązania w różnym stopniu.
+- maszyny *hybrydowe*, łączące dwa powyższe rozwiązania w różnym stopniu.
 
 Pod względem abstrakcyjności maszyny wirtualne można podzielić na dwie główne grupy:
 
@@ -342,7 +342,7 @@ Pod względem abstrakcyjności maszyny wirtualne można podzielić na dwie głó
 
 Od wyboru architektury interpretera kodu bajtowego bardzo często zależą dostępne funkcjonalności docelowego języka programowania. W celu wybrania odpowiedniej architektury należy przeprowadzić szczegółową analizę pożądanych funkcjonalności implementowanego języka i możliwości ich zrealizowania w poszczególnych modelach maszyny wirtualnej. Szczegółowa analiza wpływu języka na możliwość jego zaimplementowania w danej architekturze została zawarta w [[cite:Steele1978]] wraz z praktycznymi wskazówkami dotyczącymi implementacji maszyn wirtualnych, co okazało się niezastąpionym źródłem wiedzy pomocnym przy implementacji ThesisVM.
 
-Interpreter kodu bajtowego zaimplementowany w ramach pracy wykorzystuje niskopoziomową architekturę stosową wykorzystującą wiele stosów oraz niewielki zbiór rejestrów i jest zmodyfikowaną wersją interpretera opisanego w $\cite[\text{rozdział 4}]{PeytonJones1992}$. Szczegółowy opis implementacji został zawarty w dedykowanej mu sekcji [[ref:sec:tvm-vm]] pracy.
+Interpreter kodu bajtowego zaimplementowany w ramach pracy wykorzystuje niskopoziomową architekturę stosową *Three Instruction Machine* wykorzystującą wiele stosów oraz niewielki zbiór rejestrów i jest zmodyfikowaną wersją interpretera opisanego w $\cite[\text{rozdział 4}]{PeytonJones1992}$. Szczegółowy opis implementacji został zawarty w dedykowanej mu sekcji [[ref:sec:tvm-vm]] pracy.
 
 ** Zarządzanie pamięcią
 #+latex: \label{sec:tvm-heap-archs}
@@ -355,7 +355,7 @@ Rysunek [[ref:fig:mem-archs]] przedstawia trzy główne architektury wykorzystan
 
 - architektura *sterty współdzielonej*, charakteryzująca się współdzieleniem jednego obszaru pamięci pomiędzy wszystkie procesy, dzięki czemu wiadomości (a także ich części) mogą być współdzielone przez procesy bez konieczności ich kopiowania;
 
-- architektura *hybrydowa*, mająca za zadanie połączenie zalet obu powyższych rozwiązań przez separację danych lokalnych procesów i współdzielenie danych wiadomości przesyłanych pomiędzy procesami; rozwiązanie to wymaga skomplikowanej, statycznej analizy kodu programów, która nie zawsze może być przeprowadzona.
+- architektura *hybrydowa*, mająca za zadanie połączenie zalet obu powyższych rozwiązań przez separację lokalnych danych procesów i współdzielenie danych wiadomości przesyłanych pomiędzy nimi; rozwiązanie to wymaga skomplikowanej, statycznej analizy kodu programów, która nie zawsze może być przeprowadzona.
 
 #+begin_center
 #+label: fig:mem-archs
@@ -366,9 +366,9 @@ Rysunek [[ref:fig:mem-archs]] przedstawia trzy główne architektury wykorzystan
 
 Szczegółowa analiza wydajności architektur przedstawionych na rysunku [[ref:fig:mem-archs]] w kontekście języka =Erlang=, do semantyki którego ThesisVM jest bardzo zbliżona, została zawarta w [[cite:Wilhelmsson2005]]. Na podstawie tej analizy zdecydowano się zastosować architekturę sterty współdzielonej, która minimalizuje problem kopiowania pamięci (/ergo/, spełnia nieformalny cel pracy sformułowany w sekcji [[ref:sec:thesis-motivation]]) oraz nie wymaga skomplikowanej statycznej analizy kodu programów. Implementacja pozostawia jednak możliwość późniejszej modyfikacji architektury wykorzystania sterty.
 
-Z problemem architektury wykorzystania sterty ściśle związany jest problem wyboru algorytmu alokacji pamięci. W [[cite:Wilson1995]] zawarto obszerne zestawienie algorytmów alokacji pamięci, na podstawie, którego zdecydowano się wykorzystać alokatory kaskadowe, /cache/'ujące pamięć zwolnionych obiektów w celu optymalizacji alokacji. Implementacja zastosowanego alokatora została zawarta w sekcji [[ref:sec:tvm-gc]].
+Z problemem architektury wykorzystania sterty ściśle związany jest problem wyboru algorytmu alokacji pamięci. W [[cite:Wilson1995]] zawarto obszerne zestawienie algorytmów alokacji pamięci, na podstawie, którego zdecydowano się wykorzystać alokatory kaskadowe, /cache/'ujące pamięć zwolnionych obiektów w celu optymalizacji szybkości działania. Implementacja zastosowanego alokatora została opisana w sekcji [[ref:sec:tvm-gc]].
 
-Ostatnim aspektem zarządzania pamięci maszyny wirtualnej jest kolekcja pamięci obiektów nieosiągalnych. Kolektory obiektów nieosiągalnych można podzielić na dwa typy, ze względu na dane, które analizują:
+Ostatnim aspektem zarządzania pamięcią maszyny wirtualnej jest kolekcja pamięci obiektów nieosiągalnych. Kolektory obiektów nieosiągalnych można podzielić na dwa typy, ze względu na dane, które analizują:
 
 - kolektory *śledzące* (ang. /tracing-GC/), które okresowo trawersują zbiór obiektów bazowych (ang. /root-set/) celem oznaczenia wszystkich obiektów /osiągalnych/ w danej chwili w systemie;
 
@@ -376,10 +376,13 @@ Ostatnim aspektem zarządzania pamięci maszyny wirtualnej jest kolekcja pamięc
 
 Kolektory różnych typów mają bardzo różne charakterystyki wydajnościowe w zależności od architektury wykorzystania sterty zastosowanej w maszynie wirtualnej. Kolektory śledzące przeważnie generują długie pauzy w architekturach współdzielonych, natomiast kolektory zliczające prezentują stały narzut obliczeniowy związany z ciągłą modyfikacją liczników referencji. Oczywiście istnieją dobrze poznane metody optymalizacji obu typu algorytmów [[cite:Shahriyar2012,Bacon2004]], które zacierają wszelkie różnice w ich charakterystykach wydajnościowych.
 
-W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci", oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje. Do alternatywnych rozwiązań należą te zaprezentowane w [[cite:Armstrong1995]] oraz [[cite:Huelsbergen1998]].
+W implementacji ThesisVM zdecydowano się wykorzystać mechanizm automatycznej kolekcji "śmieci", oparty o /leniwe zliczanie referencji/, na podstawie wnikliwej analizy zawartej w [[cite:Bacon2004]] oraz w związku z wykorzystaniem podobnych algorytmów kolekcji danych binarnych w standardowej implementacji języka =Erlang=. Rozwiązanie to zostało szczegółowo opisane w sekcji [[ref:sec:tvm-gc]], a implementacja umożliwia późniejsze jej rozszerzenie o dodatkowe optymalizacje.
+
+Do alternatywnych rozwiązań należą te zaprezentowane w [[cite:Armstrong1995]] oraz [[cite:Huelsbergen1998]] polegające na algorytmie /mark and sweep/ z dodatkowymi optymalizacjami umożliwiającymi jego wykorzystanie w środowisku wieloprocesorowym.
 
 ** Przetwarzanie współbieżne
 #+latex: \label{sec:tvm-smp-vs-amp}
+
 Systemy współbieżne często realizują model symetrycznego multiprocessingu (/SMP/), którego cechą szczególną jest istnienie wielu identycznych jednostek operacyjnych wykonujących jednakowe zadania na różnych zbiorach danych (=SMPn= na rysunku [[ref:fig:amp-vs-smp]]).
 
 #+begin_center
@@ -393,11 +396,11 @@ Alternatywnym rozwiązaniem jest model asymetrycznego multiprocessingu (/AMP/) (
 
 Rozwiązania asymetryczne są interesujące ze względu na zupełnie nowe klasy algorytmów, których implementację umożliwiają (na przykład algorytm zarządzania pamięcią VCGC [[cite:Huelsbergen1998]] wykorzystujący trzy asymetryczne wątki), jednak charakteryzują się skomplikowaniem interakcji poszczególnych jednostek operacyjnych a niejednokrotnie także słabą skalowalnością całego rozwiązania.
 
-Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP, który w kontekście maszyny wirtualnej polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach procesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia realnej współbieżności interpretowanego kodu.
+Model przetwarzania współbieżnego został już przybliżony przy okazji ogólnego opisu architektury ThesisVM na początku rozdziału. Wybrany został model SMP, który w kontekście maszyny wirtualnej polega na zrównolegleniu wielu interpreterów kodu bajtowego operujących na różnych kontekstach mikroprocesów (zbiorach rejestrów i danych znajdujących się na ich stosach) w celu osiągnięcia rzeczywistej współbieżności interpretowanego kodu.
 
-Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[cite:Hewitt1973]], którego głównym założeniem jest istnienie autonomicznych aktorów, którzy reagując na zmiany otoczenia dążą do swoich celów porozumiewając się z innymi aktorami za pośrednictwem wysyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne procesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO (ang. /First In First Out/).
+Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[cite:Hewitt1973]], którego głównym założeniem jest istnienie autonomicznych aktorów, reagujących na zmiany otoczenia i dążących do swoich /celów/, którzy porozumiewają się z innymi aktorami za pośrednictwem przesyłania wiadomości [[cite:Clinger1981]]. W modelu SMP zastosowanym w maszynie wirtualnej ThesisVM aktorami są poszczególne mikroprocesy, które porozumiewają się za pomocą asynchronicznych wiadomości przesyłanych poprzez nieblokujące kolejki FIFO (ang. /First In First Out/).
 
-Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
+Szczegółowe opisy implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
 * Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
@@ -414,7 +417,7 @@ Three Instruction Machine (TIM) jest nieskomplikowanym modelem maszyny wirtualne
 - *Env* - stos będący obecnym /kontekstem/ ewaluacji kodu, który jest analogiczny do leksykalnego zasięgu zmiennych w kodzie źródłowym programu;
 
 #+latex: \noindent
-oraz trzy bazowe instrukcje przyjmujące od zera do jednego argumentu, które w zupełności wystarczą do implementacji leniwych, funkcyjnych języków programowania:
+Model wykorzystuje trzy bazowe instrukcje przyjmujące od zera do jednego argumentu, które w zupełności wystarczą do implementacji leniwych, funkcyjnych języków programowania:
 
 - *PUSH arg* - tworzy kontynuację argumentu, która umożliwia jej późniejszą ewaluację w odpowiednim kontekście, odkładając ją na stos =Stack=,
 
@@ -458,7 +461,7 @@ Model Three Instruction Machine został wybrany jako podstawa implementacji Thes
 ** Modyfikacje i implementacja modelu TIM
 #+latex: \label{sec:tim-impl}
 
-Zaprezentowany powyżej model jest bardzo prosty i pomimo swojej niewątpliwej ekspresywności, maszyna wirtualna go implementująca nie byłaby w stanie uruchamiać programów o praktycznym zastosowaniu. W związku z tym, model został rozszerzony o dodatkowy rejestr wskazujący na stos danych "prostych", nie będących kontynuacjami, a także szereg instrukcji implementujących podstawowe instrukcje arytmetyczne, logiczne i związane z implementacją Modelu Aktorowego.
+Zaprezentowany powyżej model jest bardzo prosty i pomimo swojej niewątpliwej ekspresywności, maszyna wirtualna go implementująca nie byłaby w stanie uruchamiać programów o praktycznym zastosowaniu. W związku z tym, model został rozszerzony o dodatkowy rejestr wskazujący na stos danych "prostych", nie będących kontynuacjami, a także szereg instrukcji implementujących podstawowe funkcje arytmetyczne, logiczne i związane z implementacją Modelu Aktorowego.
 
 #+begin_center
 #+label: fig:tvm-regs
@@ -473,24 +476,24 @@ Rejestr *Header* zawiera informacje o typie procesu oraz metadane kolektora obie
 
 Rejestr *IP* służy do przechowywania wskaźnika następnej instrukcji kodu bajtowego. Jest wykorzystywany w dokładnie taki sam sposób, jak analogiczny rejestr modelu TIM. Rejestry *Env* oraz *Stack* podobnie jak rejestr =IP= również wykorzystywane są zgodnie z opisem modelu TIM.
 
-Ostatni rejestr, *VStack* wskazuje na stos przechowujący dane "proste", czyli obiekty, które nie wymagają ewaluacji przez interpreter i mogą być wykorzystywane przez operacje prymitywne. Funkcjonalność tego stosu nie mogła zostać połączona z funkcjonalnością stosu =Stack=, ponieważ część instrukcji polega na homogeniczności danych znajdujących się na stosie =Stack= - jeśli istnienie na tym stosie danych innych niż kontynuacje zostałoby dozwolone, to część instrukcji wymagałaby kosztownego przeszukiwania i modyfikacji stosu.
+Ostatni rejestr, *VStack* wskazuje na stos przechowujący dane "proste", czyli obiekty, które nie wymagają ewaluacji przez interpreter i mogą być wykorzystywane przez operacje prymitywne. Funkcjonalność tego stosu nie mogła zostać połączona z funkcjonalnością stosu =Stack=, ponieważ część instrukcji polega na homogeniczności znajdujących się na nim danych - jeśli istnienie na tym stosie danych innych niż kontynuacje zostałoby dozwolone, to część instrukcji wymagałaby kosztownego przeszukiwania i modyfikacji stosu.
 
 Implementacja ThesisVM modyfikuje semantykę trzech bazowych instrukcji TIM:
 
-- *NEXT addr arg* - jest to bardziej adekwatnie nazwany analog instrukcji =PUSH= podstawowego modelu TIM, w zależności od typu adresowania argument instrukcja ta tworzy i umieszcza na stosie =Stack= samo-ewaluującą do wartości argumentu kontynuację (=addr= równe =VAL=), kontynuację składającą się z obecnego kontekstu i wartości wskazywanej przez argument (=addr= równe =CODE=) lub wartość kontynuacji znajdującej się na stosie =Env= (wartość =addr= równa =ARG=);
+- *NEXT addr arg* - jest to bardziej adekwatnie nazwany analog instrukcji =PUSH= podstawowego modelu TIM, w zależności od typu adresowania argumentu instrukcja ta tworzy i umieszcza na stosie =Stack= samo-ewaluującą do wartości argumentu kontynuację (=addr= równe =VAL=), kontynuację składającą się z obecnego kontekstu i wartości wskazywanej przez argument (=addr= równe =CODE=) lub wartość kontynuacji znajdującej się na stosie =Env= (wartość =addr= równa =ARG=);
 
 - *TAKE* - podobnie jak w przypadku modelu bazowego, pobiera jedną kontynuację ze stosu kontynuacji =Stack= i umieszcza ją w obecnym kontekście ewaluacji =Env=;
 
 - *ENTER addr arg* - w zależności od typu adresacji argumentu odpowiednio modyfikuje wartości rejestrów =Env= oraz =IP= podstawiając wartość =IP= na wartość argumentu (=addr= równe =CODE=), lub ewaluując kontynuację znajdującą się na stosie =Env= (wartość =addr= równa =ARG=);
 
 #+latex: \noindent
-oraz wprowadza kilka nowych instrukcji służących do obsługi dodatkowego rejestru i operacji prymitywnych z nim związanych:
+Wprowadzono także kilka nowych instrukcji służących do obsługi dodatkowego rejestru i operacji prymitywnych z nim związanych:
 
 - *PUSH arg* - jest to prosta instrukcja, której jedynym zadaniem jest umieszczenie argumentu na stosie =VStack=;
 
 - *PRIMOP arg* - wykonuje operację prymitywną o identyfikatorze równym wartości argumentu. Więcej informacji o implementacji operacji prymitywnych zawarto w sekcji [[ref:sec:tvm-primops-impl]];
 
-- *COND arg* - jest to instrukcja warunkowa, która sprawdza wartość znajdującą się na wierzchu stosu =VStack= i w zależności od jej wartości wybiera jedną z dwóch gałęzi kodu wskazywanych przez argument i ustawia jej wartość jako nową wartość rejestru =IP=;
+- *COND arg* - jest to instrukcja warunkowa, która sprawdza wartość znajdującą się na wierzchu stosu =VStack= i w zależności od jej wartości wybiera jedną z dwóch gałęzi kodu wskazywanych przez argument ustawiając jej wartość jako nową wartość rejestru =IP=;
 
 - *SPAWN arg* - jest to instrukcja związana z implementacją Modelu Aktorowego, tworzy ona nowy kontekst mikroprocesu ThesisVM i aranżuje ewaluację kontynuacji znajdującej się na stosie =Env= pod indeksem równym wartości argumentu instrukcji (=arg=) przekazując jej jako parametr wartość znajdującą się na szczycie stosu =VStack=. Tak zaaranżowany kontekst mikroprocesu jest następnie dodawany do kolejki uruchomieniowej jednego z symetrycznych multiprocesorów wybranego zgodnie z zasadami równoważenia obciążenia (opisanymi w sekcji [[ref:sec:tvm-scheduling]]);
 
@@ -506,7 +509,7 @@ Dane programów w maszynie ThesisVM reprezentowane są za pomocą dwóch rodzaj�
 [[file:./img/tvmvalue.pdf]]
 #+end_center
 
-Implementacja przechowuje dane obiektów prostych w strukturze o wielkości jednego słowa procesora (*64* bity w obecnej implementacji maszyny wirtualnej przystosowanej do architektury *x86_64*), która zapewnia dostęp do dwóch pól identyfikujących odpowiednio 61-bitową wartość przechowywaną w strukturze oraz 3-bitowy typ, do którego owa wartość należy.
+Implementacja przechowuje dane obiektów prostych w strukturze o wielkości jednego słowa procesora (*64* bity w obecnej implementacji maszyny wirtualnej przystosowanej do architektury *x86\_64*), która zapewnia dostęp do dwóch pól identyfikujących odpowiednio 61-bitową wartość przechowywaną w strukturze oraz 3-bitowy typ, do którego owa wartość należy.
 
 Wartość przechowywane są wraz z informacją o ich typie, w celu umożliwienia implementacji języków dynamicznie typowanych oraz ułatwienia pracy kolektora obiektów nieosiągalnych - dzięki informacji o typie może on precyzyjnie określić, czy dany obiekt jest referencją, czy też nie.
 
@@ -542,7 +545,7 @@ Ważnym elementem każdego języka programowania są złożone struktury danych 
 
 Obiekty te składają się z wielu słów procesora ułożonych kolejno w pamięci. Pierwszym słowem składającym się na obiekt złożony jest jego *nagłówek*, który zawiera między innymi ośmiobitowy identyfikator typu obiektu oraz metadane kolektora obiektów nieosiągalnych.
 
-Podobnie jak w przypadku obiektów prostych, informacja o typie jest wykorzystywana do implementacji języków dynamicznie typowanych oraz w celu ułatwienia pracy kolektora "śmieci". Identyfikator typu obiektu jest jednak znacznie większy pozwalając na reprezentację 256 różnych wartości, a co za tym idzie 256 różnych typów. Obecna implementacja nie wykorzystuje potencjału dłuższego identyfikatora typu w pełni, ale w przyszłości może zostać rozwinięta, na przykład w celu umożliwienia definiowania nowych typów danych.
+Podobnie jak w przypadku obiektów prostych, informacja o typie jest wykorzystywana do implementacji języków dynamicznie typowanych oraz w celu ułatwienia pracy kolektora "śmieci". Identyfikator typu obiektu jest jednak znacznie większy pozwalając na reprezentację 256 różnych wartości, a co za tym idzie 256 różnych typów. Obecna implementacja nie wykorzystuje potencjału dłuższego identyfikatora typu w pełni, ale w przyszłości może zostać rozwinięta, na przykład w celu umożliwienia definiowania nowych typów danych użytkownika.
 
 Dodatkowym atutem stosowania nagłówka jest fakt, że wszystkie obiekty złożone ThesisVM mogą być traktowane w jednolity sposób za pośrednictwem wskaźników do owego nagłówka. Informacja o typie obiektu w nim zawarta może zostać wykorzystana do łatwego określenia faktycznej struktury obiektu znajdującego się w pamięci. Metoda ta została szeroko opisana w [[cite:Gudeman1993]] i jest standardowym rozwiązaniem wielu maszyn wirtualnych.
 
@@ -556,7 +559,7 @@ Obecna implementacja definiuje 4 typy obiektów złożonych: =PAIR=, =CLOSURE=, 
 
 Różnica pomiędzy skompilowanymi funkcjami oraz kontynuacjami sprowadza się do zestawu instrukcji zawartego w komponencie =IP= obiektu funkcyjnego - funkcje przyjmujące parametry wymagają pobrania ich wartości za pomocą instrukcji =TAKE=.
 
-*Symbole* również składają się z nagłówka oraz dwóch obiektów prostych, które oznaczają odpowiednio wskaźnik na zewnętrzny fragment pamięci zawierający tekstową reprezentację symbolu i długość owej reprezentacji. Reprezentacja symboli została pomyślana w taki sposób, by umożliwiała bezpośrednie mapowania reprezentacji tekstowej na dostępny w języku D typ danych =string=, co znacząco ułatwia obsługę symboli w implementacji maszyny wirtualnej.
+*Symbole* również składają się z nagłówka oraz dwóch obiektów prostych, które oznaczają odpowiednio wskaźnik na zewnętrzny fragment pamięci zawierający tekstową reprezentację symbolu i długość owej reprezentacji. Reprezentacja symboli została pomyślana w taki sposób, by umożliwić bezpośrednie mapowanie reprezentacji tekstowej na dostępny w języku D typ danych =string=, co znacząco ułatwia obsługę symboli w implementacji maszyny wirtualnej.
 
 Ostatnim dostępnym typem danych ThesisVM jest *deskryptor mikroprocesu*. Deskryptory te są obiektami pierwszej klasy, co oznacza, że są w pełni dostępne dla użytkownika ThesisVM. Konteksty mikroprocesów składają się z nagłówka oraz ośmiu obiektów prostych, z których cztery pierwsze odpowiadają opisanym w poprzedniej sekcji rejestrom maszyny wirtualnej, a cztery następne zawierają dane wykorzystywane przez pozostałe moduły maszyny wirtualnej. Obiekty te zostały opisane w sekcjach [[ref:sec:tvm-gc]] oraz [[ref:sec:tvm-smp]].
 
@@ -569,7 +572,7 @@ Dekodowanie argumentu instrukcji wymagałoby wówczas jedynie przeskalowania poz
 
 Instrukcje pobierane są ze /strumienia kodu bajtowego/ wskazywanego przez rejestr =IP=. W obecnej implementacji strumień kodu bajtowego zrealizowany jest jako lista pojedynczo wiązana zbudowana z obiektów złożonych ThesisVM - par.
 
-Reprezentacja ta została wybrana ze względu na charakter języka TVMIR (jest to język z rodziny =Lisp=) oraz przez wzgląd na podobieństwo to obsługi stosów =Stack=, =Env= oraz =VStack=, które również zostały zrealizowane w oparciu o listy pojedynczo wiązane. W przyszłości implementacja ta może zostać zastąpiona rozwiązaniem szybszym, niekoniecznie opartym o listy (więcej informacji na ten temat zawarto w sekcji [[ref:sec:future-development]]).
+Reprezentacja ta została wybrana ze względu na charakter języka TVMIR (jest to język z rodziny =Lisp=) oraz przez wzgląd na podobieństwo do obsługi stosów =Stack=, =Env= oraz =VStack=, które również zostały zrealizowane w oparciu o listy pojedynczo wiązane. W przyszłości implementacja ta może zostać zastąpiona rozwiązaniem szybszym, niekoniecznie opartym o listy (więcej informacji na ten temat zawarto w sekcji [[ref:sec:future-development]]).
 
 Po przechwyceniu pierwszego elementu listy wskazywanej przez rejestr =IP= następuje ustalenie identyfikatora instrukcji, sposobu adresowania argumentu oraz samej wartości argumentu instrukcji.
 Następnie interpreter ewaluuje instrukcję zgodnie z regułami opisanymi w sekcji [[ref:sec:tim-impl]].
@@ -596,7 +599,7 @@ Operacje wbudowane, takie jak arytmetyka, czy funkcje związane z implementacją
 #+bind: org-export-latex-minted-options ()
 #+latex: \end{listing}
 
-Instrukcja wykonujące operacje prymitywne, =PRIMOP id=, wykorzystuje metodę LUT (ang. /look-up table/) w celu skorelowania identyfikatora operacji prymitywnej i fragmentu kodu odpowiedzialnego za jej wykonanie - wykonanie tej instrukcji polega na przekazaniu przepływu sterowania do odpowiedniej funkcji znajdującej się w /tablicy operacji prymitywnych/.
+Instrukcja wykonująca operacje prymitywne, =PRIMOP id=, wykorzystuje metodę LUT (ang. /look-up table/) w celu skorelowania identyfikatora operacji prymitywnej i fragmentu kodu odpowiedzialnego za jej wykonanie - wykonanie tej instrukcji polega na przekazaniu przepływu sterowania do odpowiedniej funkcji znajdującej się w /tablicy operacji prymitywnych/.
 
 Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczno-logiczne oraz funkcje typowe dla języków z rodziny =Lisp=, takie jak =cons=, =car=, czy =cdr= (więcej informacji można znaleźć w [[cite:Abelson1996]]). Lista wszystkich dostępnych operacji prymitywnych została zawarta w dodatku [[ref:sec:tvm-primops]].
 
@@ -645,9 +648,9 @@ Obecnie, implementacja ThesisVM wykorzystuje dwu-poziomowy alokator składający
 
 *D Alloc* jest standardowym interfejsem alokatora języka =D=, który wykorzystuje metadane kolektora obiektów nieosiągalnych języka =D= i udostępnia wyrównaną do słowa procesora (8 bajtów na architekturze x86\_64) pamięć przezeń zarządzaną. Wybór tego algorytmu zostanie umotywowany w sekcji [[ref:sec:tvm-cycles]].
 
- Alternatywnym rozwiązaniem dla =D Alloc= byłoby wykorzystanie interfejsu manualnego zarządzania pamięcią poprzez wykorzystanie funkcji =malloc= i =free= ze standardowej biblioteki języka =C=, która wchodzi w skład standardowej biblioteki języka =D=.
+ Alternatywnym rozwiązaniem dla =D Alloc= byłoby wykorzystanie interfejsu manualnego zarządzania pamięcią poprzez funkcje =malloc= i =free= ze standardowej biblioteki języka =C=, która wchodzi w skład standardowej biblioteki języka =D=.
 
-*TVM Alloc* jest dodatkowym algorytmem alokacji zbudowanym w oparciu o interfejs =D Alloc=, który dodatkowo zapewnia buforowanie (ang. /caching/) pamięci za pomocą *listy niedawno zwolnionych obiektów*, która jest przeszukiwana w pierwszej kolejności podczas żądania alokacji.
+*TVM Alloc* jest dodatkowym algorytmem alokacji zbudowanym w oparciu o interfejs =D Alloc=, który dodatkowo zapewnia buforowanie (ang. /caching/) pamięci za pomocą *listy niedawno zwolnionych obiektów*, która jest przeszukiwana w pierwszej kolejności podczas alokacji.
 
 #+begin_center
 #+label: fig:tvm-gc-regs
@@ -660,7 +663,7 @@ Każdy mikroproces posiada własną listę niedawno zwolnionych obiektów (rysun
 
 Wykorzystanie listy niedawno zwolnionych obiektów do buforowania alokacji umożliwia także  zaimplementowanie zupełnie nowej klasy algorytmów kolekcji obiektów nieosiągalnych w oparciu o /leniwe cykle kolekcji/. Algorytm taki został opisany w następnej sekcji.
 
-Zagadnienie alokacji pamięci jest bardzo rozległe i w kontekście języków programowania zależy od wielu różnych czynników, takich jak charakterystyki zużycia pamięci konkretnych programów, wielkości alokowanych obiektów, czy czasy ich życia. Przegląd [[cite:Wilson1995]] zawiera szczegółową analizę wydajności wielu różnych algorytmów alokacji pamięci w warunkach symulowanych oraz dla rzeczywistych programów, co było niezastąpionym źródłem wiedzy pomocnym przy wyborze i implementacji algorytmu alokacji obiektów maszyny wirtualnej ThesisVM.
+Zagadnienie alokacji pamięci jest bardzo rozległe i w kontekście języków programowania zależy od wielu różnych czynników, takich jak charakterystyki zużycia pamięci konkretnych programów, wielkości alokowanych obiektów, czy czasu ich życia. Przegląd [[cite:Wilson1995]] zawiera szczegółową analizę wydajności wielu różnych algorytmów alokacji pamięci w warunkach symulowanych oraz dla rzeczywistych programów, co było niezastąpionym źródłem wiedzy pomocnym przy wyborze i implementacji algorytmu alokacji obiektów maszyny wirtualnej ThesisVM.
 
 ** Kolekcja obiektów nieosiągalnych
 Różne podejścia do problemu automatycznego zwalniania nieużywanej pamięci zostały już opisane w sekcji [[ref:sec:tvm-heap-archs]], której konkluzją był wybór algorytmu *zliczania referencji* jako głównego algorytmu kolekcji obiektów nieosiągalnych.
@@ -717,18 +720,18 @@ Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przysz�
 * Model przetwarzania współbieżnego
 #+latex: \label{sec:tvm-smp}
 
-Niniejsza sekcja opisuje implementację modelu przetwarzania współbieżnego zastosowanego w maszynie wirtualnej ThesisVM. Model ten przewiduje wykorzystanie symetrycznego multiprocessingu oraz implementację Modelu Aktorowego interakcji mikroprocesów. Wstępny opis wybranego modelu zawarto w sekcji [[ref:sec:amp-vs-smp]].
+Niniejsza sekcja opisuje implementację modelu przetwarzania współbieżnego zastosowanego w maszynie wirtualnej ThesisVM. Model ten przewiduje wykorzystanie symetrycznego multiprocessingu oraz implementację Modelu Aktorowego interakcji mikroprocesów. Wstępny opis wybranego modelu zawarto w sekcji [[ref:sec:tvm-smp-vs-amp]].
 
 Model Aktorowy [[cite:Hewitt1973]] został wybrany przez wzgląd na jego relatywne nieskomplikowanie i wielką ekspresywność, zwłaszcza w kontekście funkcyjnych języków programowania. Model ten zakłada istnienie autonomicznych /aktorów/, którzy porozumiewają się za pomocą przekazywanych asynchronicznie /wiadomości/, co bardzo łatwo można przetłumaczyć na istnienie wielu działających konkurencyjnie mikroprocesów.
 
-Każdy mikroproces po otrzymaniu wiadomości może na nie reagować poprzez zmianę swojego wewnętrznego /zachowania/, wygenerowanie skończonej liczby /nowych wiadomości/, wysyłanych konkurencyjnie do innych mikroprocesów, lub poprzez stworzenie skończonej liczby /nowych aktorów/ - uruchomienie dodatkowych mikroprocesów ThesisVM. Dokładny opis założeń Modelu Aktorowego został zawarty w [[cite:Clinger1981]].
+Każdy mikroproces po otrzymaniu wiadomości może na nie reagować poprzez zmianę swojego wewnętrznego /zachowania/, wygenerowanie skończonej liczby /nowych wiadomości/, wysyłanych asynchronicznie do innych mikroprocesów, lub poprzez stworzenie skończonej liczby /nowych aktorów/ - uruchomienie dodatkowych mikroprocesów ThesisVM. Dokładny opis założeń Modelu Aktorowego został zawarty w [[cite:Clinger1981]].
 
 ** Implementacja symetrycznego multiprocessingu
 Implementacja wykorzystuje wątki systemu operacyjnego, na którym uruchomiona jest maszyna wirtualna ThesisVM w celu zrównoleglenia działania wielu interpreterów kodu bajtowego. Rysunek [[ref:fig:tvm-smp]] zawiera schematyczną reprezentację struktury symetrycznych multiprocesorów (SMP).
 
 SMP komunikują się ze sobą poprzez wiadomości kontrolne przekazywane za pośrednictwem kolejki wiadomości =MSGq=, efektywnie wykorzystując Model Aktorowy. Implementacja taka jest więc bardzo skalowalna i umożliwia dowolną zmianę ilość uruchomionych jednostek także podczas działania maszyny wirtualnej.
 
-Obecnie wiadomości kontrolne wykorzystywane są przy tworzeniu nowych mikroprocesów, ale implementacja może zostać w przyszłości rozszerzona w celu umożliwienia stosowania zaawansowanych algorytmów równoważenia obciążenia, strategii uruchamiania mikroprocesów a także propagacji i kolekcji danych diagnostycznych działania symetrycznych multiprocesorów. Więcej informacji o przyszłych kierunkach rozwoju projektu zostało zawarte w sekcji [[ref:sec:future-development]].
+Obecnie wiadomości kontrolne wykorzystywane są jedynie przy tworzeniu nowych mikroprocesów, ale implementacja może zostać w przyszłości rozszerzona w celu umożliwienia stosowania zaawansowanych algorytmów równoważenia obciążenia, strategii uruchamiania mikroprocesów a także propagacji i kolekcji danych diagnostycznych działania symetrycznych multiprocesorów. Więcej informacji o przyszłych kierunkach rozwoju projektu zostało zawarte w sekcji [[ref:sec:future-development]].
 
 #+begin_center
 #+label: fig:tvm-smp
@@ -749,7 +752,7 @@ SMP działają według uproszczonego algorytmu zaprezentowanego na diagramie [[r
 
 Następną fazą jest faza =wake=, której zadaniem jest przywrócenie uśpionych mikroprocesów do ponownego działania. Wykorzystuje ona kolejkę =WAITq=, dzięki czemu ustalenie, czy istnieją mikroprocesy gotowe do przebudzenia mogło zostać zrealizowane w czasie logarytmicznym poprzez analizę wartości skrajnie lewego poddrzewa reprezentacji kolejki, gdzie znajduje się element najmniejszy.
 
-Jeśli jakiekolwiek mikroprocesy zostały przebudzone i tym samym przeniesione do kolejki =RUNq=, następuje faza ich harmonogramowania - =schedule=. Faza ta ustala kolejność uruchamiania i interpretacji kodu poszczególnych mikroprocesów i została szczegółowo opisana w następnej sekcji. Jeśli żaden mikroproces nie oczekuje na uruchomienie SMP wraca do pierwszej fazy oczekując na nowe wiadomości kontrolne.
+Jeśli jakiekolwiek mikroprocesy zostały przebudzone, i tym samym przeniesione do kolejki =RUNq=, następuje faza ich harmonogramowania - =schedule=. Faza ta ustala kolejność uruchamiania oraz interpretacji kodu poszczególnych mikroprocesów i została szczegółowo opisana w następnej sekcji. Jeśli żaden mikroproces nie oczekuje na uruchomienie, SMP wraca do pierwszej fazy oczekując na nowe wiadomości kontrolne.
 
 #+begin_center
 #+label: fig:smp-operation
@@ -780,7 +783,7 @@ Wirtualne czasy działania zadań przechowywane są osobno dla każdego zadania 
 
 Rejestr =Flags= przechowuje informację o priorytecie mikroprocesu, a rejestr =RTime= o dotychczasowym, /rzeczywistym/ czasie jego działania. Wartość czasu /wirtualnego/ wyznaczana jest jako iloczyn priorytetu i rzeczywistego czasu działania.
 
-W każdym cyklu działania SMP mikroproces o najniższej wartości wirtualnego czasu działania pobierany jest  z kolejki =RUNq=. Operacja ta, podobnie jak analogiczna operacja dotycząca uśpionych mikroprocesów wykonywana jest w czasie logarytmicznym dzięki wykorzystaniu drzew czerwono czarnych w implementacji kolejki =RUNq=.
+W każdym cyklu działania SMP mikroproces o najniższej wartości wirtualnego czasu działania pobierany jest  z kolejki =RUNq=. Operacja ta, podobnie jak analogiczna operacja dotycząca uśpionych mikroprocesów wykonywana jest w czasie logarytmicznym dzięki wykorzystaniu drzew czerwono-czarnych w implementacji kolejki =RUNq=.
 
 Dla tak desygnowanego procesu obliczany jest czas dostępu do procesora (ang. /fair share/), który zależy od konfigurowalnej wartości maksymalnej oraz ilości mikroprocesów aktualnie oczekujących na uruchomienie. Zapewnia to zwiększenie /interaktywności/ mikroprocesów kosztem zwiększenia liczby zmian ich kontekstów.
 
@@ -852,9 +855,9 @@ Interpreter kodu bajtowego pozwala na uruchamianie nietrywialnych programów nap
 
 Niestety reprezentacja kodu bajtowego nie jest optymalna, ponieważ wykorzystuje dedykowane obiekty złożone ThesisVM oraz listy pojedynczo wiązane zbudowane w oparciu o pary znane z języków z rodziny =Lisp=. Alternatywnym i niewątpliwie szybszym pod wieloma względami rozwiązaniem byłoby wykorzystanie ułożonych kolejno w pamięci liczb całkowitych.
 
-Ograniczenia czasowe projektu nie pozwoliły również na rozwiązanie problemu cache'owania obliczonych wartości /kontynuacji/. Interpreter kodu bajtowego jest /leniwy/, to znaczy ewaluuje on wartości pewnych kwantów obliczeń dopiero w momencie, gdy są wymagane. Obecna implementacja nie zapamiętuje ich nowej wartości, co może prowadzić do zwielokrotnienia niektórych obliczeń.
+Ograniczenia czasowe projektu nie pozwoliły również na rozwiązanie problemu cache'owania obliczonych wartości /kontynuacji/. Interpreter kodu bajtowego jest /leniwy/, to znaczy ewaluuje on wartości pewnych kwantów obliczeń dopiero w momencie, gdy są one wymagane. Obecna implementacja nie zapamiętuje ich nowej wartości, co może prowadzić do zwielokrotnienia niektórych obliczeń i ograniczenia praktycznej przydatności maszyny wirtualnej.
 
-Problem ten jest złożony w kontekście języków programowania wspierających przetwarzanie współbieżne ponieważ wymaga synchronizacji wielu wątków, które mogą próbować ewaluować tę samą kontynuację.
+Problem ten jest złożony w kontekście języków programowania wspierających przetwarzanie współbieżne ponieważ wymaga synchronizacji wielu zadań, które mogą próbować ewaluować tę samą kontynuację w jednej chwili. Jego rozwiązanie wymaga stosowania barier odczytu lub zapisu i nie zostało zawarte w implementacji ThesisVM.
 
 ** Kolektor obiektów nieosiągalnych
 Kolektor obiektów nieosiągalnych ThesisVM został zaimplementowany w oparciu o algorytm /leniwego/ zliczania referencji. Dużą jego zaletą jest szybkość alokacji i dealokacji, która została osiągnięta poprzez zastosowanie /listy niedawno zwolnionych obiektów/, pełniącej rolę bufora alokacji.
@@ -863,12 +866,14 @@ Wadą takiego rozwiązania jest fakt, że pamięć nie jest zwracana do systemu 
 
 Kolejną wadą wybranego algorytmu jest konieczność wykorzystywania operacji atomowych i barier pamięci w celu wymuszania kolejności zachodzenia operacji na pamięci, co nieznacznie ogranicza wydajność maszyny wirtualnej. W przyszłości zastosowane mogą być dodatkowe algorytmy i optymalizacje kolekcji "śmieci" w celu złagodzenia tego problemu.
 
+Kolejnym możliwym usprawnieniem jest wykorzystanie tak zwanych /inteligentnych wskaźników/ do obsługi liczników referencji. Obecnie implementacja polega na ręcznej dekrementacji i inkrementacji liczników, przez co może zawierać trudne do wykrycia błędy. Implementacja taka została zastosowana w celu ograniczenia ilości "niepotrzebnych" modyfikacji liczników.
+
 ** Przetwarzanie współbieżne
 Modelem przetwarzania współbieżnego zastosowanym w maszynie wirtualnej ThesisVM jest *symetryczny multiprocessing*, którego główną cechą jest bardzo dobra skalowalność. Dodatkowe multiprocesory mogą być tworzone i usuwane na żądanie także podczas działania maszyny wirtualnej.
 
 Maszyna implementuje także *Model Aktorowy* polegający na wykorzystaniu autonomicznych, lekkich /mikroprocesów/ porozumiewających się za pomocą asynchronicznego przesyłania wiadomości. Implementacja zapewnia logiczną separacją pamięci procesów przez wykorzystanie niemutowalnych danych oraz optymalizuje szybkość przesyłania wiadomości dzięki zastosowaniu architektury współdzielonej sterty.
 
-Mikroprocesy harmonogramowane są z wykorzystaniem algorytmu *Completely Fair Scheduling*, który jest stosowany między innymi w jądrze systemu Linux. Algorytm ten pozwala na stosowanie jednej kolejki priorytetowej dla procesów o różnych priorytetach dzięki zastosowaniu /wirtualnego czasu/ zużycia procesora.
+Mikroprocesy harmonogramowane są z wykorzystaniem algorytmu *Completely Fair Scheduling*, który jest stosowany między innymi w jądrze systemu Linux. Algorytm ten działa bardzo sprawnie, pozwalając na stosowanie jednej kolejki priorytetowej dla procesów o różnych priorytetach dzięki zastosowaniu /wirtualnego czasu/ zużycia procesora.
 
 ** Kierunki przyszłego rozwoju
 #+latex: \label{sec:future-development}
