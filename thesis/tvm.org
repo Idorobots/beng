@@ -6,6 +6,7 @@
 #+BEGIN_OPTIONS
 #+BIND: org-export-latex-title-command ""
 #+STARTUP: content
+#+EXPORT_SELECT_TAGS: export
 #+LaTeX_CLASS: aghdpl
 #+LaTeX_CLASS_OPTIONS: [a4paper, 12pt]
 #+LaTeX_HEADER: \usepackage[polish]{babel}
@@ -76,7 +77,7 @@
 \renewcommand{\cftaftermloltitleskip}{5mm}
 #+end_latex
 
-* COMMENT Wstęp
+* Wstęp
 #+latex: \label{sec:intro}
 
 Tematem pracy jest implementacja /maszyny wirtualnej/ dla funkcyjnych języków programowania wspierających /przetwarzanie współbieżne/.
@@ -164,7 +165,7 @@ Sekcja [[ref:sec:conclusion]] zawiera podsumowanie pracy oraz zarys możliwych k
 
 Dodatki [[ref:sec:tvm-samples]], [[ref:sec:tvm-primops]] i [[ref:sec:misc]] zawierają odpowiednio wskazówki użytkowania ThesisVM i przykładowe programy gotowe do uruchomienia na maszynie wirtualnej, spis wbudowanych operatorów i funkcji prymitywnych oraz spisy rysunków, tablic i fragmentów kodu znajdujących się w tekście pracy.
 
-* COMMENT Architektura ThesisVM
+* Architektura ThesisVM
 #+latex: \label{sec:tvm-arch}
 
 Ninejsza sekcja opisuje architekturę maszyny wirtualnej ThesisVM powstałej na potrzeby pracy oraz języka przez nią akceptowanego.
@@ -306,7 +307,7 @@ Rysunek [[ref:fig:tvm-compiler-pipeline]] zawiera schemat działania kompilatora
 
 #+begin_center
 #+label: fig:tvm-compiler-pipeline
-#+caption: Schemat potokowega działania kompilatora kodu bajtowego ThesisVM wraz ze przykładami reprezentacji danych poszczególnych faz kompilacji.
+#+caption: Schemat potokowega działania kompilatora kodu bajtowego ThesisVM wraz z przykładami reprezentacji danych poszczególnych faz kompilacji.
 #+attr_latex: scale=0.5
 [[file:./img/pipeline.pdf]]
 #+end_center
@@ -359,7 +360,7 @@ Rysunek [[ref:fig:mem-archs]] przedstawia trzy główne architektury wykorzystan
 
 #+begin_center
 #+label: fig:mem-archs
-#+caption: Różne modele wykorzystania pamięci maszyn wirtualnych.
+#+caption: Porównanie modeli wykorzystania pamięci maszyn wirtualnych.
 #+attr_latex: scale=1.0
 [[file:./img/mem.pdf]]
 #+end_center
@@ -384,7 +385,7 @@ Systemy współbieżne często realizują model symetrycznego multiprocessingu (
 
 #+begin_center
 #+label: fig:amp-vs-smp
-#+caption: Różne modele przetwarzania współbieżnego.
+#+caption: Porównanie modeli przetwarzania współbieżnego.
 #+attr_latex: scale=0.5
 [[file:./img/ampvssmp.pdf]]
 #+end_center
@@ -399,7 +400,7 @@ Dodatkową zaletą modelu SMP jest jego kompatybilność z Modelem Aktorowym [[c
 
 Szczegółowy opis implementacji symetrycznego multiprocesora i realizacja Modelu Aktorowego za jego pomocą zostały zawarte w sekcji [[ref:sec:tvm-smp]].
 
-* COMMENT Interpreter kodu bajtowego
+* Interpreter kodu bajtowego
 #+latex: \label{sec:tvm-vm}
 
 Niniejszy rozdział opisuje implementację interpretera kodu bajtowego ThesisVM. Jak już wspomniano w poprzedniej sekcji, praca implementuje model /Three Instruction Machine/, opisany szczegółowo w [[cite:Fairbairn1987]]
@@ -602,7 +603,7 @@ Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczn
 
 Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywnych do języka =Core Erlang= [[cite:Carlsson2004]]. Podobieństwo to nie jest przypadkowe, a wybrany sposób reprezentacji i działania operacji prymitywnych został zaimplementowany w taki sposób, by w przyszłości umożliwić łatwe rozszerzenie implementacji maszyny wirtualnej ThesisVM oraz wsparcie pełni języka =Core Erlang=.
 
-* COMMENT Model zarządzania pamięcią
+* Model zarządzania pamięcią
 #+latex: \label{sec:tvm-gc}
 
 Niniejsza sekcja opisuje implementację modelu zarządzania pamięcią zastosowanego w maszynie wirtualnej ThesisVM, na który składa się architektura wykorzystania pamięci, algorytm alokacji obiektów oraz algorytm kolekcji obiektów nieosiągalnych. Wstępny opis wybranego modelu pamięci oraz motywacja tego wyboru zostały zawarte w sekcji [[ref:sec:tvm-heap-archs]].
@@ -714,7 +715,7 @@ Aby temu zaradzić implementacja alokatora wykorzystuje wbudowany w język =D= k
 
 Implementacja alokatora jest jednak na tyle generyczna, by umożliwić w przyszłości zaimplementowanie alternatywnego, zapasowego kolektora śledzącego, który w przeciwieństwie do kolektora języka =D= mógłby wykorzystywać dane o typach obiektów ThesisVM w celu prowadzenia precyzyjniejszych i szybszych kolekcji.
 
-* Model przetwarzania współbieżnego
+* Model przetwarzania współbieżnego                                                         :export:
 #+latex: \label{sec:tvm-smp}
 
 Niniejsza sekcja opisuje implementację modelu przetwarzania współbieżnego zastosowanego w maszynie wirtualej ThesisVM. Model ten przewiduje wykorzystanie symetrycznego multiprocessingu oraz implementację Modelu Aktorowego interakcji mikroprocesów. Wstępny opis wybranego modelu zawarto w sekcji [[ref:sec:amp-vs-smp]].
@@ -789,28 +790,23 @@ Nowo utworzone mikroprocesy, a także te reaktywowane po czasie uśpienia dodawa
 Obecna implementacja harmonogramowania nie wykorzystuje niestety algorytmów równoważenia obciążenia. W przyszłości może zostać jednak rozwinięta umożliwiając podział kolejki =RUNq= i przekazanie części przynależących do niej mikroprocesów do pozostałych symetrycznych multiprocesorów.
 
 ** Implementacja Modelu Aktorowego
-- Opisać powstawanie procesów i prymityw =spawn=.
+Implementacja Modelu Aktorowego w maszynie wirtualnej ThesisVM objawia się wykorzystaniem autonomicznych mikroprocesów, które porozumiewają się za pomocą asynchronicznego przekazywania wiadomości.
 
-- Opisać implementację prymitywów =send= oraz =recv=.
+Mikroprocesy tworzone są za pomocą prymitywnej operacji =spawn=, która jako argumenty przyjmuje nazwę funkcji startowej nowego mikroprocesu oraz argument, który zostanie jej przekazany. Tworzony jest wtedy nowy kontekst mikroprocesu, którego rejestry zostają odpowiednio spreparowane by umożliwić natychmiastowe jego wykonanie. Kontekst jest następnie przekazywany do jednego z symetrycznych multiprocesorów, gdzie rozpoczyna swoje działanie.
 
-- Opisać logiczną autonomiczność procesów (brak mutacji = inne procesy nie mogą ingerować).
-
-- Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
+Działające współbieżnie mikroprocesy mogą komunikować się za pośrednictwem prymitywnych operacji =send= oraz =recv=, które odpowiednio inicjalizują wysyłanie wiadomości i przechwytują następną wiadomość z kolejki wiadomości =MSGq= mikroprocesu. Kolejka ta przechowywana jest w osobnym rejestrze kontekstu mikroprocesu; rysunek [[ref:fig:tvm-actor-regs]] zawiera schemat położenia rejestru =MSGq= w obiekcie reprezentującym mikroproces.
 
 #+begin_center
-#+label: ref:tvm-actor-regs
+#+label: fig:tvm-actor-regs
 #+caption: Schemat rejestrów wymaganych przez implementację Modelu Aktorowego.
 #+attr_latex: scale=1.5
 [[file:./img/Actor.pdf]]
 #+end_center
 
-- Opisać zmiany wprowadzone w stanie maszyny wirtualnej (dodatkowe rejestry).
+Implementacja zapewnia /logiczną separację/ pamięci procesów, ponieważ /nie wspiera mutacji/ danych, co gwarantuje, iż jedynym sposobem ich współdzielenia między aktorami jest przekazywanie wiadomości. Należy zwrócić uwagę na fakt, że nie jest to /separacja fizyczna/. Dane przesyłane pomiędzy mikroprocesami egzystują w jednej puli pamięci i nie są w żaden sposób kopiowane.
 
 ** Implementacja przesyłania wiadomości
-
-- Opisać implementację kolejek nieblokujących (+ weryfikacja poprawności). [[cite:MichaelScott1996,Groves2008]]
-- Opisać wykorzystanie CAS i problem ABA.
-
+Asynchroniczne przesyłanie wiadomości zostało zrealizowane z wykorzystaniem kolejek nieblokujących (ang. /non-blocking queue/) zaimplementowanych zgodnie z algorytmem *Michael'a i Scott'a* [[cite:MichaelScott1996]].
 #+begin_center
 #+label: ref:tvm-msgs
 #+caption: Schemat działania przesyłania wiadomości.
@@ -818,13 +814,21 @@ Obecna implementacja harmonogramowania nie wykorzystuje niestety algorytmów ró
 [[file:./img/messagepassing.pdf]]
 #+end_center
 
+
+- Opisać sposób porozumiewania się procesów (kolejki nieblokujące). [[cite:MichaelScott1996,Herlihy2002]]
+
+- Wspomnieć o gwarancjach jakie daje algorytm. [[cite:MichaelScott1996,Groves2008]]
+
+- Opisać wykorzystanie CAS i problem ABA.
+
+
 - Opisać krótko wady i możliwe usprawnienia zastosowanego rozwiązania (dynamic size, wait-free, optimistic FIFO). [[cite:Herlihy2002,Kogan2011,Ladan-Mozes2004]]
 
 - Opisać krótko alternatywne podejścia (synchroniczne przekazywanie wiadomości - kanały, locki/mutexy/semafory).
 
 - Opisać sposób pobierania wiadomości z kolejki i jego możliwe usprawnienia (pattern-matching).
 
-* COMMENT Podsumowanie
+* Podsumowanie
 #+latex: \label{sec:conclusion}
 
 - Opisać co udało się zrobić.
@@ -852,7 +856,7 @@ Obecna implementacja harmonogramowania nie wykorzystuje niestety algorytmów ró
 #+end_latex
 
 #+latex: \appendix
-* COMMENT Przykładowe programy
+* Przykładowe programy
 #+latex: \label{sec:tvm-samples}
 
 Niniejszy dodatek zawiera instrukcje użytkowania maszyny wirtualnej ThesisVM oraz kilka przykładowych programów w języku TVMIR, które można na niej uruchomić.
@@ -1000,7 +1004,7 @@ Program tworzy trzy nowe procesy, które współbieżnie obliczają wartości fu
 #+end_src
 #+bind: org-export-latex-minted-options ()
 
-* COMMENT Spisy wbudowanych operatorów i funkcji
+* Spisy wbudowanych operatorów i funkcji
 #+latex: \label{sec:tvm-primops}
 
 #+begin_latex
@@ -1045,7 +1049,7 @@ Program tworzy trzy nowe procesy, które współbieżnie obliczają wartości fu
 #+latex: \noindent
 Dodatkowo wszystkie prymitywne operatory wymienione w powyższej liście mają swoje odpowiedniki funkcyjne o takiej samej nazwie i semantyce.
 
-* COMMENT Spisy rysunków i fragmentów kodu
+* Spisy rysunków i fragmentów kodu
 #+latex: \label{sec:misc}
 
 #+begin_latex
