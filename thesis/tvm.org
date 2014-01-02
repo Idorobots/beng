@@ -843,7 +843,7 @@ Istnieje wiele usprawnień algorytmu Michael'a i Scott'a zapewniających dodatko
 
 Asynchroniczne przekazywanie wiadomości nie jest jedyną metodą komunikacji procesów znaną w literaturze. Alternatywne rozwiązania obejmują między innymi wykorzystanie synchronicznego przesyłania wiadomości poprzez kanały wiadomości (ang. /message channels/) oraz wykorzystanie pamięci współdzielonej i niskopoziomowych prymitywów synchronizacji, takich jak mutex'y, czy semafory.
 
-* Podsumowanie                                                                              :export:
+* Podsumowanie
 #+latex: \label{sec:conclusion}
 
 Projekt implementuje kompletną maszynę wirtualną nazwaną ThesisVM, w której skład wchodzą trzy moduły: interpreter kodu bajtowego oparty o model *Three Instruction Machine*, kolektor obiektów nieosiągalnych implementujący algorytm *leniwego zliczania referencji* oraz model przetwarzania współbieżnego oparty o *symetryczny multiprocessing* i *Model Aktorowy*.
@@ -874,7 +874,22 @@ Mikroprocesy harmonogramowane są z wykorzystaniem algorytmu *Completely Fair Sc
 ** Kierunki przyszłego rozwoju
 #+latex: \label{sec:future-development}
 
-- Opisać plany na przyszły rozwój projektu (priorytet procesów, load balancing SMP, wsparcie dla =Core Erlang=, bytecode threading, przebiegi optymalizacyjne podczas kompilacji, umożliwienie dystrybucji na wiele maszyn, zapasowy kolektor śmieci cyklicznych, opcja wykorzystania sterty prywatnej i autonomicznego alokatora, natywna kompilacja JIT, wektory, data-level parallelism, optymalizacja wykorzystania stosu, hardłerowa implementacja interpretera kodu bajtowego).
+Poza rozwiązaniem drobnych problemów opisanych w poprzednich sekcjach zidentyfikowano także wiele możliwych kierunków przyszłego rozwoju projektu maszyny wirtualnej ThesisVM:
+
+- Optymalizacja reprezentacji i interpretacji kodu bajtowego - obecna reprezentacja kodu bajtowego jest sub-optymalna, co negatywnie odbija się na wydajności maszyny wirtualnej. W przyszłości można wykorzystać wiele interesujących optymalizacji reprezentacji i intepretacji kodu bajtowego, takich jak /bytecode threading/ w celu przyspieszenia działania całego systemu.
+
+- Równoważenie obciążenia SMP - obecnie maszyna wirtualna nie stosuje żadnych algorytmów równoważenia obciążenia symetrycznych multiprocesorów. W przyszłości implementacja maszyny może zostać rozszerzona o migrację mikroprocesów, co pozwoli na równoważenie obciążenia.
+
+- Przebiegi optymalizacyjne podczas kompilacji - kompliator języka reprezentacji pośredniej TVMIR nie wykorzystuje żadnych transformacji kodu mających na celu opymalizację jego działania. W przyszłości faza optymalizacji może znacznie polepszyć wydajność uruchamianych na maszynie wirtualnej ThesisVM programów.
+
+- Dodatkowe typy danych i /data-level parallelism/ - język pośredniej reprezentacji TVMIR wspiera niewielki zbiór podstawowych typów danych, takich jak typy numeryczne i listy, który w przyszłości może zostać rozszerzony o dodatkowe typy danych, takie jak wektory. Umożliwi to stosowanie zrównoleglania na poziomie danych (ang. /data-level parallelism/) w dodatku do obecnie wspieranego modelu przetwarzania współbieżnego.
+
+- Wsparcie pełnego języka =Core Erlang= - język TVMIR jest zbliżony w semantyce do pośredniej reprezentacji programów wykorzystywanej przez język =Erlang=. Rozszerzenie TVMIR w przyszłości może umożliwić uruchamianie programów napisanych w języku =Erlang= na ThesisVM.
+
+- Dystrybucja pomiędzy wieloma maszynami fizycznymi - ważną cechą konkurencyjnych języków programowania jest możliwość ich dystrybucji pomiędzy wieloma maszynami fizycznim. Obecna implementacja ThesisVM działa w obrębie pojedynczej maszyny, ale umożliwienie dystrybucji w przyszłości nie będzie trudne.
+
+- Kompilacja /Just In Time/ - w celu dalszego zwiększenia wydajności ThesisVM zastosowane mogą zostać algorytmy kompilacji do kodu maszynowego "w locie". Techniki takie są często wykorzystywane przez maszyny wirtualne i pozwalają na osiągnięcie wydajności porównywalnej z językami kopilowanymi natywnie.
+
 
 # The bibliography
 #+begin_latex
