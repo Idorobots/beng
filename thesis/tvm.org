@@ -454,7 +454,7 @@ Warto zauważyć, że argumenty przekazywane do funkcji w modelu TIM są ewaluow
 
 Drugim ważnym spostrzeżeniem jest wsparcie /optymalizacji rekursji ogonowej/ modelu TIM - jeśli ostatnią instrukcją kodu ciała funkcji jest wywołanie innej funkcji, to wynikowy kod bajtowy zakończony będzie instrukcją ENTER, która nie wymaga zapisywania adresu powrotnego i tym samym gwarantuje stałą wielkość stosu programu.
 
-Model Three Instruction Machine został wybrany jako podstawa implementacji ThesisVM ze względu na swoją prostotę i niewątpliwe zalety jakie posiada w kontekście implementacji funkcyjnych języków programowania. Istnieje wiele alternatywnych modeli działania maszyn wirtualnych, jak na przykład model /SECD/ [[cite:VanHorn2010]] oraz jego rekursywny ogonowo wariant /TR-SECD/ [[cite:Ramsdell1999]], czy bardziej adekwatne dla języków z rodziny Lisp modele opisane w [[cite:Abelson1996]] oraz [[cite:Steele1978]].
+Model Three Instruction Machine został wybrany jako podstawa implementacji ThesisVM ze względu na swoją prostotę i niewątpliwe zalety jakie posiada w kontekście implementacji funkcyjnych języków programowania. Istnieje wiele alternatywnych modeli działania maszyn wirtualnych, jak na przykład model /SECD/ [[cite:VanHorn2010]] oraz jego rekursywny ogonowo wariant /TR-SECD/ [[cite:Ramsdell1999]], czy bardziej adekwatne dla języków z rodziny =Lisp= modele opisane w [[cite:Abelson1996]] oraz [[cite:Steele1978]].
 
 ** Modyfikacje i implementacja modelu TIM
 #+latex: \label{sec:tim-impl}
@@ -551,7 +551,7 @@ Po nagłówku występują właściwe dane w postaci =n= obiektów prostych, gdzi
 
 Obecna implementacja definiuje 4 typy obiektów złożonych: =PAIR=, =CLOSURE=, =SYMBOL= oraz =UPROC=.
 
-*Pary* składają się z nagłówka oraz dwóch obiektów prostych odpowiadających odpowiednio pierwszemu i drugiemu elementowi pary. Pary są wykorzysytwane do implementacji list, które z kolei są podstawowymi strukturami danych języka TVMIR, podobnie jak w innych językach z rodziny Lisp.
+*Pary* składają się z nagłówka oraz dwóch obiektów prostych odpowiadających odpowiednio pierwszemu i drugiemu elementowi pary. Pary są wykorzysytwane do implementacji list, które z kolei są podstawowymi strukturami danych języka TVMIR, podobnie jak w innych językach z rodziny =Lisp=.
 
 *Obiekty funkcyjne*, zwane czasami domknięciami leksykalnymi (ang. /closures/), służą do reprezentowania skompilowanych funkcji TVMIR oraz *kontynuacji* będących podstawą działania modelu TIM. W obu przypadkach obiekty funkcyjne składają się z dwóch obiektów prostych odpowiadających kolejno rejestrowi =IP= oraz stosowi =Env=.
 
@@ -570,7 +570,7 @@ Dekodowanie argumentu instrukcji wymagałoby wówczas jedynie przeskalowania poz
 
 Instrukcje pobierane są ze /strumienia kodu bajtowego/ wskazywanego przez rejestr =IP=. W obecnej implementacji strumień kodu bajtowego zrealizowany jest jako lista pojedynczo wiązana zbudowana z obiektów złożonych ThesisVM - par.
 
-Reprezentacja ta została wybrana ze względu na charakter języka TVMIR (jest to język z rodziny Lisp) oraz przez wzgląd na podobieństwo to obsługi stosów =Stack=, =Env= oraz =VStack=, które również zostały zrealizowane w oparciu o listy pojedynczo wiązane. W przyszłości implementacja ta może zostać zastąpiona rozwiązaniem szybszym, niekoniecznie opartym o listy (więcej informacji na ten temat zawarto w sekcji [[ref:sec:future-development]]).
+Reprezentacja ta została wybrana ze względu na charakter języka TVMIR (jest to język z rodziny =Lisp=) oraz przez wzgląd na podobieństwo to obsługi stosów =Stack=, =Env= oraz =VStack=, które również zostały zrealizowane w oparciu o listy pojedynczo wiązane. W przyszłości implementacja ta może zostać zastąpiona rozwiązaniem szybszym, niekoniecznie opartym o listy (więcej informacji na ten temat zawarto w sekcji [[ref:sec:future-development]]).
 
 Po przechwyceniu pierwszego elementu listy wskazywanej przez rejestr =IP= następuje ustalenie identyfikatora instrukcji, sposobu adresowania argumentu oraz samej wartości argumentu instrukcji.
 Następnie interpreter ewaluuje instrukcję zgodnie z regułami opisanymi w sekcji [[ref:sec:tim-impl]].
@@ -599,7 +599,7 @@ Operacje wbudowane, takie jak arytmetyka, czy funkcje związane z implementacją
 
 Instrukcja wykonujące operacje primitywne, =PRIMOP id=, wykorzystuje metodę LUT (ang. /look-up table/) w celu skorelowania identyfikatora operacji prymitywnej i fragmentu kodu odpowiedzialnego za jej wykonanie - wykonanie tej instrukcji polega na przekazaniu przepływu sterowania do odpowiedniej funkcji znajdującej się w /tablicy operacji prymitywnych/.
 
-Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczno-logiczne oraz funkcje typowe dla języków z rodziny Lisp, takie jak =cons=, =car=, czy =cdr= (więcej informacji można znaleźć w [[cite:Abelson1996]]). Lista wszystkich dostępnych operacji prymitywnych została zawarta w dodatku [[ref:sec:tvm-primops]].
+Dostępne operacje prymitywne to w dużej mierze podstawowe operacje arytmetyczno-logiczne oraz funkcje typowe dla języków z rodziny =Lisp=, takie jak =cons=, =car=, czy =cdr= (więcej informacji można znaleźć w [[cite:Abelson1996]]). Lista wszystkich dostępnych operacji prymitywnych została zawarta w dodatku [[ref:sec:tvm-primops]].
 
 Ponownie uwagę można zwrócić na podobieństwo traktowania operacji prymitywnych do języka =Core Erlang= [[cite:Carlsson2004]]. Podobieństwo to nie jest przypadkowe, a wybrany sposób reprezentacji i działania operacji prymitywnych został zaimplementowany w taki sposób, by w przyszłości umożliwić łatwe rozszerzenie implementacji maszyny wirtualnej ThesisVM oraz wsparcie pełni języka =Core Erlang=.
 
@@ -843,21 +843,33 @@ Istnieje wiele usprawnień algorytmu Michael'a i Scott'a zapewniających dodatko
 
 Asynchroniczne przekazywanie wiadomości nie jest jedyną metodą komunikacji procesów znaną w literaturze. Alternatywne rozwiązania obejmują między innymi wykorzystanie synchronicznego przesyłania wiadomości poprzez kanały wiadomości (ang. /message channels/) oraz wykorzystanie pamięci współdzielonej i niskopoziomowych prymitywów synchronizacji, takich jak mutex'y, czy semafory.
 
-* Podsumowanie
+* Podsumowanie                                                                              :export:
 #+latex: \label{sec:conclusion}
 
-- Opisać co udało się zrobić.
-- Opisać czego nie udało się zrobić (+ możliwe usprawnienia).
+Projekt implementuje kompletną maszynę wirtualną nazwaną ThesisVM, w której skład wchodzą trzy moduły: interpreter kodu bajtowego oparty o model *Three Instruction Machine*, kolektor obiektów nieosiągalnych implementujący algorytm *leniwego zliczania referencji* oraz model przetwarzania współbieżnego oparty o *symetryczny multiprocessing* i *Model Aktorowy*.
 
 ** Interpreter kodu bajtowego
-- Opisać brak apdejtowania już obliczonych wartości i dać link do sec:future-development.
-- Opisać możliwość zastosowania lepszej reprezentacji bytecodu i bytecode threading.
+Interpreter kodu bajtowego pozwala na uruchamianie nietrywialnych programów napisanych w języku pośredniej reprezentacji *TVMIR*. Język ten kompilowany jest do kodu bajtowego, składającego się z szeregu instrukcji w architekturze *CISC*, które operują na danych za pośrednictwem czterych rejestrów: =IP=, =Stack=, =Env= oraz =VStack=.
+
+Niestety reprezentacja kodu bajtowego nie jest optymalna, ponieważ wykorzystuje dedykowane obiekty złożone ThesisVM oraz listy pojedynczo wiązane zbudowane w oparciu o pary znane z języków z rodziny =Lisp=. Alternatywnym i niewątpliwie szybszym pod wieloma względami rozwiązaniem byłoby wykorzystanie ułożonych kolejno w pamięci liczb całkowitych.
+
+Ograniczenia czasowe projektu nie pozwoliły również na rozwiązanie problemu cache'owania obliczonych wartości /kontynuacji/. Interpreter kodu bajtowego jest /leniwy/, to znaczy ewaluuje on wartości pewnych kwantów obliczeń dopiero w momencie, gdy są wymagane. Obecna implementacja nie zapamiętuje ich nowej wartości, co może prowadzić do zwielokrotnienia niektórych obliczeń.
+
+Problem ten jest złożony w kontekście języków programowania wspierających przetwarzanie współbieżne ponieważ wymaga synchronizacji wielu wątków, które mogą próbować ewaluować tę samą kontynuację.
 
 ** Kolektor obiektów nieosiągalnych
-- Przeanalizować szybkość, pauzy, zużycie pamięci.
+Kolektor obiektów nieosiągalnych ThesisVM został zaimplementowany w oparciu o algorytm /leniwego/ zliczania referencji. Dużą jego zaletą jest szybkość alokacji i dealokacji, która została osiągnięta poprzez zastosowanie /listy niedawno zwolnionych obiektów/, pełniącej rolę bufora alokacji.
+
+Wadą takiego rozwiązania jest fakt, że pamięć nie jest zwracana do systemu operacyjnego natychmiastowo a jej zużycie jest relatywnie wysokie. W przyszłości problem ten może zostać złagodzony przez ograniczenie wielkości bufora alokacji.
+
+Kolejną wadą wybranego algorytmu jest konieczność wykorzystywania operacji atomowych i barier pamięci w celu wymuszania kolejności zachodzenia operacji na pamięci, co nieznacznie ogranicza wydajność maszyny wirtualnej. W przyszłości zastosowane mogą być dodatkowe algorytmy i optymalizacje kolekcji "śmieci" w celu złagodzenia tego problemu.
 
 ** Przetwarzanie współbieżne
-- Przeanalizować szybkość przesyłania wiadomości/konieczność czekania procesów, wielkość kolejek wiadomości.
+Modelem przetwarzania współbieżnego zastosowanym w maszynie wirtualnej ThesisVM jest *symetryczny multiprocessing*, którego główną cechą jest bardzo dobra skalowalność. Dodatkowe multiprocesory mogą być tworzone i usuwane na żądanie także podczas działania maszyny wirtualnej.
+
+Maszyna implementuje także *Model Aktorowy* polegający na wykorzystaniu autonomicznych, lekkich /mikroprocesów/ porozumiewających się za pomocą asynchronicznego przesyłania wiadomości. Implementacja zapewnia logiczną separacją pamięci procesów przez wykorzystanie niemutowalnych danych oraz optymalizuje szybkość przesyłania wiadomości dzięki zastosowaniu architektury współdzielonej sterty.
+
+Mikroprocesy harmonogramowane są z wykorzystaniem algorytmu *Completely Fair Scheduling*, który jest stosowany między innymi w jądrze systemu Linux. Algorytm ten pozwala na stosowanie jednej kolejki priorytetowej dla procesów o różnych priorytetach dzięki zastosowaniu /wirtualnego czasu/ zużycia procesora.
 
 ** Kierunki przyszłego rozwoju
 #+latex: \label{sec:future-development}
