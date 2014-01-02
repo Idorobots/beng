@@ -765,22 +765,28 @@ Ostatnia faza, =reschedule= polega na wywłaszczeniu mikroprocesu i przeniesieni
 ** Harmonogramowanie procesów
 #+latex: \label{sec:tvm-scheduling}
 
-Najważniejszą fazą opisanego w poprzedniej sekcji algorytmu jest faza harmonogramowania procesów. W celu ustalenia kolejności mikroprocesów wykorzystanie został algorytm *Completely Fair Scheduling*, który jest stosowany między innymi w jądrze systemu Linux od wersji 2.6.23.
+Najważniejszą fazą opisanego w poprzedniej sekcji algorytmu jest faza harmonogramowania procesów. W celu ustalenia kolejności mikroprocesów wykorzystanie został algorytm *Completely Fair Scheduling* (CFS), który jest stosowany między innymi w jądrze systemu Linux od wersji 2.6.23.
 
-- Opisać algorytm Completely Fair Scheduler. [[cite:Pabla2009]]
+Kluczową cechą algorytmu CFS jest wykorzystanie *wirtualnych czasów* działania zadań, które obliczane są w różny sposób w zależności od priorytetu zadania, co pozwala na wykorzystanie jednej kolejki do harmonogramowania procesów o różnych priorytetach, zamiast wielu osobnych kolejek, dla różnych priorytetów.
+
+Wirtualne czasy działania zadań przechowywane są osobno dla każdego zadania i są modyfikowane po każdym cyklu ich uruchomienia. Rysunek [[ref:fig:tvm-scheduler-regs]] zawiera schemat rozmieszczenia dodatkowych rejestrów mikroprocesów ThesisVM koniecznych do zaimplementowania algorytmu CFS.
 
 #+begin_center
-#+label: ref:tvm-scheduler-regs
+#+label: fig:tvm-scheduler-regs
 #+caption: Schemat rejestrów wymaganych przez usprawnienia hanmonogramowania SMP.
 #+attr_latex: scale=1.5
 [[file:./img/Scheduler.pdf]]
 #+end_center
 
-- Opisać implementację i wykorzystanie RUNq.
+Rejestr =Flags= przechowuje informację o priorytecie mikroprocesu, a rejestr =RTime= o dotychczasowym, /rzeczywistym/ czasie jego działania. Wartość czasu /wirtualnego/ wyznaczana jest jako iloczyn priorytetu i rzeczywistego czasu działania.
 
-- Opisać implementację prymitywu =sleep= oraz WAITq.
+W każdym cyklu działania SMP mikroproces o najniższej wartości wirtualnego czasu działania pobierany jest  z kolejki =RUNq=. Operacja ta, podobnie jak analogiczna operacja dotycząca uśpionych mikroprocesów wykonywana jest w czasie logarytmicznym dzięki wykorzystaniu drzew czerwono czarnych w implementacji kolejki =RUNq=.
 
-- Opisać wady możliwe usprawnienia (load-balancing i dzielenie zużycia).
+Dla tak desygnowanego procesu obliczany jest czas dostępu do procesora (ang. /fair share/), który zależy od konfigurowalnej wartości maksymalnej oraz ilości mikroprocesów aktualnie oczekujących na uruchomienie. Zapewnia to zwiększenie /interaktywności/ mikroprocesów kosztem zwiększenia liczby zmian ich kontekstów.
+
+Nowo utworzone mikroprocesy, a także te reaktywowane po czasie uśpienia dodawane są do kolejki =RUNq= z aktualnie minimalną wartością wirtualnego czasu działania. Technika ta nosi miano *sleeper fairness* i gwarantuje, że mikroprocesy, które przez dłuższy czas były w stanie uśpienia otrzymają porównywalny udział czasu procesora sprzętowego.
+
+Obecna implementacja harmonogramowania nie wykorzystuje niestety algorytmów równoważenia obciążenia. W przyszłości może zostać jednak rozwinięta umożliwiając podział kolejki =RUNq= i przekazanie części przynależących do niej mikroprocesów do pozostałych symetrycznych multiprocesorów.
 
 ** Implementacja Modelu Aktorowego
 - Opisać powstawanie procesów i prymityw =spawn=.
