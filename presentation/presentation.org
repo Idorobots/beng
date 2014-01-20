@@ -42,13 +42,19 @@
 }
 #+end_latex
 
+# STUFF
+#+begin_latex
+\setbeamertemplate{itemize items}[default]
+%\renewcommand\pause{}
+#+end_latex
+
 * Wprowadzenie
 ** skiptitle
 *Maszyna wirtualna* - środowisko uruchomieniowe języków programowania uniezależniające je od platformy sprzętowej.
 
 #+latex: \vfill
 #+latex: \pause
-W skład pracy wchodzą:
+Cele pracy:
 
 - Implementacja interpretera kodu bajtowego.
 
@@ -58,22 +64,8 @@ W skład pracy wchodzą:
 #+latex: \pause
 - Implementacja Modelu Aktorowego (ang. Actor Model).
 
-** Motywacja pracy
-#+begin_src erlang
-transmogrify(Data) ->
-    Pids = framework:spawn_bajilion_procs(fun do_stuff/1),
-    JSON = json:decode(Data),
-    framework:map_reduce(Pids, JSON). %% $#&^@
-#+end_src
-
 #+latex: \pause
-- Mniejsza logika przepływu danych.
-
-#+latex: \pause
-- Zwielokrotnienie parsowania pliku JSON.
-
-#+latex: \pause
-- Działa szybciej. (!?)
+- Optymalizacja kosztownego kopiowania obiektów.
 
 * ThesisVM
 ** Architektura
@@ -98,34 +90,38 @@ Oparty o *Three Instruction Machine*:
 - Architektura *CISC*.
 
 ** Przykład kodu bajtowego
+#+latex: \begin{multicols}{2}
+
 #+begin_src scheme
 (define (add a b)
   (+ a b))
 (add 2 2)
 #+end_src
 
+#+latex: \columnbreak
 #+latex: \pause
 #+begin_src python
-  __start: PUSH 2      # Połóż "a" na stosie.
-           PUSH 2
-           ENTER add   # Wejdź do domknięcia "add".
-  add:     TAKE 2      # Pobierz dwa argumenty ze stosu.
-           PUSH __add0
-           ENTER 1     # PUSHC 2, RETURN
-  __add0:  PUSH __add1
+  __start: NEXT 2
+           NEXT 2
+           ENTER add
+  add:     TAKE
+           TAKE
+           NEXT __add0
+           ENTER 1
+  __add0:  NEXT __add1
            ENTER 0
-  __add1:  OP_ADD
+  __add1:  PRIMOP '+'
            RETURN
 #+end_src
 
+#+latex: \end{multicols}
+
 ** Kolekcja obiektów nieosiągalnych
-#+begin_center
-#+ATTR_LATEX: scale=0.8
-[[file:./img/GC.pdf]]
-#+end_center
+#+latex: \pause
+- Pamięć jest współdzielona pomiędzy procesami.
 
 #+latex: \pause
-- Wykorzystuje leniwe zliczanie referencji.
+- Wykorzystuje zliczanie referencji.
 
 #+latex: \pause
 - Kolekcja pamięci procesu nie zależy od innych procesów.
@@ -137,7 +133,14 @@ Oparty o *Three Instruction Machine*:
 - Proste obiekty ($\leq$ 8 bajtów) są kopiowane.
 
 ** Leniwe zliczanie referencji
-- Opóźnienie kolekcji obiektu do następnej alokacji.
+#+latex: \vspace{5mm}
+#+begin_center
+#+ATTR_LATEX: scale=0.8
+[[file:./img/GC.pdf]]
+#+end_center
+#+latex: \vspace{-5mm}
+
+Polega na opóźnieniu kolekcji obiektu do następnej alokacji poprzez wykorzystanie listy zwolnionych obiektów.
 
 #+latex: \pause
 - Szybkie dealokacje.
@@ -158,29 +161,40 @@ Oparty o *Three Instruction Machine*:
 #+end_center
 
 #+latex: \pause
+- Procesy są obiektami "pierwszej klasy".
+
+#+latex: \pause
 - Idetyfikator procesu (pid) to wskaźnik na kontekst procesu.
 
 #+latex: \pause
-- Wykorzystuje kolejki nieblokujące.
+- Wiadomości są przesyłane asynchronicznie.
+
+#+latex: \pause
+- Implementacja wykorzystuje kolejki nieblokujące.
 
 ** Symetryczny Multiprocessing
-#+latex: \vspace{0.5cm}
-
 #+begin_center
 #+ATTR_LATEX: scale=0.5
 [[file:./img/SMP.pdf]]
 #+end_center
 
+#+latex: \vspace{-0.5cm}
 #+latex: \pause
-- Wykorzystuje Model Aktorowy!
+- Implementacja wykorzystuje Model Aktorowy!
+
+#+latex: \vspace{-0.5cm}
 
 #+latex: \pause
 #+begin_center
 #+ATTR_LATEX: scale=0.8
 [[file:./img/Sched.pdf]]
 #+end_center
+#+latex: \vspace{-0.5cm}
 
 - Procesy są wywłaszczane (ang. preemptive concurrency).
+
+#+latex: \pause
+- Wykorzystuje algorytm *Completely Fair Scheduling*.
 
 * Podsumowanie
 ** skiptitle
@@ -199,7 +213,7 @@ Projekt implementuje:
 - Architekturę SMP oraz Model Aktorowy oparty o *kolejki nieblokujące*.
 
 #+latex: \vfill
-* 
+* COMMENT
 #+latex: \usebackgroundtemplate{\includegraphics[width=\paperwidth]{titlepagepl}}
 ** 
 # FINAL FRAME
