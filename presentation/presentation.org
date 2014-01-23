@@ -1,7 +1,7 @@
 ################################################################################
 #+TITLE: Implementacja maszyny wirtualnej dla funkcyjnych języków programowania wspierających przetwarzanie współbieżne.
 #+AUTHOR: Kajetan Rzepecki
-#+DATE: \today
+#+DATE: 24 stycznia 2014
 #+LATEX_HEADER: \institute[AGH-UST]{Wydział EAIiIB\\ Katedra Informatyki Stosowanej}
 #
 #+BEGIN_OPTIONS
@@ -94,16 +94,20 @@ Oparty o *Three Instruction Machine*:
 
 #+begin_src scheme
 (define (add a b)
-  (+ a b))
+  (primop + a b))
+
+
+
+
+
+
+;; ...
 (add 2 2)
 #+end_src
 
 #+latex: \columnbreak
 #+latex: \pause
 #+begin_src python
-  __start: NEXT 2
-           NEXT 2
-           ENTER add
   add:     TAKE
            TAKE
            NEXT __add0
@@ -112,16 +116,22 @@ Oparty o *Three Instruction Machine*:
            ENTER 0
   __add1:  PRIMOP '+'
            RETURN
+  # ...
+  __start: NEXT 2
+           NEXT 2
+           ENTER add
 #+end_src
 
 #+latex: \end{multicols}
 
-** Kolekcja obiektów nieosiągalnych
-#+latex: \pause
-- Pamięć jest współdzielona pomiędzy procesami.
+** Alokacja i kolekcja pamięci
+- Celem jest uniknięcie nadmiernego kopiowania pamięci przy zachowaniu /logicznej/ separacji procesów.
 
 #+latex: \pause
-- Wykorzystuje zliczanie referencji.
+- Pamięć jest współdzielona pomiędzy procesami, ale nie można jej modyfikować.
+
+#+latex: \pause
+- Kolektor wykorzystuje /leniwe zliczanie referencji/.
 
 #+latex: \pause
 - Kolekcja pamięci procesu nie zależy od innych procesów.
@@ -199,18 +209,14 @@ Polega na opóźnieniu kolekcji obiektu do następnej alokacji poprzez wykorzyst
 * Podsumowanie
 ** skiptitle
 #+latex: \vfill
-Projekt implementuje:
 
-- Interpreter kodu bajtowego oparty o *Three Instruction Machine*.
-
-#+latex: \pause
-- Kompilator kodu bajtowego.
+- Udało się osiągnąć zamierzone cele.
 
 #+latex: \pause
-- Kolektor obiektów nieosiągalnych oparty o *leniwe zliczanie referencji*.
+- Nie udało się zawrzeć wszystkich zaplanowanych optymalizacji.
 
 #+latex: \pause
-- Architekturę SMP oraz Model Aktorowy oparty o *kolejki nieblokujące*.
+- Udało się zidentyfikować wiele kierunków przyszłego rozwoju.
 
 #+latex: \vfill
 * COMMENT
