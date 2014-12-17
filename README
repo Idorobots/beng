@@ -1,0 +1,3 @@
+This is my Bachelor's project and Thesis (polish version only) as submitted to AGH-UST. It's a compiler & a VM for a TIM-based, lazy, actor-model-enabled Lisp written in the D programming language.
+
+Currently, it doesn't support memoization of lazy values, so it's a bit wacky and buggy, and probably not very useful. Maybe someday...
